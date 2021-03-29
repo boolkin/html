@@ -1,0 +1,53 @@
+<script type="text/javascript">
+function calc1(){
+var radios = document.getElementsByName('timeformat');
+for (var i = 0, length = radios.length; i < length; i++) {
+	if (radios[i].checked) ratio = (radios[i].value); // единицы измерения
+}
+var ss,se,a,t,p;
+ ss = parseFloat(document.getElementById('speedstart').value); //стартовая скорость v1
+ se = parseFloat(document.getElementById('speedend').value); //конечная скорость v2
+ t = parseFloat(document.getElementById('time').value); //время
+
+a = ((se/ratio-ss/ratio)/t).toFixed(5); //ускорение a = (v2-v1)/t
+p = ss/ratio*t+(a*t*t/2); //путь p = v1*t + (a*t^2)/2
+
+document.getElementById('path').innerHTML = p.toFixed(2);
+document.getElementById('aa').innerHTML = (a*ratio).toFixed(2);
+
+if (ratio==60) {
+document.getElementById('spdfo').innerHTML = "м/мин";
+document.getElementById('spdfd').innerHTML = "м/мин";
+document.getElementById('spdft').innerHTML = "м/мин";
+}
+else if (ratio==3600)
+{
+document.getElementById('spdfo').innerHTML = "м/час";
+document.getElementById('spdfd').innerHTML = "м/час";
+document.getElementById('spdft').innerHTML = "м/час";
+} else {
+document.getElementById('spdfo').innerHTML = "м/с";
+document.getElementById('spdfd').innerHTML = "м/с";
+document.getElementById('spdft').innerHTML = "м/с";
+} 
+}
+</script>
+
+<b>Расчет расстояния и ускорения онлайн</b>
+<form oninput="calc1()" onsubmit="return false;">
+Скорость метры в 
+<label><input checked="" name="timeformat" onchange="calc1()" type="radio" value="1" /> секунду </label>
+<label><input name="timeformat" onchange="calc1()" type="radio" value="60" /> минуту </label>
+<label><input name="timeformat" onchange="calc1()" type="radio" value="3600" /> час </label><br />
+Скорость начальная: <input id="speedstart" style="width: 100px;" type="number" value ="0"/> <output id="spdfo"> м/с</output>
+<br>
+Скорость конечная: <input id="speedend" style="width: 100px;" type="number" value ="100"/> <output id="spdfd"> м/с</output>
+<br>
+Время: <input id="time" style="width: 100px;" type="number" value ="10"/> с
+
+<br>
+Расстояние: <strong><output id="path"></output></strong> м<br>
+Ускорение: <strong><output id="aa"></output></strong> (<output id="spdft">м/с</output>)/c 
+</form>
+
+

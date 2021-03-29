@@ -1,0 +1,182 @@
+<html>
+<head> <title>Калькулятор Пиццы</title>
+    <link href="Img/.PizzaCalc.png" rel="shortcut icon" type="image/x-icon" />
+    <meta name="description" content="Калькулятор пиццы позволяет узнать какую пиццу выгоднее заказывать, большую пиццу или маленькую. Вбейте диаметр пиццы и ее цену и узнайте что выгоднее">
+    <meta name="Keywords" content="калькулятор пиццы, pizza calculator, большая пицца или маленькая">
+</head>
+<style type="text/css">
+form input
+{   font-size: 12px;
+ text-align: center; }
+tr.border_bottom td {
+  border-bottom:1pt solid black;
+}
+ body {
+    background-image: url(Img/bg.jpg); /* Путь к фоновому изображению */
+   background-repeat: no-repeat;
+   background-size: cover;
+   }
+a {color:black;}
+      #main {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+     #main:target {display: block;}
+</style>
+
+<body>
+
+<script type="text/javascript">
+function calc1(){
+ var c, a, d, p, cd, ad, dd, pd, raznicad, raznicap, raznicaa, raznicac, pix, pixd, numb, numbd;
+ d = document.getElementById('diametr').value;
+ p = document.getElementById('price').value;
+ numb = document.getElementById('num').value;
+ a = (0.785*d*d).toFixed(1);
+ c = (p/a).toFixed(2);
+ pix = ((100*a)/p).toFixed(2);
+ dd = document.getElementById('diametr2').value;
+ pd = document.getElementById('price2').value;
+ numbd = document.getElementById('num2').value;
+ ad = (0.785*dd*dd).toFixed(1);
+ cd = (pd/ad).toFixed(2);
+ pixd = ((100*ad)/pd).toFixed(2);
+   if (c == "NaN" ||c=="Infinity") {
+        document.getElementById('1cm').innerHTML = "";
+    } else {
+        document.getElementById('1cm').innerHTML = c;
+    }
+   if (a == "NaN"|| a ==0 || a=="Infinity") {
+        document.getElementById('area').innerHTML = "";
+    } else {
+        document.getElementById('area').innerHTML = (a*numb).toFixed(2) +" см2";
+    }
+ if (pix == "NaN"|| pix ==0|| pix=="Infinity") {
+        document.getElementById('piz').innerHTML = "";
+    } else {
+        document.getElementById('piz').innerHTML = pix +" см2";
+    }
+ if (pixd == "NaN"|| pixd ==0|| pixd=="Infinity") {
+        document.getElementById('piz2').innerHTML = "";
+    } else {
+        document.getElementById('piz2').innerHTML = pixd +" см2";
+    }
+   if (cd == "NaN"|| cd=="Infinity") {
+        document.getElementById('1cm2').innerHTML = "";
+    } else {
+        document.getElementById('1cm2').innerHTML = cd;
+    }
+   if (ad == "NaN"|| ad ==0) {
+        document.getElementById('area2').innerHTML = "";
+    } else {
+        document.getElementById('area2').innerHTML = (ad*numbd).toFixed(2) +" см2";
+    }
+ raznicad = (d-dd).toFixed(2);
+ raznicap = (p*numb-pd*numbd).toFixed(2);
+ raznicac = (c-cd).toFixed(2);
+ raznicapiz = (pix-pixd).toFixed(2);
+ raznicaa = (a*numb-ad*numbd).toFixed(1);
+if (raznicad == "NaN" || raznicad =="Infinity") {
+        document.getElementById('raznicad').innerHTML = "";
+   } else {
+        document.getElementById('raznicad').innerHTML = Math.abs(raznicad)+" см";}
+if (raznicap == "NaN" || raznicap =="Infinity") {
+        document.getElementById('raznicap').innerHTML = "";
+   } else {
+        document.getElementById('raznicap').innerHTML = Math.abs(raznicap)+" руб.";}
+if (raznicac == "NaN" ||  raznicac =="Infinity") {
+        document.getElementById('raznicac').innerHTML = "";
+   } else {
+        document.getElementById('raznicac').innerHTML = Math.abs(raznicac);}
+if (raznicapiz == "NaN" || raznicapiz == "Infinity") {
+        document.getElementById('raznicapiz').innerHTML = "";
+   } else {
+        document.getElementById('raznicapiz').innerHTML = Math.abs(raznicapiz);}
+for (var i = 1; i < 7; i++) {
+document.getElementsByName("v1")[i].style.backgroundColor= raznicapiz > 0 ? "lightgreen" : "rgba(245, 245, 245, 0.9)";
+document.getElementsByName("v2")[i].style.backgroundColor= raznicapiz < 0 ? "lightgreen" : "rgba(245, 245, 245, 0.9)";
+}
+if ( raznicaa == "NaN" || raznicaa== "Infinity" ) {
+        document.getElementById('raznicaa').innerHTML = "";
+   } else {
+        document.getElementById('raznicaa').innerHTML = Math.abs(raznicaa)+" см2";}
+}
+</script>
+<h2 align="center" style="color: #FFF;text-shadow: 2px 2px 0 #4074b5, 2px -2px 0 #4074b5, -2px 2px 0 #4074b5, -2px -2px 0 #4074b5, 2px 0px 0 #4074b5, 0px 2px 0 #4074b5, -2px 0px 0 #4074b5, 0px -2px 0 #4074b5;">Калькулятор пиццы </h2>
+
+</br>
+<form onsubmit="return false;" oninput="calc1()">
+    <center>
+        <table width="98%">
+            <tr>
+                <td align="right"  width="22%"></td>
+                <td align="center"  width="26%" style="background-color: RGBA(249, 201, 16, 0.8);font-weight:bold" name="v1">Вариант 1</td>
+                <td align="center"  width="26%" style="background-color: RGBA(249, 201, 16, 0.8);font-weight:bold"name="v2">Вариант 2</td>
+                <td align="center"  width="26%" style="background-color: RGBA(249, 201, 16, 0.8);font-weight:bold">Разница</td>
+            </tr>
+
+
+            <tr style="background-color: rgba(245, 245, 245, 0.9)">
+                <td align="right" style="background-color: rgba(173, 216, 230, 0.5)">Диаметр </td>
+                <td align="center" name="v1"><input id="diametr" type="number" style="width: 70px;"> см</td>
+                <td align="center" name="v2"><input id="diametr2" type="number" style="width: 70px;"> см</td>
+                <td align="center"><strong><output id="raznicad"></output></strong></td>
+            </tr>
+
+
+            <tr style="background-color: rgba(245, 245, 245, 0.9)">
+                <td align="right"  style="background-color: rgba(173, 216, 230, 0.5)">Цена </td>
+                <td align="center" name="v1"><input id="price" type="number" style="width: 70px;"> р.</td>
+                <td align="center" name="v2"><input id="price2" type="number" style="width: 70px;"> р.</td>
+                <td align="center"><strong><output id="raznicap"></output></strong></td>
+            </tr>
+
+            <tr style="background-color: rgba(245, 245, 245, 0.9)">
+                <td align="right"  style="background-color: rgba(173, 216, 230, 0.5)">Штук </td>
+                <td align="center" name="v1"><input type="number" step="1" min="1" max="9" id="num" value="1" title="Кол." size="3"></td>
+                <td align="center"  name="v2"><input type="number" step="1" min="1" max="9" id="num2" value="1" title="Кол." size="3"></td>
+                <td align="center"></td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+            <tr style="background-color: rgba(245, 245, 245, 0.9)">
+                <td align="right"  style="background-color: rgba(173, 216, 230, 0.5)">Площадь пиццы </td>
+                <td align="center" name="v1"><strong><output id="area"></output></strong></td>
+                <td align="center" name="v2"><strong><output id="area2"></output></strong></td>
+                <td align="center"><strong><output id="raznicaa"></output></strong></td>
+            </tr>
+            <tr style="background-color: rgba(245, 245, 245, 0.9)">
+                <td align="right"  style="background-color: rgba(173, 216, 230, 0.5)">Рублей за 1 см<sup>2 </sup></td>
+                <td align="center" name="v1"><strong><output id="1cm"></output></strong></td>
+                <td align="center" name="v2"><strong><output id="1cm2"></output></td>
+                <td align="center"><strong><output id="raznicac"></output></strong></td>
+            </tr>
+            <tr style="background-color: rgba(245, 245, 245, 0.9)">
+                <td align="right"  style="background-color: rgba(173, 216, 230, 0.5)">Cм<sup>2</sup> за 100 руб. </td>
+                <td align="center" name="v1"><strong><output id="piz"></output></strong></td>
+                <td align="center" name="v2"><strong><output id="piz2"></output></strong></td>
+                <td align="center"><strong><output id="raznicapiz"></output></strong></td>
+            </tr>
+        </table>
+    </center>
+</form>
+<a href="#" id="main">
+    <table style=" width: 70%;
+        height: 30%;
+		font-size: medium;
+        text-align: center;
+        padding: 15px;
+        border: 8px outset #1C6EA4;
+        border-radius: 20px;
+    background-color:rgba(245, 245, 245, 0.9);
+        position: absolute; top: 20; right: 0; bottom: 0; left: 0;
+        margin: auto;"><tr><td>
+        &#127829;&#127829;&#127829; <br>Это приложение помогает рассчитать какую пиццу выгоднее заказывать. <br>Введите диаметр и цену каждого варианта пиццы в соответствующие поля и зеленым цветом будет выделен наиболее выгодный вариант <br>&#127829;&#127829;&#127829;
+        <td></tr></table>
+</a>
+<a href="#main"><input type="button" value="Что это?" style="display: inline-block;    height: 2em;  line-height: 2em;  vertical-align: middle;  text-align: center;  text-decoration: none;  color: #000;  outline: none;  border-radius: 5px;  box-shadow: 0 0 0 1px #ddd inset, 0 1px 1px #fff;position: absolute; bottom: 5px; right: 5px;"></a>
+</body>
+</html>

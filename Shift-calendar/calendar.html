@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <style>
+  body {	
+	background: url(grey.png) repeat 0 0;
+	}	
+    table {
+      border-collapse: collapse;
+	  font-size:x-large;
+	  width:90%;
+    }
+
+    td, th {
+      border: 1px solid black;
+      padding: 3px;
+      text-align: center;
+	  height:5vh;
+	  width:12%;
+    }
+
+    th {
+      font-weight: bold;
+      background-color: #E6E6E6;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div>
+	<h2 align ='center'> График на <span id="header"></span></h2>
+	<div id="calendar"></div>
+</div>
+	
+<div style="position:absolute; bottom:4%;width:90%;margin:0 auto;padding:4%">
+	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 0; monthset();" value="1 бригада"/> 
+	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 1; monthset();" value="2 бригада"/> 
+	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 2; monthset();" value="3 бригада"/> 
+	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 3; monthset();" value="4 бригада"/> 
+<br>
+	<input style = "width:98%; height:30px;"type="button" onclick="clearstorage();" value="Удалить все отметки">
+	<br><br>
+	<input style = "width:40%; height:70px;" type="button" onclick ="monthchange('back')" value="Предыдущий"/> 
+	<input style = "width:16%; height:70px; white-space:normal;" type="button" onclick ="location.reload();" value="Этот месяц"/> 	
+	<input style = "width:40%; height:70px; " type="button" onclick ="monthchange('ff')" value="Следующий"/>
+	
+</div>
+  <script>
+
+	let changemonth = 0;
+	let myshift =0;
+	let forsave = new Date();
+	forsave.setHours(0,0,0,0);
+	
+	function monthset(){
+		let today = new Date();
+		let thisdate = new Date();
+		thisdate.setDate (1);
+		thisdate.setMonth (today.getMonth() + changemonth);
+
+		let thismonth = thisdate.getMonth();
+		let thisyear = thisdate.getFullYear();
+		document.getElementById("header").innerHTML = thisdate.toLocaleString("ru",{year: 'numeric', month: 'long'});
+		createCalendar(calendar, thisyear, thismonth);
+	}
+	
+	function selectday(day,month){
+		forsave.setDate(day);
+		forsave.setMonth(month);
+		if (localStorage.getItem(forsave.valueOf()) !== null) localStorage.removeItem(forsave.valueOf());
+		else localStorage.setItem(forsave.valueOf(), "");
+		createCalendar(calendar, forsave.getFullYear(), forsave.getMonth());
+	}
+	
+	function clearstorage(){
+		for(let key in localStorage){
+			localStorage.removeItem(key);
+		}
+		document.location.reload(true);
+	}
+	
+    function createCalendar(elem, year, month) {
+
+      let d = new Date(year, month);
+
+      let table = '<table align="center"><tr><th>пн</th><th>вт</th><th>ср</th><th>чт</th><th>пт</th><th>сб</th><th>вс</th></tr><tr>';
+
+      // пробелы для первого ряда
+      // с понедельника до первого дня месяца
+      // * * * 1  2  3  4
+      for (let i = 0; i < getDay(d); i++) {
+        table += '<td></td>';
+      }
+
+      // <td> ячейки календаря с датами
+      while (d.getMonth() == month) {
+
+
+		let buf = new Date();
+		buf.setHours(0,0,0,0);
+		let dayshift = new Date(2021,02,11);
+		let nigthshift = new Date(2021,02,12);
+		
+		dayshift.setDate(dayshift.getDate()+ myshift);
+		nigthshift.setDate(nigthshift.getDate()+ myshift);
+
+		let nsdate = Math.floor(Math.abs(nigthshift - d)/(1000*60*60*24));
+		let dsdate = Math.floor(Math.abs(dayshift - d)/(1000*60*60*24));
+		let daystyle ="";
+		
+		if (Math.floor(Math.abs(buf - d)/(1000*60*60*24))==0) daystyle = daystyle + "border:3px; border-style:solid; border-color:red;"; 
+		if (nsdate % 4 ==0) 
+			daystyle = daystyle +"background-color: #444477; color:white;";
+		else if (dsdate %4 ==0)
+			daystyle = daystyle +"background-color: #eeee77;";
+			
+		if (localStorage.getItem(d.valueOf()) !== null)  daystyle = daystyle + "background-color:GreenYellow;";
+				
+		table += '<td ondblclick="selectday('+d.getDate()+','+d.getMonth()+');" style="'+daystyle +'">'+ d.getDate() + '</td>';       
+		
+		if (getDay(d) % 7 == 6) { // вс, последний день - перевод строки
+          table += '</tr><tr>';
+        }
+		
+        d.setDate(d.getDate() + 1);
+      }
+
+      // добить таблицу пустыми ячейками, если нужно
+      // 29 30 31 * * * *
+      if (getDay(d) != 0) {
+        for (let i = getDay(d); i < 7; i++) {
+          table += '<td></td>';
+        }
+      }
+
+      // закрыть таблицу
+      table += '</tr></table>';
+
+      elem.innerHTML = table;
+    }
+
+    function getDay(date) { // получить номер дня недели, от 0 (пн) до 6 (вс)
+      let day = date.getDay();
+      if (day == 0) day = 7; // сделать воскресенье (0) последним днем
+      return day - 1;
+    }
+	
+	monthset();
+    
+	function monthchange(direction){
+		changemonth = (direction=="back") ? changemonth-1:	changemonth +1;
+		monthset();
+	}
+  </script>
+
+</body>
+</html>
