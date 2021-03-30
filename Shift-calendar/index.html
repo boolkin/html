@@ -1,10 +1,10 @@
 <!DOCTYPE HTML>
-<html>
+<html  id="slider">
 
 <head>
   <style>
   body {	
-	background: url(grey.png) repeat 0 0;
+	background-color:Snow;
 	}	
     table {
       border-collapse: collapse;
@@ -30,22 +30,23 @@
 
 <body>
 
-<div>
+<div align="center">
 	<h2 align ='center'> График на <span id="header"></span></h2>
 	<div id="calendar"></div>
+<br>
+	<input id="today" style = "width:70%; height:7vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/> 	
 </div>
 	
-<div style="position:absolute; bottom:4%;width:90%;margin:0 auto;padding:4%">
-	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 0; monthset();" value="1 бригада"/> 
-	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 1; monthset();" value="2 бригада"/> 
-	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 2; monthset();" value="3 бригада"/> 
-	<input style = "width:23%; height:40px;" type="button" onclick ="myshift = 3; monthset();" value="4 бригада"/> 
+<div style="position:absolute; bottom:1%;width:90%;margin:0 auto;padding:3%">
+	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 0; monthset();" value="1 бригада"/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 1; monthset();" value="2 бригада"/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 2; monthset();" value="3 бригада"/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 3; monthset();" value="4 бригада"/> 
 <br>
-	<input style = "width:98%; height:30px;"type="button" onclick="clearstorage();" value="Удалить все отметки">
+	<input style = "width:97%; height:5vh"type="button" onclick="clearstorage();" value="Удалить все отметки">
 	<br><br>
-	<input style = "width:40%; height:70px;" type="button" onclick ="monthchange('back')" value="Предыдущий"/> 
-	<input style = "width:16%; height:70px; white-space:normal;" type="button" onclick ="location.reload();" value="Этот месяц"/> 	
-	<input style = "width:40%; height:70px; " type="button" onclick ="monthchange('ff')" value="Следующий"/>
+	<input style = "width:48%; height:4vh;" type="button" onclick ="monthchange('back')" value="<<< Предыдущий"/> 
+	<input style = "width:48%; height:4vh; " type="button" onclick ="monthchange('ff')" value="Следующий >>>"/>
 	
 </div>
   <script>
@@ -54,13 +55,31 @@
 	let myshift =0;
 	let forsave = new Date();
 	forsave.setHours(0,0,0,0);
-	
+	let touchstartX = 0;
+	let touchendX = 0;
+
+	const slider = document.getElementById('slider');
+
+	function handleGesture() {
+		if (touchendX+120 < touchstartX) monthchange('ff');
+		if (touchendX -120 > touchstartX) monthchange('back');
+	}
+	slider.addEventListener('touchstart', e => {
+		touchstartX = e.changedTouches[0].screenX;
+		});
+
+	slider.addEventListener('touchend', e => {
+		touchendX = e.changedTouches[0].screenX;
+		handleGesture();
+		});
+
 	function monthset(){
 		let today = new Date();
 		let thisdate = new Date();
 		thisdate.setDate (1);
 		thisdate.setMonth (today.getMonth() + changemonth);
 
+ document.getElementById('today').value = "Сегодня "+ today.toLocaleString("ru",{year: 'numeric', month: 'long',day:'numeric'});
 		let thismonth = thisdate.getMonth();
 		let thisyear = thisdate.getFullYear();
 		document.getElementById("header").innerHTML = thisdate.toLocaleString("ru",{year: 'numeric', month: 'long'});
@@ -151,7 +170,8 @@
 	monthset();
     
 	function monthchange(direction){
-		changemonth = (direction=="back") ? changemonth-1:	changemonth +1;
+	if (direction=="zero") changemonth=0;
+	else	changemonth = (direction=="back") ? changemonth-1:	changemonth +1;
 		monthset();
 	}
   </script>
