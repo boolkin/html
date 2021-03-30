@@ -1,3 +1,6 @@
+<!DOCTYPE HTML>
+<html>
+<head>
 <script type="text/javascript">
 function calc1(){
 var radios = document.getElementsByName('timeformat');
@@ -32,7 +35,8 @@ document.getElementById('spdft').innerHTML = "м/с";
 } 
 }
 </script>
-
+</head>
+<body>
 <b>Расчет расстояния и ускорения онлайн</b>
 <form oninput="calc1()" onsubmit="return false;">
 Скорость метры в 
@@ -49,5 +53,6 @@ document.getElementById('spdft').innerHTML = "м/с";
 Расстояние: <strong><output id="path"></output></strong> м<br>
 Ускорение: <strong><output id="aa"></output></strong> (<output id="spdft">м/с</output>)/c 
 </form>
-
+</body>
+</html>
 
