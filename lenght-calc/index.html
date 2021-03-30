@@ -6,53 +6,53 @@
 function calc1(){
 var radios = document.getElementsByName('timeformat');
 for (var i = 0, length = radios.length; i < length; i++) {
-	if (radios[i].checked) ratio = (radios[i].value); // единицы измерения
+	if (radios[i].checked) ratio = (radios[i].value); // РµРґРёРЅРёС†С‹ РёР·РјРµСЂРµРЅРёСЏ
 }
 var ss,se,a,t,p;
- ss = parseFloat(document.getElementById('speedstart').value); //стартовая скорость v1
- se = parseFloat(document.getElementById('speedend').value); //конечная скорость v2
- t = parseFloat(document.getElementById('time').value); //время
+ ss = parseFloat(document.getElementById('speedstart').value); //СЃС‚Р°СЂС‚РѕРІР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ v1
+ se = parseFloat(document.getElementById('speedend').value); //РєРѕРЅРµС‡РЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ v2
+ t = parseFloat(document.getElementById('time').value); //РІСЂРµРјСЏ
 
-a = ((se/ratio-ss/ratio)/t).toFixed(5); //ускорение a = (v2-v1)/t
-p = ss/ratio*t+(a*t*t/2); //путь p = v1*t + (a*t^2)/2
+a = ((se/ratio-ss/ratio)/t).toFixed(5); //СѓСЃРєРѕСЂРµРЅРёРµ a = (v2-v1)/t
+p = ss/ratio*t+(a*t*t/2); //РїСѓС‚СЊ p = v1*t + (a*t^2)/2
 
 document.getElementById('path').innerHTML = p.toFixed(2);
 document.getElementById('aa').innerHTML = (a*ratio).toFixed(2);
 
 if (ratio==60) {
-document.getElementById('spdfo').innerHTML = "м/мин";
-document.getElementById('spdfd').innerHTML = "м/мин";
-document.getElementById('spdft').innerHTML = "м/мин";
+document.getElementById('spdfo').innerHTML = "Рј/РјРёРЅ";
+document.getElementById('spdfd').innerHTML = "Рј/РјРёРЅ";
+document.getElementById('spdft').innerHTML = "Рј/РјРёРЅ";
 }
 else if (ratio==3600)
 {
-document.getElementById('spdfo').innerHTML = "м/час";
-document.getElementById('spdfd').innerHTML = "м/час";
-document.getElementById('spdft').innerHTML = "м/час";
+document.getElementById('spdfo').innerHTML = "Рј/С‡Р°СЃ";
+document.getElementById('spdfd').innerHTML = "Рј/С‡Р°СЃ";
+document.getElementById('spdft').innerHTML = "Рј/С‡Р°СЃ";
 } else {
-document.getElementById('spdfo').innerHTML = "м/с";
-document.getElementById('spdfd').innerHTML = "м/с";
-document.getElementById('spdft').innerHTML = "м/с";
+document.getElementById('spdfo').innerHTML = "Рј/СЃ";
+document.getElementById('spdfd').innerHTML = "Рј/СЃ";
+document.getElementById('spdft').innerHTML = "Рј/СЃ";
 } 
 }
 </script>
 </head>
 <body>
-<b>Расчет расстояния и ускорения онлайн</b>
+<b>Р Р°СЃС‡РµС‚ СЂР°СЃСЃС‚РѕСЏРЅРёСЏ Рё СѓСЃРєРѕСЂРµРЅРёСЏ РѕРЅР»Р°Р№РЅ</b>
 <form oninput="calc1()" onsubmit="return false;">
-Скорость метры в 
-<label><input checked="" name="timeformat" onchange="calc1()" type="radio" value="1" /> секунду </label>
-<label><input name="timeformat" onchange="calc1()" type="radio" value="60" /> минуту </label>
-<label><input name="timeformat" onchange="calc1()" type="radio" value="3600" /> час </label><br />
-Скорость начальная: <input id="speedstart" style="width: 100px;" type="number" value ="0"/> <output id="spdfo"> м/с</output>
+РЎРєРѕСЂРѕСЃС‚СЊ РјРµС‚СЂС‹ РІ 
+<label><input checked="" name="timeformat" onchange="calc1()" type="radio" value="1" /> СЃРµРєСѓРЅРґСѓ </label>
+<label><input name="timeformat" onchange="calc1()" type="radio" value="60" /> РјРёРЅСѓС‚Сѓ </label>
+<label><input name="timeformat" onchange="calc1()" type="radio" value="3600" /> С‡Р°СЃ </label><br />
+РЎРєРѕСЂРѕСЃС‚СЊ РЅР°С‡Р°Р»СЊРЅР°СЏ: <input id="speedstart" style="width: 100px;" type="number" value ="0"/> <output id="spdfo"> Рј/СЃ</output>
 <br>
-Скорость конечная: <input id="speedend" style="width: 100px;" type="number" value ="100"/> <output id="spdfd"> м/с</output>
+РЎРєРѕСЂРѕСЃС‚СЊ РєРѕРЅРµС‡РЅР°СЏ: <input id="speedend" style="width: 100px;" type="number" value ="100"/> <output id="spdfd"> Рј/СЃ</output>
 <br>
-Время: <input id="time" style="width: 100px;" type="number" value ="10"/> с
+Р’СЂРµРјСЏ: <input id="time" style="width: 100px;" type="number" value ="10"/> СЃ
 
 <br>
-Расстояние: <strong><output id="path"></output></strong> м<br>
-Ускорение: <strong><output id="aa"></output></strong> (<output id="spdft">м/с</output>)/c 
+Р Р°СЃСЃС‚РѕСЏРЅРёРµ: <strong><output id="path"></output></strong> Рј<br>
+РЈСЃРєРѕСЂРµРЅРёРµ: <strong><output id="aa"></output></strong> (<output id="spdft">Рј/СЃ</output>)/c 
 </form>
 </body>
 </html>
