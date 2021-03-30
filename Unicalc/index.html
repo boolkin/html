@@ -1,0 +1,71 @@
+<html>
+<head>
+    <style>
+input {font-size: 200%;}
+tr {background-color: RGBA(150, 210, 220, 0.6);}
+
+ body {
+    background-image: url('bg.jpg'); /* Путь к фоновому изображению */
+   background-repeat: no-repeat;
+   background-size: cover;
+   }
+</style>
+
+    <script>
+
+function calc() {
+imin = Number(document.getElementById('inputmin').value);
+imax = Number(document.getElementById('inputmax').value);
+ival = Number(document.getElementById('inputvalue').value);
+omin = Number(document.getElementById('outmin').value);
+omax = Number(document.getElementById('outmax').value);
+xval = (ival-imin)/(imax-imin);
+oval = (xval*(omax-omin) + omin).toFixed(2);
+document.getElementById('outvalue').innerHTML = oval;
+}
+</script>
+</head>
+<body>
+<br />
+<form oninput="calc()" onsubmit="return false;">
+    <table align="center" width="100%">
+
+        <tr align="center" style="font-size: 150%;">
+            <td colspan="2" width="100%">Диапазон Входа</td>
+        </tr>
+        <tr align="center">
+            <td>от</td>
+            <td>до</td>
+        </tr>
+        <tr align="center">
+            <td><input id="inputmin" style="width: 100%; text-align:center" title="Вход от" type="number"/></td>
+            <td><input id="inputmax" style="width: 100%;text-align:center" title="Вход до" type="number"/></td>
+        </tr>
+        <tr align="center" style="font-size: 150%;">
+            <td colspan="2" width="100%">Вход</td>
+        </tr>
+        <tr align="center">
+            <td colspan="2" width="100%"><input id="inputvalue" style="width: 100%; text-align:center" title="На входе" type="number" /></td>
+        </tr>
+        <tr align="center" style="font-size: 150%;">
+            <td colspan="2" width="100%">Диапазон Выхода</td>
+        </tr>
+        <tr align="center" >
+            <td>от</td>
+            <td>до</td>
+        </tr>
+        <tr>
+            <td><input id="outmin" style="width: 100%; text-align:center" title="Выход от" type="number" /></td>
+            <td><input id="outmax" style="width: 100%; text-align:center" title="Выход до" type="number" /></td>
+        </tr>
+        <tr align="center" style="font-size: 150%;">
+            <td colspan="2" width="100%">Выход</td>
+        </tr>
+        <tr align="center" style="font-size: 150%;">
+            <td colspan="2" width="100%" align="center" title="На выходе"><output style="font-size: 150%;" id="outvalue" >0</output></td>
+        </tr>
+
+    </table>
+</form>
+</body>
+</html>

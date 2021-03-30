@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>Bulls an cows</title>
+
+<style>
+body { background-color: #ffffff; }
+   div {
+	border-radius: 50%;
+	width:  9vw;
+ 	height: 9vw;
+ 	margin-left: 1vw;
+  	display: inline-block;
+	}
+div.c0 {
+background-color: green;
+}
+div.c1 {
+background-color: yellow;
+}
+div.c2 {
+background-color: purple;
+}
+div.c3 {
+background-color: orange;
+}
+div.c4 {
+background-color: blue;
+}
+div.c5 {
+background-color: red;
+}
+div.c6 {
+background-color: white;
+}
+div.c8 {
+background-color: black;
+}
+div.c9 {
+background-color: gray;
+}
+.btn{
+height:16vw; width:16vw;
+font-size: 2vw;
+}
+@media screen and (orientation: landscape) { 
+  div {   	
+	width:  10vh;
+ 	height: 10vh;
+ 	margin-left: 1vh;
+	}
+	.btn{
+height:10vh; width:10vh;font-size: 1vw;
+}
+}
+
+</style>
+</head>
+<body>
+
+<table align="center" width="99%" style="position: absolute; bottom: 4vw; margin-inline-start: 0; margin-inline-end: 0;">
+<tbody><tr><td id="cup" colspan="2" border="0"></td></tr>
+<tr><td colspan="2"><hr></td></tr>
+<tr><td id="box"></td><td><div class="c6"></div></td></tr>
+<tr>
+	<td id="colors" align="center"><div class="c0" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c1" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c2" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><br><div class="c3" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c4" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c5" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div></td>
+	<td>
+		<input type="button" onclick="checkset()" class="btn" value="Проверить">
+		<input type="button" value="Новая игра" onclick="newgame()" class="btn"><br>
+		<input type="button" value="Очистить поле" onclick="clears()" class="btn">
+		<input type="button" value="Как играть" onclick="alert ("Ваша задача угадать случайную последовательность из 4 цветов, выбирая цвета из предложенных. Если выбранный цвет есть в загаданной последовательности, то он отмечается серым цветом, если этот цвет стоит на своем месте, то черным. Цвета могут повторяться")" class="btn">
+	</td>
+</tr>
+
+
+</tbody></table>
+
+<script>
+
+setTimeout('fillcolors()', 0);
+let count=0;
+let win=false;
+let yourset =[];
+let randset = [];
+let tryes =0;
+function fillcolors(){
+	let colors = "";
+	let ss= "";
+	let style="";
+	
+	if(window.innerHeight > window.innerWidth){
+	style=" style='width: 16vw; height: 16vw;	margin-left: 2vw;'";
+		}
+	for (let i = 0;i<6;i++){
+	  colors = colors + "<div class = 'c"+i+"' onclick = 'select(this.className)' "+style+ "></div>";
+	  if (i==2) colors = colors + "<br>";
+	}
+	document.getElementById("colors").innerHTML = colors;
+	for (let j=0;j<4;j++) {
+		randset[j] = "c"+Math.floor(Math.random() * 6);
+		ss=ss+randset[j]+ " ";
+	}
+	console.log (ss);
+}
+
+function select (clname)
+{
+	if (count<4)
+	{
+		let circle = document.createElement("div");
+		circle.className = clname;
+		document.getElementById("box").append(circle);
+		yourset[count] = clname;
+		count++;
+	}
+}
+function clears (){
+	document.getElementById("box").innerHTML="";
+
+	count=0;
+	yourset =[];
+}
+function checkset (){
+	if (count <4) alert ("Нужно заполнить 4 цвета");
+	else {
+		tryes++;
+		let bulls =0;
+		let cows=0;
+		let randsetcopy = [];
+		let cup = document.createElement("p");
+		cup.style = "margin-block-start: 0em; margin-block-end: 0em;";
+		document.getElementById("cup").append(cup);
+
+		for (let i=0;i<4;i++){
+			randsetcopy[i] = randset[i];
+			if (yourset[i]==randset[i]) {
+				randsetcopy[i] = "bull"; 
+				yourset[i] = "bull";
+				bulls++;
+			}
+		}
+
+		for (let j=0;j<4;j++) 
+			if (randsetcopy[j]!="bull") for (let k=0;k<4;k++)
+				if (yourset[k]==randsetcopy[j] && yourset[k]!="cow") { yourset[k] = "cow"; randsetcopy[j] = "cow"; cows++;} 
+
+		let result="<div class='c6'></div>";
+		for (let b=0;b<bulls;b++) result=result + "<div class='c8'></div>";
+		for (let c=0;c<cows;c++) result=result + "<div class='c9'></div>";
+		cup.innerHTML = "<span style='position: relative; bottom: 3vw;font-size: 2vw;'>"+tryes+"</span>"+ document.getElementById("box").innerHTML + result;
+		if (bulls==4) {
+			alert("Вы угадали! Количество попыток: " +tryes);
+			newgame();
+		}
+		clears();
+
+	}
+}
+
+function newgame(){
+	clears();
+	document.getElementById("cup").innerHTML="";
+	fillcolors();
+	tryes=0;
+}
+</script>
+
+ 
+</body>
+</html>
