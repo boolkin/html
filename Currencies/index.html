@@ -1,0 +1,19 @@
+currencies<script>
+let xhr = new XMLHttpRequest();
+xhr.open('GET', 'https://www.cbr-xml-daily.ru/daily_json.js', false);
+xhr.send();
+let data = JSON.parse(xhr.response);
+
+let currences = ["usd","eur","kzt"]
+let valutes = data['Valute'];
+let text='';
+
+for (i=0; i<currences.length; i++) {
+	let item = valutes[currences[i].toUpperCase()];
+	let val = (item['Nominal']>1) ? Math.round(item['Nominal']/item['Value']*100)/100 : Math.round(item['Value']*100)/100;
+	let char= (item['Nominal']>1) ? item['CharCode'] + '*': item['CharCode'];
+	text = text + char + '  ' + val + '</br>';	 
+}
+
+document.write(text);
+</script>

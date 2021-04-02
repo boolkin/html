@@ -4,6 +4,9 @@
   <title>Bulls an cows</title>
 
 <style>
+  * {
+      touch-action: manipulation;
+  }
 body { background-color: #ffffff; }
    div {
 	border-radius: 50%;
@@ -68,7 +71,7 @@ height:10vh; width:10vh;font-size: 1vw;
 		<input type="button" onclick="checkset()" class="btn" value="Проверить">
 		<input type="button" value="Новая игра" onclick="newgame()" class="btn"><br>
 		<input type="button" value="Очистить поле" onclick="clears()" class="btn">
-		<input type="button" value="Как играть" onclick="alert ("Ваша задача угадать случайную последовательность из 4 цветов, выбирая цвета из предложенных. Если выбранный цвет есть в загаданной последовательности, то он отмечается серым цветом, если этот цвет стоит на своем месте, то черным. Цвета могут повторяться")" class="btn">
+		<input type="button" value="Как играть" onclick="alert ('Ваша задача угадать случайную последовательность из 4 цветов, выбирая цвета из предложенных. Если выбранный цвет есть в загаданной последовательности, то он отмечается серым цветом, если этот цвет стоит на своем месте, то черным. Цвета могут повторяться')" class="btn">
 	</td>
 </tr>
 
