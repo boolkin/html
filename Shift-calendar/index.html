@@ -34,10 +34,12 @@
 <body>
 
 <div align="center">
-	<h2 align ='center'> График на <span id="header"></span></h2>
+	<h2 align ='center'>График на <span id="header"></span></h2>
 	<div id="calendar"></div>
 <br>
-	<input id="today" style = "width:70%; height:7vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/> 	
+	<input id="today" style = "width:70%; height:7vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/>
+	<div id ="sh-counters"></div>
+	<div id ="dn-counters"></div>
 </div>
 	
 <div style="position:absolute; bottom:1%;width:90%;margin:0 auto;padding:3%">
@@ -60,7 +62,8 @@
 	forsave.setHours(0,0,0,0);
 	let touchstartX = 0;
 	let touchendX = 0;
-
+	
+	//slider function from stack-overflow
 	const slider = document.getElementById('slider');
 
 	function handleGesture() {
@@ -81,8 +84,7 @@
 		let thisdate = new Date();
 		thisdate.setDate (1);
 		thisdate.setMonth (today.getMonth() + changemonth);
-
- document.getElementById('today').value = "Сегодня "+ today.toLocaleString("ru",{year: 'numeric', month: 'long',day:'numeric'});
+		document.getElementById('today').value = "Сегодня "+ today.toLocaleString("ru",{year: 'numeric', month: 'long',day:'numeric'});
 		let thismonth = thisdate.getMonth();
 		let thisyear = thisdate.getFullYear();
 		document.getElementById("header").innerHTML = thisdate.toLocaleString("ru",{year: 'numeric', month: 'long'});
@@ -92,8 +94,9 @@
 	function selectday(day,month){
 		forsave.setDate(day);
 		forsave.setMonth(month);
-		if (localStorage.getItem(forsave.valueOf()) !== null) localStorage.removeItem(forsave.valueOf());
-		else localStorage.setItem(forsave.valueOf(), "");
+		if (localStorage.getItem(forsave.valueOf()) == "r") localStorage.removeItem(forsave.valueOf());
+		else if (localStorage.getItem(forsave.valueOf()) == "g") localStorage.setItem(forsave.valueOf(), "r");
+		else localStorage.setItem(forsave.valueOf(), "g");
 		createCalendar(calendar, forsave.getFullYear(), forsave.getMonth());
 	}
 	
@@ -116,7 +119,8 @@
       for (let i = 0; i < getDay(d); i++) {
         table += '<td></td>';
       }
-
+		let nightscount = 0;
+		let dayscount = 0;
       // <td> ячейки календаря с датами
       while (d.getMonth() == month) {
 
@@ -134,15 +138,21 @@
 		let daystyle ="";
 		
 		if (Math.floor(Math.abs(buf - d)/(1000*60*60*24))==0) daystyle = daystyle + "border:3px; border-style:solid; border-color:red;"; 
-		if (nsdate % 4 ==0) 
+		if (nsdate % 4 ==0) {
 			daystyle = daystyle +"background-color: #444477; color:white;";
-		else if (dsdate %4 ==0)
+			nightscount++;
+			}
+		else if (dsdate %4 ==0){
 			daystyle = daystyle +"background-color: #eeee77;";
-			
-		if (localStorage.getItem(d.valueOf()) !== null)  daystyle = daystyle + "background-color:GreenYellow;";
+			dayscount++;
+			}
+		if (localStorage.getItem(d.valueOf()) == "g") daystyle = daystyle + "background-color:GreenYellow;";
+		else if (localStorage.getItem(d.valueOf()) == "r") daystyle = daystyle + "background-color:Pink;";
 				
 		table += '<td ondblclick="selectday('+d.getDate()+','+d.getMonth()+');" style="'+daystyle +'">'+ d.getDate() + '</td>';       
-		
+		document.getElementById("dn-counters").innerHTML = "Дневных " + dayscount + ", ночных "+nightscount;
+		let shifts = dayscount + nightscount;
+		document.getElementById("sh-counters").innerHTML = "Всего смен " + shifts + ", часов " + shifts *11;
 		if (getDay(d) % 7 == 6) { // вс, последний день - перевод строки
           table += '</tr><tr>';
         }
