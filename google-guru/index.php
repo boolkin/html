@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>Тест на умение гуглить</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css" type="text/css"/>
+<meta charset="utf-8">
+<meta name="description" content="Google-guru.cf: Пройдите тест и получите сертификать, чтобы знать как хорошо вы умеете гуглить">
+<meta name="keywords" content="google test, тест на умение гуглить, сертификат Google-guru, гуру гугла, googleguru" />
+
+</head>
+  <body>
+<center><h2>Как хорошо вы умеете "гуглить"?</h2>
+<div style="font-size: 120%; width: 100%; max-width: 400px; margin: 0 auto; "><p id="fieldout"><input style="height:35px;width: 300px;font-size: 100%;" type="text" id="name" value=""><br>Введите свое имя и нажмите "Далее" чтобы начать тест. На это имя будет выдан сертификат, если результат будет больше 50%. Всего будет задано 3 вопроса с вариантами ответов.</p></div>
+<input id="nextbtn" class="button" type="button" value="Далее" onClick="next()">
+<input id="printbtn" class="button" type="button" hidden="" value="Показать сертификат" onClick="printcert()">
+
+<button id="downbtn" class="button" hidden="" onclick="saveCanvasAsImageFile()">Сохранить мой сертификат</button></center>
+
+<br/><div style="width: 95%; max-width: 800px; margin: 0 auto; "><canvas style="width: 100%; height: auto; " id="myCanvas"></canvas></div>
+
+<script>
+var i=0, q=[], answer=0, answer1=0, result=0, name;
+var proc;
+var canvas = document.getElementById('myCanvas');
+var context = canvas.getContext('2d');
+var imageObj = new Image();
+imageObj.src = "certificateblank.png";
+
+q[0]="Как называется северный район южного острова Новой Зеландии? <br /><br /><div style='text-align:left;'><label><input name='god' type='radio' value='1' onchange='choosed()'> Винстон</label><br>" +"<label><input name='god' type='radio' value='2' onchange='choosed()'> Соверин</label><br><label><input name='god' type='radio' value='4' onchange='choosed()'> Мальборо</label></div><br>";
+q[1]="Если некий товар дорожает, но при этом его потребление возрастает. Как называется это явление? <br /><br /><div style='text-align:left;'><label><input name='god' type='radio' value='8' onchange='choosed()'> Парадокс Гиффена</label><br>" +"<label><input name='god' type='radio' value='16' onchange='choosed()'> Парадокс Баффета</label><br><label><input name='god' type='radio' value='32' onchange='choosed()'> Парадокс Маршалла</label></div><br>";
+q[2]="Как называется Шэнмуфэн по непальски? <br /><br /><div style='text-align:left;'><label><input name='god' type='radio' value='64' onchange='choosed()'> Гуркхали</label><br>" +"<label><input name='god' type='radio' value='128' onchange='choosed()'> Сагарматха</label><br><label><input name='god' type='radio' value='256' onchange='choosed()'> Бухдейна</label></div><br>";
+var myFont = new FontFace('Old Standard TT Italic', 'url(19413.ttf)');
+	myFont.load().then(function(font){
+	// with canvas, if this is ommited won't work
+	document.fonts.add(font);
+	console.log('Font loaded');
+});
+function printcert(){
+	var date = new Date();
+	var options = {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',    
+	};
+    var ddmmyy=date.toLocaleString("ru", options);
+		canvas.width="800";
+        canvas.height="565";
+	    context.drawImage(imageObj, 0, 0);
+		context.save();
+        context.font = "30pt fantasy";
+        context.textAlign = "center";
+       	context.font = "italic 14pt Calibri";
+		context.fillText(proc+"%", 544, 357); 
+		context.fillText(ddmmyy, 300, 468); 
+		context.font = "italic 35pt Old Standard TT Italic";
+		context.fillStyle = "#51aac0";
+		context.fillText(name, 443, 262); 
+		document.getElementById('printbtn').hidden = "true";
+		document.getElementById('downbtn').hidden = "";
+		context.restore();
+}
+function getImage(canv){
+    var imageData = canv.toDataURL("image/png").replace(/^data:image\/[^;]/, 'data:application/octet-stream');
+    var image = new Image();
+    image.src = imageData;
+    return image;
+}
+ 
+function saveImage(image) {
+    var link = document.createElement("a");
+    link.setAttribute("href", image.src);
+    link.setAttribute("download", "googleguru.png");
+    link.click();
+}
+
+function saveCanvasAsImageFile(){
+    var image = getImage(document.getElementById("myCanvas"));
+    saveImage(image);
+}
+function choosed(){
+	var radios = document.getElementsByName('god');
+	answer= (radios[0].checked)? +radios[0].value : (radios[1].checked)? +radios[1].value : (radios[2].checked)? +radios[2].value : 0;
+}
+function next(){
+    if (document.getElementById('name')) name=document.getElementById('name').value;
+	if (answer==answer1) answer=0; else answer1=answer;
+	result=+result +answer;
+  	document.getElementById('fieldout').innerHTML = q[i];
+	if (i==3) {
+    	var check = result & 0x8c;
+        var count1=check.toString(2).split('1').length-1;
+        proc= (count1==3)? '100':(count1==2)? '66':(count1==1)? '33': '0';
+		if (name=="") name="Человек Без Имени";
+		document.getElementById('fieldout').innerHTML =  "Тест закончен, "+name+". </br>Поздравляем! Ваш результат " +proc+ "% ";
+		document.getElementById('nextbtn').hidden = "true";
+		if (proc>=50) {document.getElementById('printbtn').hidden = "";}
+		else {document.getElementById('fieldout').innerHTML =  "Тест закончен, "+name+". </br> Ваш результат всего лишь " +proc+ "% <br>Нажмите <a href='https://www.google.ru/search?q=%D0%BA%D0%B0%D0%BA+%D0%BD%D0%B0%D1%83%D1%87%D0%B8%D1%82%D1%8C%D1%81%D1%8F+%D0%B3%D1%83%D0%B3%D0%BB%D0%B8%D1%82%D1%8C' target='_blank'>сюда</a>, чтобы научиться гуглить лучше.";}
+		} else {
+		i++;
+		}
+}
+</script>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript" >
+   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+   m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+   ym(73761769, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true
+   });
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/73761769" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+</body>
+</html>
