@@ -23,12 +23,12 @@ https://boolkin.github.io/on-off-simulator/
 
 
 Currencies js widget (usd,eur,kzt)  
-https://boolkin.github.io/html/Currencies
+https://boolkin.github.io/html/Currencies/
 
 
 WebViewApp to save any html/js app as separate application in Android  
-https://boolkin.github.io/html/WebViewApp  
+https://boolkin.github.io/html/WebViewApp/  
 
 
 Google-guru test with certificate  
-https://boolkin.github.io/html/google-guru  
+https://boolkin.github.io/html/google-guru/index.html  
