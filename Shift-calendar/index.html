@@ -1,60 +1,83 @@
 <!DOCTYPE HTML>
 <html  id="slider">
-
 <head>
-  <style>
+
+<style>
     * {
-      touch-action: manipulation;
-  }
-  body {	
-	background-color:Snow;
-	}	
+		touch-action: manipulation;
+	}
+	body {	
+		background-color:Snow;
+		font-size:3vh;
+	}
+	input{
+		font-size:2.5vh;
+	}
+	p {
+		margin:0.3em;
+		font-size:5vh;
+	}
     table {
-      border-collapse: collapse;
-	  font-size:x-large;
-	  width:90%;
+		border-collapse: collapse;
+		font-size:4vh;
+		width:90%;
+		
     }
-
     td, th {
-      border: 1px solid black;
-      padding: 3px;
-      text-align: center;
-	  height:5vh;
-	  width:12%;
+		border: 1px solid black;
+		padding: 3px;
+		text-align: center;
+		height:5vh;
+		width:12%;
     }
-
     th {
-      font-weight: bold;
-      background-color: #E6E6E6;
+		font-weight: bold;
+		background-color: #E6E6E6;
     }
+	#content{
+		margin: 0 auto ;
+		max-width: 450px;
+		position:relative;
+	}
+	@media (orientation: portrait) {
+		#content{
+			max-width:100%;
+		}
+	}
 
-  </style>
+</style>
 </head>
 
 <body>
 
-<div align="center">
-	<h2 align ='center'>График на <span id="header"></span></h2>
-	<div id="calendar"></div>
-<br>
-	<input id="today" style = "width:70%; height:7vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/>
-	<div id ="sh-counters"></div>
-	<div id ="dn-counters"></div>
-</div>
-	
-<div style="position:absolute; bottom:1%;width:90%;margin:0 auto;padding:3%">
-	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 0; monthset();" value="1 бригада"/> 
-	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 1; monthset();" value="2 бригада"/> 
-	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 2; monthset();" value="3 бригада"/> 
-	<input style = "width:23%; height:8vh;" type="button" onclick ="myshift = 3; monthset();" value="4 бригада"/> 
-<br>
+
+
+<div id="content" align="center">
+<div id="settings" style="display:none;">
+	<p style="font-size:1em;">Дважды щелкнуть по дню чтобы выделить его зеленым цветом. Если щелкнуть дважды по зеленому полю, оно станет красным. Если щелкнуть по красному дважды, то вернется в свое первоначальное состояние.</p>
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 0); monthset();" value="1 бригада"/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 1); monthset();" value="2 бригада"/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 2); monthset();" value="3 бригада"/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 3); monthset();" value="4 бригада"/> 
+	<br>
 	<input style = "width:97%; height:5vh"type="button" onclick="clearstorage();" value="Удалить все отметки">
 	<br><br>
 	<input style = "width:48%; height:4vh;" type="button" onclick ="monthchange('back')" value="<<< Предыдущий"/> 
 	<input style = "width:48%; height:4vh; " type="button" onclick ="monthchange('ff')" value="Следующий >>>"/>
-	
 </div>
-  <script>
+	<p align ='center'>График на <span id="header"></span></p>
+	<div id="calendar"></div>
+	<br>
+	<input id="today" style = "width:70%; height:7vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/>
+	<div id ="sh-counters"></div>
+	<div id ="dn-counters"></div>
+</div>
+
+<div style="position:absolute; top:1%;right:1%;">
+	<input type="button" onclick ="togglesettings()" style="font-size:4vh;" value="≡"/> 	
+</div>	
+	
+<script>
 
 	let changemonth = 0;
 	let myshift =0;
@@ -63,7 +86,7 @@
 	let touchstartX = 0;
 	let touchendX = 0;
 	
-	//slider function from stack-overflow
+	//slider function from stack-overflow to change month by slide to right-left
 	const slider = document.getElementById('slider');
 
 	function handleGesture() {
@@ -130,6 +153,8 @@
 		let dayshift = new Date(2021,02,11);
 		let nigthshift = new Date(2021,02,12);
 		
+		if (localStorage.getItem('storedshift') != null) myshift = parseInt(localStorage.getItem('storedshift')); else myshift=0;
+		
 		dayshift.setDate(dayshift.getDate()+ myshift);
 		nigthshift.setDate(nigthshift.getDate()+ myshift);
 
@@ -183,9 +208,14 @@
 	monthset();
     
 	function monthchange(direction){
-	if (direction=="zero") changemonth=0;
-	else	changemonth = (direction=="back") ? changemonth-1:	changemonth +1;
+		if (direction=="zero") changemonth=0;
+			else changemonth = (direction=="back") ? changemonth-1:	changemonth +1;
 		monthset();
+	}
+	
+	function togglesettings(){
+		var x = document.getElementById("settings");
+		x.style.display = (x.style.display === "none") ? "block" : "none";		
 	}
   </script>
 
