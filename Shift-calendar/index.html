@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html  id="slider">
 <head>
+<link rel="shortcut icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAYAAABWk2cPAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAADeSURBVEhLzZNJDsIwDEU5HEW0PQwSww6ph8sZyjKLSHANo1hQmdTNPPAlq3US6yX+yQ4ayAs6TROG+a9Fx+nXpiCob7jUpr1CCKgdCJVSYlvm+YGDSinM9Tidz5X/QLcWxeTf4ObbtZcqR94PV9h3Zwxuvgh0HE9wON7qQzvXSWsHe9LX876Ezl3tovKp94ba2kXlU+8F7YcLFsRCzfr/8ZRK5+ud298hFVcfBU29WNHQlIvVztNUj0LrEZrqUWj9As35+Km4vJ2n5s5Le8xCS3u8CS3pcRtPPxuoKIA3IkAxzZg1dXIAAAAASUVORK5CYII=" />
 
 <style>
     * {
@@ -8,18 +9,18 @@
 	}
 	body {	
 		background-color:Snow;
-		font-size:3vh;
+		font-size:2.5vh;
 	}
 	input{
 		font-size:2.5vh;
 	}
 	p {
 		margin:0.3em;
-		font-size:5vh;
+		font-size:3.5vh;
 	}
     table {
 		border-collapse: collapse;
-		font-size:4vh;
+		font-size:3.5vh;
 		width:90%;
 		
     }
@@ -27,7 +28,7 @@
 		border: 1px solid black;
 		padding: 3px;
 		text-align: center;
-		height:5vh;
+		height:4vh;
 		width:12%;
     }
     th {
@@ -54,11 +55,11 @@
 
 <div id="content" align="center">
 <div id="settings" style="display:none;">
-	<p style="font-size:1em;">Дважды щелкнуть по дню чтобы выделить его зеленым цветом. Если щелкнуть дважды по зеленому полю, оно станет красным. Если щелкнуть по красному дважды, то вернется в свое первоначальное состояние.</p>
-	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 0); monthset();" value="1 бригада"/> 
-	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 1); monthset();" value="2 бригада"/> 
-	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 2); monthset();" value="3 бригада"/> 
-	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 3); monthset();" value="4 бригада"/> 
+	<p style="font-size:1em;">Дважды щелкнуть по дню чтобы выделить его зеленым цветом. Если щелкнуть дважды по зеленому полю, оно станет красным. Если щелкнуть по красному дважды, то вернется в свое первоначальное состояние. Поменять номер бригады можно кнопками ниже.</p>
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 0); monthset();" value="1 бр."/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 1); monthset();" value="2 бр."/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 2); monthset();" value="3 бр."/> 
+	<input style = "width:23%; height:8vh;" type="button" onclick ="localStorage.setItem('storedshift', 3); monthset();" value="4 бр."/> 
 	<br>
 	<input style = "width:97%; height:5vh"type="button" onclick="clearstorage();" value="Удалить все отметки">
 	<br><br>
@@ -68,7 +69,7 @@
 	<p align ='center'>График на <span id="header"></span></p>
 	<div id="calendar"></div>
 	<br>
-	<input id="today" style = "width:70%; height:7vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/>
+	<input id="today" style = "width:70%; height:6vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/>
 	<div id ="sh-counters"></div>
 	<div id ="dn-counters"></div>
 </div>
