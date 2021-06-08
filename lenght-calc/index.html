@@ -1,6 +1,18 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+<style>
+	*{
+	//font-size:1.1em;
+	}
+	div{
+		border: 2px solid black; 
+		display:inline-block;
+		padding: 0.3em;
+		font-family:monospace;
+		//font-size:1em;
+	}
+</style>
 <meta charset="utf-8">
 <script type="text/javascript">
 function calc1(){
@@ -18,6 +30,7 @@ p = ss/ratio*t+(a*t*t/2); //путь p = v1*t + (a*t^2)/2
 
 document.getElementById('path').innerHTML = p.toFixed(2);
 document.getElementById('aa').innerHTML = (a*ratio).toFixed(2);
+document.getElementById('aams').innerHTML= (a*1).toFixed(2) + " м/с2"
 
 if (ratio==60) {
 document.getElementById('spdfo').innerHTML = "м/мин";
@@ -39,21 +52,30 @@ document.getElementById('spdft').innerHTML = "м/с";
 </head>
 <body>
 <b>Расчет расстояния и ускорения онлайн</b>
+<hr>
+Ускорение <div>	a = (v<sub>2</sub>-v<sub>1</sub>)/t	</div>
+<br>
+Путь <div>	p = v<sub>1</sub>*t + (a*t<sup>2</sup>)/2	</div>
+<br>
+<br>
+
+Выберите опцию <br>
+
 <form oninput="calc1()" onsubmit="return false;">
 Скорость метры в 
 <label><input checked="" name="timeformat" onchange="calc1()" type="radio" value="1" /> секунду </label>
 <label><input name="timeformat" onchange="calc1()" type="radio" value="60" /> минуту </label>
 <label><input name="timeformat" onchange="calc1()" type="radio" value="3600" /> час </label><br />
-Скорость начальная: <input id="speedstart" style="width: 100px;" type="number" value ="0"/> <output id="spdfo"> м/с</output>
+Скорость начальная (v<sub>1</sub>): <input id="speedstart" style="width: 100px;" type="number" value ="0"/> <output id="spdfo"> м/с</output>
 <br>
-Скорость конечная: <input id="speedend" style="width: 100px;" type="number" value ="100"/> <output id="spdfd"> м/с</output>
+Скорость конечная (v<sub>2</sub>): <input id="speedend" style="width: 100px;" type="number" value ="100"/> <output id="spdfd"> м/с</output>
 <br>
-Время: <input id="time" style="width: 100px;" type="number" value ="10"/> с
+Время (t): <input id="time" style="width: 100px;" type="number" value ="10"/> с
 
 <br>
-Расстояние: <strong><output id="path"></output></strong> м<br>
-Ускорение: <strong><output id="aa"></output></strong> (<output id="spdft">м/с</output>)/c 
+Расстояние (p): <strong><output id="path"></output></strong> м<br>
+Ускорение (a): <strong><output id="aa"></output></strong> (<output id="spdft">м/с</output>)/c или <output id="aams">м/с<sup>2</sup></output>
 </form>
+
 </body>
 </html>
-
