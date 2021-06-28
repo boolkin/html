@@ -95,7 +95,7 @@
 	<div id ="dn-counters"></div>
 	<div id="memo" style="display:none">Заметка на <span id = "memodate"></span>
 	<input type="button" onclick = "document.getElementById('memo').style.display = 'none';" value="Скрыть">
-	<textarea rows="12" cols="40" id = "memotext"></textarea>
+	<textarea rows="12" cols="40" id = "memotext" onchange="textfill()"></textarea>
 	
 	</div>
 </div>
@@ -287,11 +287,14 @@
 		let color = checkStoredDay[0];
 		document.getElementById("memo").style.display = "block";
 		document.getElementById("memodate").innerHTML = date;
+		
 		let memotext = document.getElementById("memotext");
-		memotext.onchange = function(){
+		
+		memotext.oninput = function textfill(){
 			localStorage.setItem(date, color+memotext.value);
-			}
+		}
 		memotext.value = checkStoredDay.substring(1);		
+
 	}
 
   </script>
