@@ -40,6 +40,7 @@
 		margin: 0 auto ;
 		max-width: 450px;
 		position:relative;
+		z-index: 0;
 	}
 	@media (orientation: portrait) {
 		#content{
@@ -75,13 +76,26 @@
 	  font-size:1em;
 	  border:solid 2px orange;
 	}
+	.settings {
+		background-color:Snow;
+		position:fixed;
+		max-width: 450px;
+		overflow-y: hidden;
+		height:350px;
+		max-height: 400px; 
+		transition-property: all;
+		transition-duration: 0.5s;
+	}
+	.settings.closed {
+		max-height:0;
+	}
 
 </style>
 </head>
 <body>
 
 <div id="content" align="center">
-	<div id="settings" style="display:none;">
+	<div id="settings" class="settings closed" onclick ="togglesettings()">
 		<p style="font-size:1em;">Дважды щелкнуть по дню чтобы выделить его зеленым цветом. Если щелкнуть дважды по зеленому полю, оно станет красным. Если щелкнуть по красному дважды, то вернется в свое первоначальное состояние. Поменять номер бригады можно кнопками ниже.</p>
 		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 0); monthset();" value="1 бр."/> 
 		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 1); monthset();" value="2 бр."/> 
@@ -287,7 +301,8 @@
 	
 	function togglesettings(){
 		var x = document.getElementById("settings");
-		x.style.display = (x.style.display === "none") ? "block" : "none";		
+		//x.style.display = (x.style.display === "none") ? "block" : "none";
+		x.classList.toggle('closed');
 	}
 	
 	function showTextArea(obj){
