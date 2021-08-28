@@ -17,7 +17,7 @@
 	}
 	p {
 		margin:0.3em;
-		font-size:3.5vh;
+		font-size:2.5vh;
 	}
     table {
 		border-collapse: collapse;
@@ -81,7 +81,7 @@
 		position:fixed;
 		max-width: 450px;
 		overflow-y: hidden;
-		height:350px;
+		height:400px;
 		max-height: 400px; 
 		transition-property: all;
 		transition-duration: 0.5s;
@@ -108,7 +108,8 @@
 		<input style = "width:48%; height:4vh;" type="button" onclick ="monthchange('back')" value="<<< Предыдущий"/> 
 		<input style = "width:48%; height:4vh; " type="button" onclick ="monthchange('ff')" value="Следующий >>>"/>
 	</div>
-	<p align ='center'>График на <span id="header"></span></p>
+	<div align ='center' style='font-size:3.5vh;' >График на <span id="header"></span></div>
+	<p align ='center' >Бригада №<span id="brigada"></span></p>
 	<div id="calendar"></div>
 	<br>
 	<input style = "height:6vh;" type="button" onclick ="monthchange('back')" value="<"/><input id="today" style = "width:70%; height:6vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/><input style = "height:6vh; " type="button" onclick ="monthchange('ff')" value=">"/>
@@ -202,6 +203,7 @@
 		
 		if (localStorage.getItem('storedshift') != null) myshift = parseInt(localStorage.getItem('storedshift')); 
 		else myshift=0;
+		document.getElementById('brigada').innerHTML = myshift + 1;
       // пробелы для первого ряда
       // с понедельника до первого дня месяца
       // * * * 1  2  3  4
