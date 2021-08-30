@@ -36,15 +36,10 @@
 		font-weight: bold;
 		background-color: #E6E6E6;
     }
-	#content{
+	.content{
 		margin: 0 auto ;
 		max-width: 450px;
 		position:relative;
-	}
-	@media (orientation: portrait) {
-		#content{
-			max-width:100%;
-		}
 	}
 	.greenday {
 		background-color:GreenYellow;
@@ -88,12 +83,19 @@
 	.settings.closed {
 		max-height:0;
 	}
-
+	@media (orientation: portrait) {
+		.content{
+			max-width:100%;
+		}
+		.settings{
+			max-width:100%;
+		}
+	}
 </style>
 </head>
 <body>
 
-<div id="content" align="center">
+<div class="content" align="center">
 	<div id="settings" class="settings closed" onclick ="togglesettings()">
 		<p style="font-size:1em;">Дважды щелкнуть по дню чтобы выделить его зеленым цветом. Если щелкнуть дважды по зеленому полю, оно станет красным. Если щелкнуть по красному дважды, то вернется в свое первоначальное состояние. Поменять номер бригады можно кнопками ниже.</p>
 		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 0); monthset();" value="1 бр."/> 
