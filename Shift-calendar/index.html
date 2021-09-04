@@ -1,329 +1,361 @@
 <!DOCTYPE HTML>
-<html  id="slider">
-<head>
-<meta charset="utf-8">
-<link rel="shortcut icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAYAAABWk2cPAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAADeSURBVEhLzZNJDsIwDEU5HEW0PQwSww6ph8sZyjKLSHANo1hQmdTNPPAlq3US6yX+yQ4ayAs6TROG+a9Fx+nXpiCob7jUpr1CCKgdCJVSYlvm+YGDSinM9Tidz5X/QLcWxeTf4ObbtZcqR94PV9h3Zwxuvgh0HE9wON7qQzvXSWsHe9LX876Ezl3tovKp94ba2kXlU+8F7YcLFsRCzfr/8ZRK5+ud298hFVcfBU29WNHQlIvVztNUj0LrEZrqUWj9As35+Km4vJ2n5s5Le8xCS3u8CS3pcRtPPxuoKIA3IkAxzZg1dXIAAAAASUVORK5CYII=" />
+<html id="slider">
 
-<style>
-    * {
-		touch-action: manipulation;
-	}
-	body {	
-		background-color:Snow;
-		font-size:2.5vh;
-	}
-	input{
-		font-size:2.5vh;
-	}
-	p {
-		margin:0.3em;
-		font-size:2.5vh;
-	}
-    table {
-		border-collapse: collapse;
-		font-size:3.5vh;
-		width:90%;
-		
-    }
-    td, th {
-		border: 1px solid black;
-		padding: 3px;
-		text-align: center;
-		height:4vh;
-		width:12%;
-    }
-    th {
-		font-weight: bold;
-		background-color: #E6E6E6;
-    }
-	.content{
-		margin: 0 auto ;
-		max-width: 450px;
-		position:relative;
-	}
-	.greenday {
-		background-color:GreenYellow;
-		cursor: pointer;
-	}
-	.redday {
-		background-color:Pink;
-		cursor: pointer;
-	}
-	.nightshift {
-		background-color: #444477; 
-		color:white;
-	}
-	.dayshift {
-		background-color: #eeee77;
-	}
-	.weekend {
-		background-color: SteelBlue;
-		color:white;
-	}
-	.shiftsel {
-		height:8vh;
-		width:19%;
-	}
-	textarea {
-	  width:99%;
-	  font-size:1em;
-	  border:solid 2px orange;
-	}
-	.settings {
-		background-color:Snow;
-		position:fixed;
-		max-width: 450px;
-		overflow-y: hidden;
-		height:100%;
-		max-height: 100%; 
-		transition-property: all;
-		transition-duration: 0.7s;
-	}
-	.settings.closed {
-		max-height:0;
-	}
-	@media (orientation: portrait) {
-		.content{
-			max-width:100%;
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon"
+		href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAYAAABWk2cPAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAADeSURBVEhLzZNJDsIwDEU5HEW0PQwSww6ph8sZyjKLSHANo1hQmdTNPPAlq3US6yX+yQ4ayAs6TROG+a9Fx+nXpiCob7jUpr1CCKgdCJVSYlvm+YGDSinM9Tidz5X/QLcWxeTf4ObbtZcqR94PV9h3Zwxuvgh0HE9wON7qQzvXSWsHe9LX876Ezl3tovKp94ba2kXlU+8F7YcLFsRCzfr/8ZRK5+ud298hFVcfBU29WNHQlIvVztNUj0LrEZrqUWj9As35+Km4vJ2n5s5Le8xCS3u8CS3pcRtPPxuoKIA3IkAxzZg1dXIAAAAASUVORK5CYII=" />
+
+	<style>
+		* {
+			touch-action: manipulation;
 		}
-		.settings{
-			max-width:100%;
+
+		body {
+			background-color: Snow;
+			font-size: 2.5vh;
 		}
-	}
-</style>
+
+		input {
+			font-size: 2.5vh;
+		}
+
+		p {
+			margin: 0.3em;
+			font-size: 2.5vh;
+		}
+
+		table {
+			border-collapse: collapse;
+			font-size: 3.5vh;
+			width: 90%;
+
+		}
+
+		td,
+		th {
+			border: 1px solid black;
+			padding: 3px;
+			text-align: center;
+			height: 4vh;
+			width: 12%;
+		}
+
+		th {
+			font-weight: bold;
+			background-color: #E6E6E6;
+		}
+
+		.content {
+			margin: 0 auto;
+			max-width: 450px;
+			position: relative;
+		}
+
+		.greenday {
+			background-color: GreenYellow;
+			cursor: pointer;
+		}
+
+		.redday {
+			background-color: Pink;
+			cursor: pointer;
+		}
+
+		.nightshift {
+			background-color: #444477;
+			color: white;
+		}
+
+		.dayshift {
+			background-color: #eeee77;
+		}
+
+		.weekend {
+			background-color: SteelBlue;
+			color: white;
+		}
+
+		.shiftsel {
+			height: 8vh;
+			width: 19%;
+		}
+
+		textarea {
+			width: 99%;
+			font-size: 1em;
+			border: solid 2px orange;
+		}
+
+		.settings {
+			background-color: Snow;
+			position: fixed;
+			max-width: 450px;
+			overflow-y: hidden;
+			height: 100%;
+			max-height: 100%;
+			transition-property: all;
+			transition-duration: 0.7s;
+		}
+
+		.settings.closed {
+			max-height: 0;
+		}
+
+		@media (orientation: portrait) {
+			.content {
+				max-width: 100%;
+			}
+
+			.settings {
+				max-width: 100%;
+			}
+		}
+	</style>
 </head>
+
 <body>
 
-<div class="content" align="center">
-	<div id="settings" class="settings closed" onclick ="togglesettings()">
-		<p style="font-size:1em;">Дважды щелкнуть по дню чтобы выделить его зеленым цветом. Если щелкнуть дважды по зеленому полю, оно станет красным. Если щелкнуть по красному дважды, то вернется в свое первоначальное состояние. Поменять номер бригады можно кнопками ниже.</p>
-		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 0); monthset();" value="1 бр."/> 
-		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 1); monthset();" value="2 бр."/> 
-		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 2); monthset();" value="3 бр."/> 
-		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 3); monthset();" value="4 бр."/>
-		<input class = "shiftsel" type="button" onclick ="localStorage.setItem('storedshift', 4); monthset();" value="5 бр."/>
+	<div class="content" align="center">
+		<div id="settings" class="settings closed" onclick="togglesettings()">
+			<p style="font-size:1em;">Дважды щелкнуть по дню чтобы выделить его зеленым цветом. Если щелкнуть дважды по
+				зеленому полю, оно станет красным. Если щелкнуть по красному дважды, то вернется в свое первоначальное
+				состояние. Поменять номер бригады можно кнопками ниже.</p>
+			<input class="shiftsel" type="button" onclick="localStorage.setItem('storedshift', 0); monthset();"
+				value="1 бр." />
+			<input class="shiftsel" type="button" onclick="localStorage.setItem('storedshift', 1); monthset();"
+				value="2 бр." />
+			<input class="shiftsel" type="button" onclick="localStorage.setItem('storedshift', 2); monthset();"
+				value="3 бр." />
+			<input class="shiftsel" type="button" onclick="localStorage.setItem('storedshift', 3); monthset();"
+				value="4 бр." />
+			<input class="shiftsel" type="button" onclick="localStorage.setItem('storedshift', 4); monthset();"
+				value="5 бр." />
+			<br>
+			<input style="width:97%; height:5vh" type="button" onclick="clearstorage();" value="Удалить все отметки">
+			<br><br>
+			<input style="width:48%; height:4vh;" type="button" onclick="monthchange('back')" value="<<< Предыдущий" />
+			<input style="width:48%; height:4vh; " type="button" onclick="monthchange('ff')" value="Следующий >>>" />
+		</div>
+		<div align='center' style='font-size:3.5vh;'>График на <span id="header"></span></div>
+		<p align='center'>Бригада №<span id="brigada"></span></p>
+		<div id="calendar"></div>
 		<br>
-		<input style = "width:97%; height:5vh" type="button" onclick="clearstorage();" value="Удалить все отметки">
-		<br><br>
-		<input style = "width:48%; height:4vh;" type="button" onclick ="monthchange('back')" value="<<< Предыдущий"/> 
-		<input style = "width:48%; height:4vh; " type="button" onclick ="monthchange('ff')" value="Следующий >>>"/>
+		<input style="height:6vh;" type="button" onclick="monthchange('back')" value="<" /><input id="today"
+			style="width:70%; height:6vh; white-space:normal;" type="button" onclick="monthchange('zero');"
+			value="Этот месяц" /><input style="height:6vh; " type="button" onclick="monthchange('ff')" value=">" />
+		<div id="sh-counters"></div>
+		<div id="dn-counters"></div>
+		<div id="memo" style="display:none">Заметка на <span id="memodate"></span>
+			<input type="button" onclick="document.getElementById('memo').style.display = 'none';" value="Скрыть">
+			<textarea rows="12" cols="40" id="memotext"></textarea>
+		</div>
 	</div>
-	<div align ='center' style='font-size:3.5vh;' >График на <span id="header"></span></div>
-	<p align ='center' >Бригада №<span id="brigada"></span></p>
-	<div id="calendar"></div>
-	<br>
-	<input style = "height:6vh;" type="button" onclick ="monthchange('back')" value="<"/><input id="today" style = "width:70%; height:6vh; white-space:normal;" type="button" onclick ="monthchange('zero');" value="Этот месяц"/><input style = "height:6vh; " type="button" onclick ="monthchange('ff')" value=">"/>
-	<div id ="sh-counters"></div>
-	<div id ="dn-counters"></div>
-	<div id="memo" style="display:none">Заметка на <span id = "memodate"></span>
-		<input type="button" onclick = "document.getElementById('memo').style.display = 'none';" value="Скрыть">
-		<textarea rows="12" cols="40" id = "memotext" ></textarea>	
+
+	<div style="position:absolute; top:1%;right:1%;">
+		<input type="button" onclick="togglesettings()" style="font-size:4vh;" value="≡" />
 	</div>
-</div>
 
-<div style="position:absolute; top:1%;right:1%;">
-	<input type="button" onclick ="togglesettings()" style="font-size:4vh;" value="≡"/> 	
-</div>	
-	
-<script>
+	<script>
 
-	let changemonth = 0;
-	let myshift = 0;
-	
-	//slider function from stack-overflow to change month by slide to right-left
-	const slider = document.getElementById('slider');
-	let touchstartX = 0;
-	let touchendX = 0;
-	
-	function handleGesture() {
-		if (touchendX+120 < touchstartX) monthchange('ff');
-		if (touchendX -120 > touchstartX) monthchange('back');
-	}
-	slider.addEventListener('touchstart', e => {
-		touchstartX = e.changedTouches[0].screenX;
+		let changemonth = 0;
+		let myshift = 0;
+
+		//slider function from stack-overflow to change month by slide to right-left
+		const slider = document.getElementById('slider');
+		let touchstartX = 0;
+		let touchendX = 0;
+
+		function handleGesture() {
+			if (touchendX + 120 < touchstartX) monthchange('ff');
+			if (touchendX - 120 > touchstartX) monthchange('back');
+		}
+		slider.addEventListener('touchstart', e => {
+			touchstartX = e.changedTouches[0].screenX;
 		});
 
-	slider.addEventListener('touchend', e => {
-		touchendX = e.changedTouches[0].screenX;
-		handleGesture();
+		slider.addEventListener('touchend', e => {
+			touchendX = e.changedTouches[0].screenX;
+			handleGesture();
 		});
 
-	function monthset(){
-		let today = new Date();
-		let thisdate = new Date();
-		thisdate.setDate (1);
-		thisdate.setMonth (today.getMonth() + changemonth);
-		document.getElementById('today').value = "Сегодня "+ today.toLocaleString("ru",{year: 'numeric', month: 'long',day:'numeric'});
-		let thismonth = thisdate.getMonth();
-		let thisyear = thisdate.getFullYear();
-		document.getElementById("header").innerHTML = thisdate.toLocaleString("ru",{year: 'numeric', month: 'long'});
-		createCalendar(calendar, thisyear, thismonth);
-	}
-	
-	function selectday(selected){
-		let date = new Date();
-		date.setHours(0,0,0,0);
-		
-		let arr = selected.split('.');
-		date.setDate(parseInt(arr[0]));
-		date.setMonth(parseInt(arr[1]-1));
-		date.setFullYear(parseInt(arr[2]));
-	
-		let checkStoredDay = localStorage.getItem(selected);
-		if (checkStoredDay){
-			if (checkStoredDay[0] ==="r") {
-				document.getElementById('memo').style.display = 'none';
-				localStorage.removeItem(selected);
+		function monthset() {
+			let today = new Date();
+			let thisdate = new Date();
+			thisdate.setDate(1);
+			thisdate.setMonth(today.getMonth() + changemonth);
+			document.getElementById('today').value = "Сегодня " + today.toLocaleString("ru", { year: 'numeric', month: 'long', day: 'numeric' });
+			let thismonth = thisdate.getMonth();
+			let thisyear = thisdate.getFullYear();
+			document.getElementById("header").innerHTML = thisdate.toLocaleString("ru", { year: 'numeric', month: 'long' });
+			createCalendar(calendar, thisyear, thismonth);
+		}
+
+		function selectday(selected) {
+			let date = new Date();
+			date.setHours(0, 0, 0, 0);
+
+			let arr = selected.split('.');
+			date.setDate(parseInt(arr[0]));
+			date.setMonth(parseInt(arr[1] - 1));
+			date.setFullYear(parseInt(arr[2]));
+
+			let checkStoredDay = localStorage.getItem(selected);
+			if (checkStoredDay) {
+				if (checkStoredDay[0] === "r") {
+					document.getElementById('memo').style.display = 'none';
+					localStorage.removeItem(selected);
 				}
-			else if (checkStoredDay[0] === "g") {
-			localStorage.setItem(selected, "r"+checkStoredDay.substring(1));
-			showTextArea(selected);
+				else if (checkStoredDay[0] === "g") {
+					localStorage.setItem(selected, "r" + checkStoredDay.substring(1));
+					showTextArea(selected);
+				}
 			}
-		}
-		else {
-			localStorage.setItem(selected, "g");
-			showTextArea(selected);
+			else {
+				localStorage.setItem(selected, "g");
+				showTextArea(selected);
 			}
-		
-		createCalendar(calendar, date.getFullYear(), date.getMonth());
-	}
-	
-	function clearstorage(){
-		for(let key in localStorage){
-			localStorage.removeItem(key);
+
+			createCalendar(calendar, date.getFullYear(), date.getMonth());
 		}
-		document.location.reload(true);
-	}
-	
-    function createCalendar(elem, year, month) {
 
-		let d = new Date(year, month);
-
-		let table = '<table align="center"><tr><th>пн</th><th>вт</th><th>ср</th><th>чт</th><th>пт</th><th>сб</th><th>вс</th></tr><tr>';
-		
-		if (localStorage.getItem('storedshift') != null) myshift = parseInt(localStorage.getItem('storedshift')); 
-		else myshift=0;
-		document.getElementById('brigada').innerHTML = myshift + 1;
-      // пробелы для первого ряда
-      // с понедельника до первого дня месяца
-      // * * * 1  2  3  4
-      for (let i = 0; i < getDay(d); i++) {
-        table += '<td></td>';
-      }
-		let nightscount = 0;
-		let dayscount = 0;
-		let shiftscount = 0;
-		let bufToday = new Date();
-		bufToday.setHours(0,0,0,0);
-		
-		let dayShift = new Date(2021,02,11);
-		let nightShift = new Date(2021,02,12);
-		dayShift.setDate(dayShift.getDate()+ myshift);
-		nightShift.setDate(nightShift.getDate()+ myshift);
-		
-      // <td> ячейки календаря с датами
-      while (d.getMonth() == month) {
-		let daystyle =""; let todayDay = ""; // обнуляем стили на каждой итерации
-
-		let nsdate = Math.floor(Math.abs(nightShift - d)/(1000*60*60*24));
-		let dsdate = Math.floor(Math.abs(dayShift - d)/(1000*60*60*24));
-
-		if (myshift ==4) {
-			if (getDay(d) == 6 || getDay(d) ==5 ) daystyle = 'class = "weekend"';
-			else shiftscount++;
-			document.getElementById("dn-counters").innerHTML = "";
-			document.getElementById("sh-counters").innerHTML = "Всего смен " + shiftscount + ", часов " + shiftscount *8;
-		}
-		else if (nsdate % 4 ==0) {
-			daystyle = 'class = "nightshift"';
-			nightscount++;
+		function clearstorage() {
+			for (let key in localStorage) {
+				localStorage.removeItem(key);
 			}
-		else if (dsdate % 4 ==0){
-			daystyle = 'class = "dayshift"';
-			dayscount++;
+			document.location.reload(true);
+		}
+
+		function createCalendar(elem, year, month) {
+
+			let d = new Date(year, month);
+
+			let table = '<table align="center"><tr><th>пн</th><th>вт</th><th>ср</th><th>чт</th><th>пт</th><th>сб</th><th>вс</th></tr><tr>';
+
+			if (localStorage.getItem('storedshift') != null) myshift = parseInt(localStorage.getItem('storedshift'));
+			else myshift = 0;
+			document.getElementById('brigada').innerHTML = myshift + 1;
+			// пробелы для первого ряда
+			// с понедельника до первого дня месяца
+			// * * * 1  2  3  4
+			for (let i = 0; i < getDay(d); i++) {
+				table += '<td></td>';
 			}
-		
-		let checkStoredDay = localStorage.getItem(d.toLocaleDateString());
-		if  (checkStoredDay) {
-			if (checkStoredDay[0] == "r") daystyle = 'class = "redday"';
-			else daystyle = 'class = "greenday"';
+			let nightscount = 0;
+			let dayscount = 0;
+			let shiftscount = 0;
+			let bufToday = new Date();
+			bufToday.setHours(0, 0, 0, 0);
+
+			let dayShift = new Date(2021, 02, 11);
+			let nightShift = new Date(2021, 02, 12);
+			dayShift.setDate(dayShift.getDate() + myshift);
+			nightShift.setDate(nightShift.getDate() + myshift);
+
+			// <td> ячейки календаря с датами
+			while (d.getMonth() == month) {
+				let daystyle = ""; let todayDay = ""; // обнуляем стили на каждой итерации
+
+				let nsdate = Math.floor(Math.abs(nightShift - d) / (1000 * 60 * 60 * 24));
+				let dsdate = Math.floor(Math.abs(dayShift - d) / (1000 * 60 * 60 * 24));
+
+				if (myshift == 4) {
+					if (getDay(d) == 6 || getDay(d) == 5) daystyle = 'class = "weekend"';
+					else shiftscount++;
+					document.getElementById("dn-counters").innerHTML = "";
+					document.getElementById("sh-counters").innerHTML = "Всего смен " + shiftscount + ", часов " + shiftscount * 8;
+				}
+				else if (nsdate % 4 == 0) {
+					daystyle = 'class = "nightshift"';
+					nightscount++;
+				}
+				else if (dsdate % 4 == 0) {
+					daystyle = 'class = "dayshift"';
+					dayscount++;
+				}
+
+				let checkStoredDay = localStorage.getItem(d.toLocaleDateString());
+				if (checkStoredDay) {
+					if (checkStoredDay[0] == "r") daystyle = 'class = "redday"';
+					else daystyle = 'class = "greenday"';
+				}
+				if (Math.floor(Math.abs(bufToday - d) / (1000 * 60 * 60 * 24)) == 0) todayDay = 'style = "border:3px; border-style:solid; border-color:red;"';
+				let dayForSelect = d.toLocaleDateString(); //дата в формате dd.mm.yyyy для возможности выделения этого дня
+				table += '<td ondblclick="selectday(\'' + dayForSelect + '\');" ' + daystyle + todayDay + '>' + d.getDate() + '</td>';
+
+				if (getDay(d) % 7 == 6) { // вс, последний день - перевод строки
+					table += '</tr><tr>';
+				}
+				if (myshift != 4) {
+					document.getElementById("dn-counters").innerHTML = "Дневных " + dayscount + ", ночных " + nightscount;
+					let shifts = dayscount + nightscount;
+					document.getElementById("sh-counters").innerHTML = "Всего смен " + shifts + ", часов " + shifts * 11;
+				}
+
+				d.setDate(d.getDate() + 1);
+			}
+
+			// добить таблицу пустыми ячейками, если нужно
+			// 29 30 31 * * * *
+			if (getDay(d) != 0) {
+				for (let i = getDay(d); i < 7; i++) {
+					table += '<td></td>';
+				}
+			}
+
+			// закрыть таблицу
+			table += '</tr></table>';
+
+			elem.innerHTML = table;
+
+			let greenDays = document.querySelectorAll(".greenday");
+			greenDays.forEach(day => {
+				day.addEventListener("click", () => showTextArea(day))
+			})
+			let redDays = document.querySelectorAll(".redday");
+			redDays.forEach(day => {
+				day.addEventListener("click", () => showTextArea(day))
+			})
 		}
-		if (Math.floor(Math.abs(bufToday - d)/(1000*60*60*24))==0) todayDay = 'style = "border:3px; border-style:solid; border-color:red;"';
-		let dayForSelect = d.toLocaleDateString(); //дата в формате dd.mm.yyyy для возможности выделения этого дня
-		table += '<td ondblclick="selectday(\''+dayForSelect+'\');" '+daystyle +todayDay+'>'+ d.getDate() + '</td>';       
 
-		if (getDay(d) % 7 == 6) { // вс, последний день - перевод строки
-          table += '</tr><tr>';
-        }
-		if (myshift !=4) {
-			document.getElementById("dn-counters").innerHTML = "Дневных " + dayscount + ", ночных "+nightscount;
-			let shifts = dayscount + nightscount;
-			document.getElementById("sh-counters").innerHTML = "Всего смен " + shifts + ", часов " + shifts *11;
+		function getDay(date) { // получить номер дня недели, от 0 (пн) до 6 (вс)
+			let day = date.getDay();
+			if (day == 0) day = 7; // сделать воскресенье (0) последним днем
+			return day - 1;
 		}
 
-        d.setDate(d.getDate() + 1);
-      }
-
-      // добить таблицу пустыми ячейками, если нужно
-      // 29 30 31 * * * *
-      if (getDay(d) != 0) {
-        for (let i = getDay(d); i < 7; i++) {
-          table += '<td></td>';
-        }
-      }
-
-      // закрыть таблицу
-      table += '</tr></table>';
-
-      elem.innerHTML = table;
-	  
-	  let greenDays = document.querySelectorAll(".greenday");
-	  greenDays.forEach (day => {
-	  day.addEventListener ( "click", ()=> showTextArea(day))
-		})
-	  let redDays = document.querySelectorAll(".redday");
-	  redDays.forEach (day => {
-	  day.addEventListener ( "click", ()=> showTextArea(day))
-		})
-    }
-
-    function getDay(date) { // получить номер дня недели, от 0 (пн) до 6 (вс)
-      let day = date.getDay();
-      if (day == 0) day = 7; // сделать воскресенье (0) последним днем
-      return day - 1;
-    }
-	
-	monthset();
-    
-	function monthchange(direction){
-		if (direction=="zero") changemonth=0;
-			else changemonth = (direction=="back") ? changemonth-1:	changemonth +1;
 		monthset();
-	}
-	
-	function togglesettings(){
-		var x = document.getElementById("settings");
-		//x.style.display = (x.style.display === "none") ? "block" : "none";
-		x.classList.toggle('closed');
-	}
-	
-	function showTextArea(obj){
-		let date = obj;
-		if (typeof obj !== "string") {
-			date = obj.outerHTML.match(/\d+\.\d+\.\d+/g).toString();
+
+		function monthchange(direction) {
+			if (direction == "zero") changemonth = 0;
+			else changemonth = (direction == "back") ? changemonth - 1 : changemonth + 1;
+			monthset();
 		}
-		let checkStoredDay = localStorage.getItem(date);
-		let color = checkStoredDay[0];
-		document.getElementById("memo").style.display = "block";
-		document.getElementById("memodate").innerHTML = date;
-		
-		let memotext = document.getElementById("memotext");
-		
-		memotext.oninput = function textfill(){
-			localStorage.setItem(date, color+memotext.value);
+
+		function togglesettings() {
+			var x = document.getElementById("settings");
+			//x.style.display = (x.style.display === "none") ? "block" : "none";
+			x.classList.toggle('closed');
 		}
-		memotext.value = checkStoredDay.substring(1);
-	}
-  </script>
+
+		function showTextArea(obj) {
+			let date = obj;
+			if (typeof obj !== "string") {
+				date = obj.outerHTML.match(/\d+\.\d+\.\d+/g).toString();
+			}
+			let checkStoredDay = localStorage.getItem(date);
+			let color = checkStoredDay[0];
+			document.getElementById("memo").style.display = "block";
+			document.getElementById("memodate").innerHTML = date;
+
+			let memotext = document.getElementById("memotext");
+
+			memotext.oninput = function textfill() {
+				localStorage.setItem(date, color + memotext.value);
+			}
+			memotext.value = checkStoredDay.substring(1);
+		}
+	</script>
 </body>
+
 </html>
