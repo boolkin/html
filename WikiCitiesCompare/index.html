@@ -25,7 +25,7 @@ let cities = ["лондон","москва"];
 let xhr = new Array(cities.length);
 for (let i=0;i<cities.length;i++){
 	console.log(cities[i]);
-	let url = 'https://crossorigin.me/https://ru.wikipedia.org/wiki/'+cities[i];
+	let url = 'https://scrappy-php.herokuapp.com/?url=https://ru.wikipedia.org/wiki/'+cities[i];
 	console.log(url);
 	xhr[i] = new XMLHttpRequest();
 	xhr[i].open('GET', url, true);
