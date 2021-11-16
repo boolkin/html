@@ -31,4 +31,8 @@ https://boolkin.github.io/html/WebViewApp/
 
 
 Google-guru test with certificate  
-https://boolkin.github.io/html/google-guru/index.html  
+https://boolkin.github.io/html/google-guru/index.html 
+
+Compare cities by wikipedia information
+https://boolkin.github.io/html/WikiCitiesCompare/index.html 
+

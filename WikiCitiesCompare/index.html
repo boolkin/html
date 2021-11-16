@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Города wiki</title>
+  <style>
+	td {
+		vertical-align: top;
+	}
+  </style>
+</head>
+<body>
+	<div id="content"></div>
+	<table>
+		<tr>
+			<td id="city0"></td>
+			<td id="city1"></td>
+		</tr>
+	</table>
+
+<script>
+document.getElementById("content").innerHTML = "Downloading information...";
+
+let cities = ["лондон","москва"];
+let xhr = new Array(cities.length);
+for (let i=0;i<cities.length;i++){
+	console.log(cities[i]);
+	let url = 'https://ru.wikipedia.org/wiki/'+cities[i];
+	console.log(url);
+	xhr[i] = new XMLHttpRequest();
+	xhr[i].open('GET', url, true);
+	xhr[i].responseType = 'document';
+
+	xhr[i].onload = function () {
+		if (xhr[i].readyState === xhr[i].DONE) {
+			if (xhr[i].status === 200) {
+				let resp = xhr[i].response;
+				let cityInfo = resp.getElementsByClassName("infobox")[0].innerHTML;
+				console.log(cityInfo);
+				let re = /src="\/\//gi;
+				cityInfo = cityInfo.replace(re,'src="https://');
+				cityId = "city"+i;
+				document.getElementById(cityId).innerHTML = "<table>"+cityInfo+"</table>";
+				document.getElementById("content").innerHTML = "";
+			}
+		}
+	};
+	xhr[i].send(null);
+}
+</script>
+</body>
+</html>
