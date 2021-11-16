@@ -67,7 +67,7 @@ height:10vh; width:10vh;font-size: 1vw;
 <tr><td colspan="2"><hr></td></tr>
 <tr><td id="box"></td><td><div class="c6"></div></td></tr>
 <tr>
-	<td id="colors" align="center"><div class="c0" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c1" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c2" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><br><div class="c3" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c4" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div><div class="c5" onclick="select(this.className)" ondblclick="select(this.className)" style="width: 16vw; height: 16vw;	margin-left: 2vw;"></div></td>
+	<td id="colors" align="center"></td>
 	<td>
 		<input type="button" onclick="checkset()" class="btn" value="Проверить">
 		<input type="button" value="Новая игра" onclick="newgame()" class="btn"><br>
@@ -104,7 +104,7 @@ function fillcolors(){
 		randset[j] = "c"+Math.floor(Math.random() * 6);
 		ss=ss+randset[j]+ " ";
 	}
-	console.log (ss);
+	//console.log (ss);
 }
 
 function select (clname)
@@ -154,7 +154,7 @@ function checkset (){
 		cup.innerHTML = "<span style='position: relative; bottom: 3vw;font-size: 2vw;'>"+tryes+"</span>"+ document.getElementById("box").innerHTML + result;
 		if (bulls==4) {
 			alert("Вы угадали! Количество попыток: " +tryes);
-			newgame();
+			//newgame();
 		}
 		clears();
 
