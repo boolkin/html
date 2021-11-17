@@ -1,52 +1,59 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <title>Города wiki</title>
-  <style>
+	<meta charset="utf-8" />
+	<title>Города wiki</title>
+	<style>
 	td {
 		vertical-align: top;
 	}
-  </style>
+	</style>
+	<script>
+	function wikiGetInfo (){
+		document.getElementById("content").innerHTML = "Downloading information...";
+		let cities = [];
+		for (let i=0;i<2;i++) cities.push(document.getElementById("city"+i).value);
+		let xhr = new Array(cities.length);
+		for (let i=0;i<cities.length;i++){
+			let url = 'https://scrappy-php.herokuapp.com/?url=https://ru.wikipedia.org/wiki/'+cities[i];
+			xhr[i] = new XMLHttpRequest();
+			xhr[i].open('GET', url, true);
+			xhr[i].responseType = 'document';
+			xhr[i].onload = function () {
+				if (xhr[i].readyState === xhr[i].DONE) {
+					if (xhr[i].status === 200) {
+						let wikiDoc = xhr[i].response;
+						let cityInfo = wikiDoc.getElementsByClassName("infobox")[0].innerHTML;
+						console.log(cityInfo);
+						let re = /src="\/\//gi;
+						cityInfo = cityInfo.replace(re,'src="https://');
+						re = /href="\/wiki/gi;
+						cityInfo = cityInfo.replace(re,'href="https://ru.wikipedia.org/wiki');
+						cityId = "info"+i;
+						document.getElementById(cityId).innerHTML = "<table>"+cityInfo+"</table>";
+						document.getElementById("content").innerHTML = "";
+					}
+				}
+			};
+			xhr[i].send(null);
+		}
+	}
+	</script>
 </head>
 <body>
-	<div id="content"></div>
-	<table>
+	<input type="button" onclick="wikiGetInfo()" value="Сравнить города">
+	<table width="100%">
 		<tr>
-			<td id="city0"></td>
-			<td id="city1"></td>
+			<td><input id="city0" type="text" value="Лондон"></td>
+			<td><input id="city1" type="text" value="Париж"></td>
+		</tr>
+		<tr>
+			<td colspan="2"><div id="content"></div></td>
+		</tr>
+		<tr>
+			<td id="info0"></td>
+			<td id="info1"></td>
 		</tr>
 	</table>
-
-<script>
-document.getElementById("content").innerHTML = "Downloading information...";
-
-let cities = ["лондон","москва"];
-let xhr = new Array(cities.length);
-for (let i=0;i<cities.length;i++){
-	console.log(cities[i]);
-	let url = 'https://scrappy-php.herokuapp.com/?url=https://ru.wikipedia.org/wiki/'+cities[i];
-	console.log(url);
-	xhr[i] = new XMLHttpRequest();
-	xhr[i].open('GET', url, true);
-	xhr[i].responseType = 'document';
-
-	xhr[i].onload = function () {
-		if (xhr[i].readyState === xhr[i].DONE) {
-			if (xhr[i].status === 200) {
-				let resp = xhr[i].response;
-				let cityInfo = resp.getElementsByClassName("infobox")[0].innerHTML;
-				console.log(cityInfo);
-				let re = /src="\/\//gi;
-				cityInfo = cityInfo.replace(re,'src="https://');
-				cityId = "city"+i;
-				document.getElementById(cityId).innerHTML = "<table>"+cityInfo+"</table>";
-				document.getElementById("content").innerHTML = "";
-			}
-		}
-	};
-	xhr[i].send(null);
-}
-</script>
 </body>
 </html>
