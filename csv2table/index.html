@@ -6,12 +6,20 @@
 		* {
 			touch-action: manipulation;
 		}
-
+		input[type=checkbox] {
+			transform: scale(1.2);
+		}
+		label,input{
+			display: inline-block;
+			vertical-align: middle;
+		}
 		body {
 			margin: 4px;
 			background-color: snow;
 		}
-
+		td{
+			padding: 1% 5px;
+		}
 		.slider {
 			overflow-y: hidden;
 			max-height: 500px;
@@ -20,6 +28,7 @@
 			transition-duration: 1s;
 			background-color: #1b1a1a;
 			color: #eee;
+			font-size:1.2em;
 		}
 
 		.slider.closed {
@@ -75,7 +84,7 @@
 			</center>
 		</div>
 	</div>
-	<table id="resultTable" border="1" width ="100%"></table>
+	<table id="resultTable" border="1" width ="100%" style="font-size:1.2em;"></table>
 	<div id="noteNOK" style="display: none;">
 			Описание замечания:</br>
 			<textarea id="noteText" rows='7' cols='50'>NOK</textarea></br>
@@ -109,7 +118,6 @@
 		}
 		
         function csvToArray(csv) {
-			console.log(csv);
 			let semicolon = RegExp(";","g");
 			let newline = RegExp("\n","g");
          	let lines = csv.split(newline);
@@ -132,7 +140,7 @@
 			}
 			// добавляем выбор колонок для генерации
 			for (let i=0;i<tableArray[0].length;i++) {
-				selectCols += "<input type='checkbox' oninput='colsAdd(this.id)' id='"+i+"'><label for='"+i+"'>"+tableArray[0][i]+"</label>";
+				selectCols += "<label for='"+i+"'><input type='checkbox' oninput='colsAdd(this.id)' id='"+i+"'>  "+tableArray[0][i]+"  </label>";
 			}
 			document.getElementById('colsSelectorBlock').innerHTML = selectCols;
 			localStorage.setItem('csvdata', csv);
@@ -153,7 +161,15 @@
 		function tableGen() {
 			tableBody = "";
 			for (let j=0;j<tableArray.length;j++){
-				tableBody += "<tr id='line"+j+"' onclick='check(this.id)'>";
+				if (tableArray[j][colsNumb+2] === "OK") {
+					tableBody += "<tr id='line"+j+"' onclick='check(this.id)' style='background-color:lightgreen;'>";
+				}
+				else if (tableArray[j][colsNumb+2] != "" && j != 0){
+					tableBody += "<tr id='line"+j+"' onclick='check(this.id)' style='background-color:pink;'>";
+				}
+				else {
+					tableBody += "<tr id='line"+j+"' onclick='check(this.id)'>";
+				}
 				for (let i=0;i<cols.length;i++){
 					if (j==0) tableBody += "<th>" + tableArray[j][cols[i]]+"</th>";
 					else tableBody += "<td>" + tableArray[j][cols[i]]+"</td>"
@@ -165,7 +181,7 @@
 		function check(id) {
 			let check = document.getElementById(id).getElementsByTagName('div')[0];
 			lineNumb = parseInt(id.replace("line",""));
-			if (check.className === "black") {
+			if (check.className === "black") {				
 				tableArray[lineNumb][colsNumb+2] = "OK";
 				tableArray[lineNumb][colsNumb+1] = "<div class='green'>✔</div>"
 				tableGen();
