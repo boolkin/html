@@ -1,0 +1,213 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+	<style>
+		* {
+			touch-action: manipulation;
+		}
+
+		body {
+			margin: 4px;
+			background-color: snow;
+		}
+
+		.slider {
+			overflow-y: hidden;
+			max-height: 500px;
+			/* approximate max height */
+			transition-property: all;
+			transition-duration: 1s;
+			background-color: #1b1a1a;
+			color: #eee;
+		}
+
+		.slider.closed {
+			max-height: 0;
+		}
+		
+		#noteNOK {
+			  position: fixed;
+			  width: 100%;
+			  height: 100%;
+			  top: 0%;
+			  left: 0%;
+			  z-index: 15;
+			  background: #1b1a1a;
+			  color: #eee
+		}
+
+		textarea {
+			width: 98%;
+			background-color: #dcdcdc;
+		}
+
+		.green {
+			color:green;
+		}
+		.black {
+			color:black;
+		}
+		.red {
+			color:red;
+		}
+	</style>
+</head>
+
+<body>
+
+	<button style="position:fixed; top:0; right:0; margin: 4px;"
+		onclick="document.getElementById('slider').classList.toggle('closed');">≡</button>
+
+	<div>
+
+		<div class="slider" id="slider">
+			
+			CSV table code:</br>
+			<textarea id="csvdata" rows='7' cols='50'></textarea></br>
+			<center>
+				<input type='button' onclick='loadCSV()' value='Выбор столбцов'>
+			</center>
+			 <div id="colsSelectorBlock"></div>
+			</br>
+			<center>
+				<input type='button' onclick='exportToCSV()' value='Экспорт таблицы'>
+			</center>
+		</div>
+	</div>
+	<table id="resultTable" border="1" width ="100%"></table>
+	<div id="noteNOK" style="display: none;">
+			Описание замечания:</br>
+			<textarea id="noteText" rows='7' cols='50'>NOK</textarea></br>
+			<center>
+				<input type='button' onclick='addNote()' value='Сохранить запись'>
+			</center>			
+	</div>
+
+	<script>
+
+		
+		let cols = [];
+		let colsNumb = 0;
+		let tableArray = [];
+		let tableBody = "";
+		let today = new Date();
+		let lineNumb;
+		today = today.toLocaleString("ru", { year: 'numeric', month: 'numeric', day: 'numeric' });
+
+		if (localStorage.getItem('csvdata') !== null) {
+			let csvDataStorage = localStorage.getItem('csvdata');
+			csvToArray(csvDataStorage);
+		}
+		
+		function loadCSV(){
+			let csvFromTextArea = document.getElementById('csvdata').value;
+			localStorage.removeItem('csvdata');
+			csvToArray(csvFromTextArea);
+
+			document.location.reload(true);
+		}
+		
+        function csvToArray(csv) {
+			console.log(csv);
+			let semicolon = RegExp(";","g");
+			let newline = RegExp("\n","g");
+         	let lines = csv.split(newline);
+			let selectCols = "";
+			// добавляем ячейки в таблицу
+			for (let i=0;i<lines.length;i++){
+				let cells = lines[i].split(semicolon);
+				colsNumb = cells.length;
+				if (i==0) {
+					cells.push("Дата"); // добавить возможность выбора столбца с датой в таблице
+					cells.push("Чек"); // добавление отметки
+					cells.push("Note") // добавление замечания
+					}
+				else {
+					cells.push(today);
+					cells.push("<div class='black'>☐</div>");
+					cells.push("");
+				}
+				tableArray.push(cells);	
+			}
+			// добавляем выбор колонок для генерации
+			for (let i=0;i<tableArray[0].length;i++) {
+				selectCols += "<input type='checkbox' oninput='colsAdd(this.id)' id='"+i+"'><label for='"+i+"'>"+tableArray[0][i]+"</label>";
+			}
+			document.getElementById('colsSelectorBlock').innerHTML = selectCols;
+			localStorage.setItem('csvdata', csv);
+        }
+		 
+		function colsAdd(id){
+			for (let i=0;i<cols.length;i++){
+				if (cols[i]==id) {
+					cols.splice(i,1);
+					tableGen();
+					return;
+				}
+			}
+			cols.push(id);
+			tableGen();			
+		}
+		
+		function tableGen() {
+			tableBody = "";
+			for (let j=0;j<tableArray.length;j++){
+				tableBody += "<tr id='line"+j+"' onclick='check(this.id)'>";
+				for (let i=0;i<cols.length;i++){
+					if (j==0) tableBody += "<th>" + tableArray[j][cols[i]]+"</th>";
+					else tableBody += "<td>" + tableArray[j][cols[i]]+"</td>"
+				}
+				tableBody += "</tr>";
+			}
+			document.getElementById("resultTable").innerHTML = tableBody;
+		}
+		function check(id) {
+			let check = document.getElementById(id).getElementsByTagName('div')[0];
+			lineNumb = parseInt(id.replace("line",""));
+			if (check.className === "black") {
+				tableArray[lineNumb][colsNumb+2] = "OK";
+				tableArray[lineNumb][colsNumb+1] = "<div class='green'>✔</div>"
+				tableGen();
+				}
+			if (check.className === "green") {
+				//tableArray[lineNumb][colsNumb+2] = "NOT OK";
+				tableArray[lineNumb][colsNumb+1] = "<div class='red'>✘</div>"
+				document.getElementById("noteNOK").style.display = "block";
+				
+				}
+			if (check.className === "red") {
+				tableArray[lineNumb][colsNumb+2] = "";
+				tableArray[lineNumb][colsNumb+1] = "<div class='black'>☐</div>"
+				tableGen();
+				}
+		}
+		
+		function addNote() {
+			tableArray[lineNumb][colsNumb+2] = document.getElementById("noteText").value;
+			document.getElementById("noteNOK").style.display = "none";
+			tableGen();
+		}
+		
+		function exportToCSV(){
+			let csvString = "";
+			for (let i=0;i<tableArray.length;i++) {
+				csvString += tableArray[i].join(";") + "%0D%0A";
+				
+			}
+			var pom = document.createElement('a');
+         	pom.setAttribute('href', 'data:text/csv;charset=utf-8,' + (csvString.replace(/<\/?[^>]+(>|$)/g, "")));
+         	pom.setAttribute('download', 'check-list.csv');
+         	if(document.createEvent) {
+         		var event = document.createEvent('MouseEvents');
+         		event.initEvent('click', true, true);
+         		pom.dispatchEvent(event);
+         	} else {
+         		pom.click();
+         	}
+			//console.log(csvString.replace(/<\/?[^>]+(>|$)/g, ""));
+		}
+	</script>
+</body>
+
+</html>

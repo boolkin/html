@@ -23,7 +23,7 @@ https://boolkin.github.io/on-off-simulator/
 
 
 Currencies js widget (usd,eur,kzt)  
-https://boolkin.github.io/html/Currencies/
+https://boolkin.github.io/html/Currencies/  
 
 
 WebViewApp to save any html/js app as separate application in Android  
@@ -34,6 +34,9 @@ Google-guru test with certificate
 https://boolkin.github.io/html/google-guru/index.html 
 
 
-Compare cities by wikipedia information
+Compare cities by wikipedia information  
 https://boolkin.github.io/html/WikiCitiesCompare/index.html 
 
+
+Generate table from csv data  
+https://boolkin.github.io/html/csv2table/index.html 
