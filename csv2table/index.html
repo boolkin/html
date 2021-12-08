@@ -2,6 +2,7 @@
 <html>
 
 <head>
+	<meta charset="utf-8">
 	<style>
 		* {
 			touch-action: manipulation;
@@ -81,16 +82,20 @@
 			</br>
 			<center>
 				<input type='button' onclick='exportToCSV()' value='Экспорт таблицы'>
+				<input type='button' onclick='readTextFile("https://boolkin.github.io/html/csv2table/entryU.csv")' value='Входная секция'>
+				<input type='button' onclick='readTextFile("https://boolkin.github.io/html/csv2table/loftU.csv")' value='KMU-LOFT'>
 			</center>
 		</div>
 	</div>
 	<table id="resultTable" border="1" width ="100%" style="font-size:1.2em;"></table>
 	<div id="noteNOK" style="display: none;">
+		<div style="margin:3% 5%">
 			Описание замечания:</br>
-			<textarea id="noteText" rows='7' cols='50'>NOK</textarea></br>
+			<textarea id="noteText" rows='10' cols='50'>NOK</textarea></br>
 			<center>
 				<input type='button' onclick='addNote()' value='Сохранить запись'>
 			</center>			
+		</div>
 	</div>
 
 	<script>
@@ -126,6 +131,7 @@
 			for (let i=0;i<lines.length;i++){
 				let cells = lines[i].split(semicolon);
 				colsNumb = cells.length;
+				//console.log(colsNumb + " array " + cells)
 				if (i==0) {
 					cells.push("Дата"); // добавить возможность выбора столбца с датой в таблице
 					cells.push("Чек"); // добавление отметки
@@ -222,6 +228,27 @@
          		pom.click();
          	}
 			//console.log(csvString.replace(/<\/?[^>]+(>|$)/g, ""));
+		}
+		
+		//from https://stackoverflow.com/questions/14446447/how-to-read-a-local-text-file
+		function readTextFile(file){
+			localStorage.removeItem('csvdata');
+			var rawFile = new XMLHttpRequest();
+			rawFile.open("GET", file, true);
+			//rawFile.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+			rawFile.onreadystatechange = function ()
+			{
+				if(rawFile.readyState === 4)
+				{
+					if(rawFile.status === 200 || rawFile.status == 0)
+					{
+						var allText = rawFile.responseText;
+						csvToArray(allText);
+					}
+				}
+			}
+			rawFile.send(null);
+			document.location.reload(true);
 		}
 	</script>
 </body>
