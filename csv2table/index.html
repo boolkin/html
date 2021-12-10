@@ -271,6 +271,7 @@
 					if (tableArray[i][j].indexOf(sep) !== -1) csvString += '"'+tableArray[i][j]+'"' + sep;
 					else csvString += tableArray[i][j] + sep;
 				}
+				csvString.slice(0, -1);
 				csvString += "%0D%0A";
 			}
 			var pom = document.createElement('a');
