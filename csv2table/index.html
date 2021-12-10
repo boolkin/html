@@ -2,9 +2,21 @@
 <html>
 <head>
 	<meta charset="utf-8">
+	<title>Чек-лист</title>
 	<link rel="stylesheet" href="style/main.css">
 	<style>
-
+	/* Скрываем элемент <input type="file" /> */
+	input[type="file"] {
+		display: none;
+	}
+	 
+	/* Собственно стилизируем кнопку в соответствии с нужным внешним видом */
+	.custom-file-upload {
+		border: 1px solid #ccc;
+		display: inline-block;
+		padding: 6px 12px;
+		cursor: pointer;
+	}
 	</style>
 </head>
 
@@ -17,11 +29,19 @@
 		<div class="sliderCSS closed" id="sliderCSS" width="100%">
 			<table ><tr><td>
 			Импортировать таблицу из текстового поля:</br>
-			<textarea id="csvdata" rows='7' cols='50'></textarea><br>
-			<center><input type='button' onclick='loadCSV()' class="myButton" value='Импортировать'></center>
+			<textarea id="csvdata" rows='4' cols='50'></textarea><br>
+			<center><input type='button' onclick='loadCSV()' class="myButton" value='Импортировать'></center><br>
+			Или загрузить из файла: </br>
+			<div><label for="fileToLoad" id="fileToLoadName" class="custom-file-upload">
+			Выбрать CSV файл
+			</label>
+			<input type="file" id="fileToLoad" onchange="uploadFile(this)">
+			<input type='button' onclick='loadFileAsText()' class="myButton" value='Загрузить'></div>
 			</td>
-			<td>
+			<td style="vertical-align: text-top;">
 				Введите ваше имя:  <input type="text" id="inputName" oninput="inputName()"><br><br>
+				Добавить дополнительные столбцы дата, чек, замечание? (если их нет)<br>
+				<input class="myButton" type='button' onclick='additionalColumns()' value='Добавить'><br><br>
 				Выбор готовой таблицы:<br>
 				<input type='button' class="myButton" onclick="readCSVFile('https://boolkin.github.io/html/csv2table/entry.csv')" value='Входная секция'>
 			</td>
@@ -36,7 +56,8 @@
 		<div style="margin:3% 5%;text-align: center;" >
 			<div id="itemInfo"></div>
 			<input class="myButtonOK" type='button' onclick='checkOK()' value='✔ '>
-			<input class="myButton" type='button' onclick='checkCancel()' value='Отмена'>
+			<input class="myButton" type='button' onclick='document.getElementById("popupWind").style.display = "none"' value='Отмена'>
+			<input class="myButton" type='button' onclick='checkCancel()' value='Убрать отметку'>
 			<input class="myButtonNOK" type='button' onclick='checkNotOK()' value='✘'><br>
 			Описание замечания:</br>
 			<textarea id="noteText" rows='10' cols='50' width = "100%">NOK</textarea></br>
@@ -45,7 +66,6 @@
 	</div>
 
 	<script>
-
 		
 		let cols = [];
 		let tableArray = [];
@@ -116,19 +136,9 @@
 			
 			let selectCols = "";
 			if (firstStart) {
-				colsNumb = tableArray[0].length;
-				for (let i=0;i<tableArray.length;i++) {
-					if (i==0) {
-						tableArray[0].push("Дата, Время"); // добавить возможность выбора столбца с датой в таблице
-						tableArray[0].push("Чек"); // добавление отметки
-						tableArray[0].push("Замечание") // добавление замечания
-						}
-					else {
-						tableArray[i].push("");
-						tableArray[i].push("<div class='black'>☐</div>");
-						tableArray[i].push("");
-					}
-				}
+				//colsNumb = tableArray[0].length;
+				//if ()
+
 				localStorage.setItem('tableArray', JSON.stringify(tableArray));
 			}
 			// добавляем выбор колонок для генерации
@@ -137,6 +147,19 @@
 			}
 			document.getElementById('colsSelectorBlock').innerHTML = selectCols;
         }
+		
+		function additionalColumns(){
+			tableArray[0].push("Дата, Время"); // добавить возможность выбора столбца с датой в таблице
+			tableArray[0].push("Чек"); // добавление отметки
+			tableArray[0].push("Замечание") // добавление замечания
+			for (let i=1;i<tableArray.length;i++) {
+				tableArray[i].push("");
+				tableArray[i].push("☐");
+				tableArray[i].push("");
+			}
+			tableGen();
+			document.location.reload(true);
+		}
 		 
 		function colsAdd(id){
 			for (let i=0;i<cols.length;i++){
@@ -192,8 +215,8 @@
 			let today = new Date();
 			today = today.toLocaleString("ru", timeOptions);
 			let name = localStorage.getItem('YourName');
-			tableArray[lineNumb][colsNumb] = today + "(" + name + ")";			
-			tableArray[lineNumb][colsNumb+1] = "<div class='green'>✔</div>"
+			tableArray[lineNumb][colsNumb] = today + " (" + name + ")";			
+			tableArray[lineNumb][colsNumb+1] = "✔"
 			tableArray[lineNumb][colsNumb+2] = "OK";
 			document.getElementById("popupWind").style.display = "none";
 			tableGen();
@@ -204,7 +227,7 @@
 			let today = new Date();
 			today = today.toLocaleString("ru", timeOptions);
 			tableArray[lineNumb][colsNumb] = "";			
-			tableArray[lineNumb][colsNumb+1] = "<div class='black'>☐</div>"
+			tableArray[lineNumb][colsNumb+1] = "☐"
 			tableArray[lineNumb][colsNumb+2] = "";
 			document.getElementById("popupWind").style.display = "none";
 			tableGen();
@@ -215,8 +238,8 @@
 			let today = new Date();
 			today = today.toLocaleString("ru", timeOptions);
 			let name = localStorage.getItem('YourName');
-			tableArray[lineNumb][colsNumb] = today + "(" + name + ")";	
-			tableArray[lineNumb][colsNumb+1] = "<div class='red'>✘</div>"
+			tableArray[lineNumb][colsNumb] = today + " (" + name + ")";	
+			tableArray[lineNumb][colsNumb+1] = "✘"
 			tableArray[lineNumb][colsNumb+2] = document.getElementById("noteText").value;
 			document.getElementById("popupWind").style.display = "none";
 			tableGen();
@@ -235,7 +258,7 @@
 				csvString += "%0D%0A";
 			}
 			var pom = document.createElement('a');
-         	pom.setAttribute('href', 'data:text/csv;charset=utf-8,' + (csvString.replace(/<\/?[^>]+(>|$)/g, "")));
+         	pom.setAttribute('href', 'data:text/csv;charset=utf-8,' + (csvString));
          	pom.setAttribute('download', today+'_('+name+')'+'.csv');
          	if(document.createEvent) {
          		var event = document.createEvent('MouseEvents');
@@ -274,6 +297,24 @@
 		
 		function inputName(){
 			localStorage.setItem('YourName', document.getElementById("inputName").value); 
+		}
+		
+		function loadFileAsText(){
+		  let fileToLoad = document.getElementById("fileToLoad").files[0];
+		  
+		  let fileReader = new FileReader();
+			fileReader.onload = function(fileLoadedEvent){
+				let textFromFileLoaded = fileLoadedEvent.target.result;
+				clearLocalStorage();
+				csvToMyArray(textFromFileLoaded);
+				document.location.reload(true);
+			};
+			fileReader.readAsText(fileToLoad, "UTF-8");
+		}
+		
+		function uploadFile(name){
+			let fileName = (name.value).split("\\");
+			document.getElementById("fileToLoadName").innerHTML = fileName[fileName.length-1];
 		}
 	</script>
 </body>

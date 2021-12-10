@@ -25,11 +25,12 @@ td {
 	position: fixed;
 	width:100%;
 	overflow-y: hidden;
-	max-height: 500px;
+	max-height: 700px;
 	transition-property: all;
 	transition-duration: 1s;
 	background-color: #1b1a1a;
 	color: #eee;
+	z-index: 50;
 	font-size: 1.2em;
 }
 
@@ -44,12 +45,11 @@ td {
 	top: 0%;
 	left: 0%;
 	z-index: 15;
-	background: #1b1a1a;
+	background: #827993;
 	color: #eee;
 }
 
 textarea {
-	//width: 98%;
 	background-color: #dcdcdc;
 }
 
