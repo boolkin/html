@@ -1,4 +1,4 @@
-const cacheName = 'check-list';
+const cacheName = 'Shift-calendar';
 const contentToCache = [
   '/html/Shift-calendar/',
   '/html/Shift-calendar/index.html',
