@@ -1,0 +1,14 @@
+{
+  "display": "fullscreen",
+  "name": "График смен",
+  "orientation": "any",
+  "short_name": "График смен",
+  "start_url": "./index.html",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
