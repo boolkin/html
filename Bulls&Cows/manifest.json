@@ -1,0 +1,14 @@
+{
+  "display": "fullscreen",
+  "name": "Bulls&Cows",
+  "orientation": "any",
+  "short_name": "Bulls&Cows",
+  "start_url": "./index.html",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
