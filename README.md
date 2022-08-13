@@ -10,8 +10,8 @@ Length calculator to calculate acceleration and length
 https://boolkin.github.io/html/lenght-calc/
 
 
-Game Bulls and Cows by colors  
-https://boolkin.github.io/html/Bulls&Cows/
+Game MasterMind, like Bulls and Cows but by colors  
+https://boolkin.github.io/html/MasterMind/
 
 
 Unicalc to calculate proportions, for example 4-20mA conversion  
