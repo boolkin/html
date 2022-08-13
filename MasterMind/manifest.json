@@ -1,8 +1,8 @@
 {
   "display": "standalone",
-  "name": "Bulls&Cows",
+  "name": "MasterMind",
   "orientation": "any",
-  "short_name": "Bulls&Cows",
+  "short_name": "MasterMind",
   "start_url": "./index.html",
   "icons": [
     {

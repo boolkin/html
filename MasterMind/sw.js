@@ -1,10 +1,10 @@
-const cacheName = 'Bulls&Cows';
+const cacheName = 'MasterMind';
 const contentToCache = [
-  '/html/Bulls&Cows/',
-  '/html/Bulls&Cows/index.html',
-  '/html/Bulls&Cows/sw.js',
-  '/html/Bulls&Cows/manifest.json',
-  '/html/Bulls&Cows/favicon.png'
+  '/html/MasterMind/',
+  '/html/MasterMind/index.html',
+  '/html/MasterMind/sw.js',
+  '/html/MasterMind/manifest.json',
+  '/html/MasterMind/favicon.png'
 ];
 
 // Install the Service Worker
