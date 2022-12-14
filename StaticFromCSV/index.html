@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV-reader</title>
+    <style>
+        input[type="file"] {
+			display: none;
+		}
+
+		.custom-file-upload {
+			border: 1px solid #ccc;
+			display: inline-block;
+			padding: 6px 12px;
+			cursor: pointer;
+		}
+
+		input[type="text"] {
+			font-size: 1.2em;
+		}
+    </style>
+</head>
+
+<body>
+    <div>
+        <table>
+            <tr>
+                <td>
+                    Загрузить CSV файл <br>
+                    Разделитель: <input type="text" id="separator" value=";" size="2"><br>
+                    <label for="fileToLoad" id="fileToLoadName" class="custom-file-upload">Выбрать CSV/Excel
+                        файл</label>
+                    <input type="file" id="fileToLoad" class="myButton" onchange="uploadFile(this)"><br>
+                    <input type="button" value="getPosts" onclick="getPosts()">
+                </td>
+            </tr>
+        </table>
+        <div id="exported"></div>
+        <div id="blogContent"></div>
+    </div>
+
+    <script>
+		let tableArray = [];
+        
+        function uploadFile(fullPath) {
+            let pathName = (fullPath.value).split("\\");
+            let fileNameLast = pathName[pathName.length - 1];
+            let extension = fileNameLast.replace(/(.+)(\.[a-z]+)$/i, '$2');
+            let fileName = fileNameLast.replace(/(.+)(\.[a-z]+)$/i, '$1');
+            document.getElementById("fileToLoadName").innerHTML = fileNameLast;
+            loadLocalFile(extension);
+        }
+        function loadLocalFile(ext) {
+            let fileToLoad = document.getElementById("fileToLoad").files[0];
+            let fileReader = new FileReader();
+			if (ext === ".csv") fileReader.readAsText(fileToLoad, "UTF-8");
+            fileReader.onload = function (fileLoadedEvent) {
+                let contents = fileLoadedEvent.target.result;
+                if (ext === ".csv") {
+					tableArray = csvToArray(contents, document.getElementById('separator').value);
+                }
+            };
+        }
+		function csvToArray(text, sep) {
+			let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+			for (l of text) {
+				if ('"' === l) {
+					if (s && l === p) row[i] += l;
+					s = !s;
+				} else if (sep === l && s) l = row[++i] = '';
+				else if ('\n' === l && s) {
+					if ('\r' === p) row[i] = row[i].slice(0, -1);
+					row = ret[++r] = [l = '']; i = 0;
+				} else row[i] += l;
+				p = l;
+			}
+			return ret;
+		}
+
+        function getPosts(){
+            let posts ="<hr>";
+            for (let i=1; i<3; i++){
+                let title = tableArray[i][2];
+                let post = tableArray[i][3];
+                let date = tableArray[i][4];
+                let author = tableArray[i][1];
+                let postId =tableArray[i][0];
+                const regex = /http:\/\/vtemirtau.kz\/uploads\//g;
+                let newpost = post.replace(regex, "uploads/");
+                let newfile = '<h2><a href="'+postId+'.html">'+ title+'</a></h2> №'+postId+' Автор: <b>'+author + ' </b>| Дата: '+ date+'<hr>';
+                posts = posts + newfile;
+                exportToFile (postId,author,date,title,newpost);
+            }
+            document.getElementById('blogContent').innerHTML = posts;
+        }
+        function exportToFile (postId,author,date,title,content){
+            let template = '';
+            //template = readTemplate();
+            console.log(readTemplate());
+            let argNames =['postId','author','date','title','content']
+            
+            for (let i =0; i<arguments.length; i++) {
+                template = template.replace("{"+argNames[i]+"}",arguments[i]);
+            }
+            var pom = document.createElement('a');
+			pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + (template));
+			pom.setAttribute('download', postId + '.html');
+			if (document.createEvent) {
+				var event = document.createEvent('MouseEvents');
+				event.initEvent('click', true, true);
+				pom.dispatchEvent(event);
+				document.getElementById("exported").innerHTML = "Успешно экспортировано!";
+			} else {
+				pom.click();
+			}
+        }
+        function readTemplate() {
+			var rawFile = new XMLHttpRequest();
+			rawFile.open("GET", 'templ.html', true);
+			rawFile.responseType = 'text';
+			rawFile.onreadystatechange = function () {
+				if (rawFile.readyState === 4) {
+					if (rawFile.status === 200 || rawFile.status == 0) {
+                        console.log(rawFile.responseText);
+						return rawFile.responseText;
+					}
+				}
+			}
+			rawFile.send(null);
+		}
+    </script>
+
+</body>
+</html>
