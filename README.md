@@ -41,5 +41,5 @@ https://boolkin.github.io/html/WikiCitiesCompare/index.html
 Generate table from csv data  
 https://boolkin.github.io/html/csv2table/index.html
 
-Generate static html files from csv table StaticFromCSV
-https://boolkin.github.io/html/StaticFromCSV/
+Generate static html files from csv table StaticFromCSV  
+https://boolkin.github.io/html/StaticFromCSV/  
