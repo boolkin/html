@@ -1,7 +1,7 @@
 {
-  "display": "fullscreen",
+  "display": "standalone",
   "name": "График смен",
-  "orientation": "any",
+  "orientation": "portrait",
   "short_name": "График смен",
   "start_url": "./index.html",
   "icons": [
