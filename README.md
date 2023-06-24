@@ -43,3 +43,6 @@ https://boolkin.github.io/html/csv2table/index.html
 
 Generate static html files from csv table StaticFromCSV  
 https://boolkin.github.io/html/StaticFromCSV/  
+
+Sun and moon calculations  
+https://boolkin.github.io/html/sun-calculations/  

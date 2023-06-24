@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Астрономические вычисления</title>
+    <style>
+        button {
+            width: 100%;
+            height: 5vh;
+            min-height: 30px;
+        }
+
+        #mainCont {
+            max-width: 800px;
+        }
+
+        svg.pie {
+            width: 50px;
+            height: 50px;
+            stroke: black;
+            fill: white;
+        }
+    </style>
+    <script src="suncalc.js"></script>
+</head>
+
+<body>
+    <div id="mainCont">
+        Время: <input id="currDate"><br>
+        Широта: <input id="currLat" value="55.7558333" type="number">&deg;<br>
+        Долгота: <input id="currLong" value="37.6177778" type="number">&deg;<br>
+        Высота объекта (h): <input id="myHeight" value="1.7" type="number" size="7">м<br>
+        <button onclick="getSunPos()">Пересчитать</button><br />
+
+        <div>
+            Высота солнца: <span id="currAlt"></span>&deg;, азимут: <span id="currAz"></span>&deg;
+            <svg viewBox="0 0 56 56" class="pie" id="sunSVG"></svg>
+            <br>
+            Длина тени (h/tgα ): <span id="shadowLen"></span>&deg;<br>
+            <details id="suntimes"></details>
+            <hr>
+            Высота луны: <span id="moonAlt"></span>&deg;, азимут: <span id="moonAz"></span>&deg;
+            <svg viewBox="0 0 56 56" class="pie" id="moonSVG"></svg>
+            <br>
+            Расстояние: <span id="moonLen"></span>м <br>
+
+            <details id="moontimes"></details>
+            <details id="moonill"></details>
+        </div>
+        <button id="find-me">Мои координаты</button><br />
+
+        <p id="status"></p>
+        <a id="map-link" target="_blank"></a>
+        <div id="mapYand" width="100%" height="300"> </div>
+    </div>
+
+    <script>
+        let currDate = new Date();
+        let currLong = 37.6177778;
+        let currLat = 55.7558333;
+        document.getElementById("currDate").value = currDate;
+        document.getElementById("currDate").style.width = ((document.getElementById("currDate").value.length + 1) * 7) + 'px';
+        document.getElementById("myHeight").style.width = '80px';
+        getSunPos();
+
+        function getSunPos() {
+            let ti = new Date(document.getElementById("currDate").value);
+            let la = document.getElementById("currLat").value;
+            let lo = document.getElementById("currLong").value;
+            var sunPosition = SunCalc.getPosition(ti, la, lo);
+            var moonPos = SunCalc.getMoonPosition(ti, la, lo);
+
+            drawSVGsector("sunSVG", sunPosition.azimuth + Math.PI / 2);
+            drawSVGsector("moonSVG", moonPos.azimuth + Math.PI / 2);
+
+            showObjElem(SunCalc.getTimes(ti, la, lo), "suntimes");
+            showObjElem(SunCalc.getMoonIllumination(ti), "moonill");
+            showObjElem(SunCalc.getMoonTimes(ti, la, lo), "moontimes");
+
+            let shadow = parseFloat(document.getElementById("myHeight").value) / Math.tan(sunPosition.altitude);
+            document.getElementById("currAlt").textContent = (sunPosition.altitude * 180 / Math.PI).toFixed(1);
+            document.getElementById("currAz").textContent = (sunPosition.azimuth * 180 / Math.PI + 180).toFixed(1);
+            document.getElementById("moonAlt").textContent = (moonPos.altitude * 180 / Math.PI).toFixed(1);
+            document.getElementById("moonAz").textContent = (moonPos.azimuth * 180 / Math.PI + 180).toFixed(1);
+            document.getElementById("moonLen").textContent = moonPos.distance.toFixed(1);
+            document.getElementById("shadowLen").textContent = shadow.toFixed(2) + "м, азимут: " + (sunPosition.azimuth * 180 / Math.PI).toFixed(1);
+            getMap(lo,la);
+        }
+        function getMap(lo,la) {
+            xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    document.getElementById("mapYand").innerHTML = xmlhttp.responseText;
+                }
+            }
+            let url = `https://www.openstreetmap.org/#map=18/${la}/${lo}`; //`https://yandex.ru/maps/?ll=${lo}%2C${la}&z=13`;
+            xmlhttp.open("POST", url, true);
+            xmlhttp.send();
+            
+        }
+        function drawSVGsector(id, angle) {
+            let posPoint1 = 22 + (Math.cos(angle) * 18); // 25- центр, 18 радиус
+            let posPoint2 = 30 + (Math.sin(angle) * 18);
+            // https://ru.stackoverflow.com/questions/821164/
+            // M - центр окр, L - начальная точка дуги, A - радиус дуги, 
+            let path = '<path d="M22,30 L22,12 A18,18 1 0,1 ';
+            if (angle > Math.PI / 2) {
+                path += '22, 48 A18,18 1 0,1 ' + posPoint1 + ',' + posPoint2 + ' Z"></path>';
+            }
+            else {
+                path += posPoint1 + ',' + posPoint2 + ' Z"></path>';
+            }
+            path += '<text x="18" y="10" style="font-family: sans-serif;" fill="black" font-size="11px">N</text>';
+            path += '<circle cx="22" cy="12" r="4" fill="yellow" transform="rotate(' + (angle * 180 / Math.PI + 90) + ' 22 30)"/>'
+            document.getElementById(id).innerHTML = path;
+        }
+
+        function geoFindMe() {
+            const status = document.querySelector('#status');
+            const mapLink = document.querySelector('#map-link');
+            mapLink.href = '';
+            mapLink.textContent = '';
+
+            function success(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                currLong = longitude;
+                currLat = latitude;
+                document.getElementById("currDate").value = currDate;
+                document.getElementById("currLong").value = currLong;
+                document.getElementById("currLat").value = currLat;
+                getSunPos();
+                status.textContent = '';
+                mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+                mapLink.textContent = `Широта: ${latitude} °, Долгота: ${longitude} °`;
+
+            }
+
+            function error() {
+                status.textContent = 'Невозможно получить ваше местоположение';
+            }
+
+            if (!navigator.geolocation) {
+                status.textContent = 'Geolocation не поддерживается вашим браузером';
+            } else {
+                status.textContent = 'Определение местоположения…';
+                navigator.geolocation.getCurrentPosition(success, error);
+            }
+        }
+        function showObjElem(obj, id) {
+            document.getElementById(id).innerHTML = "";
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    let span = document.createElement('span');
+                    span.innerHTML = key + ": " + obj[key] + "<br>";
+                    document.getElementById(id).append(span);
+                }
+            }
+        }
+
+        document.querySelector('#find-me').addEventListener('click', geoFindMe);
+    </script>
+</body>
+
+</html>
