@@ -23,11 +23,17 @@
             stroke: black;
             fill: white;
         }
+
+        svg.bigpie {
+            stroke: black;
+            fill: white;
+        }
     </style>
     <script src="suncalc.js"></script>
 </head>
 
 <body>
+    <div id="bigAzimuth" onclick="this.innerHTML=''" width="100%"></div>
     <div id="mainCont">
         Время: <input id="currDate"><br>
         Широта: <input id="currLat" value="55.7558333" type="number">&deg;<br>
@@ -37,13 +43,13 @@
 
         <div>
             Высота солнца: <span id="currAlt"></span>&deg;, азимут: <span id="currAz"></span>&deg;
-            <svg viewBox="0 0 56 56" class="pie" id="sunSVG"></svg>
+            <svg viewBox="0 0 56 56" class="pie" id="sunSVG" onclick="bigSVG(this)"></svg>
             <br>
             Длина тени (h/tgα ): <span id="shadowLen"></span>&deg;<br>
             <details id="suntimes"></details>
             <hr>
             Высота луны: <span id="moonAlt"></span>&deg;, азимут: <span id="moonAz"></span>&deg;
-            <svg viewBox="0 0 56 56" class="pie" id="moonSVG"></svg>
+            <svg viewBox="0 0 56 56" class="pie" id="moonSVG" onclick="bigSVG(this)"></svg>
             <br>
             Расстояние: <span id="moonLen"></span>м <br>
 
@@ -87,9 +93,9 @@
             document.getElementById("moonAz").textContent = (moonPos.azimuth * 180 / Math.PI + 180).toFixed(1);
             document.getElementById("moonLen").textContent = moonPos.distance.toFixed(1);
             document.getElementById("shadowLen").textContent = shadow.toFixed(2) + "м, азимут: " + (sunPosition.azimuth * 180 / Math.PI).toFixed(1);
-            getMap(lo,la);
+            //getMap(lo,la);
         }
-        function getMap(lo,la) {
+        function getMap(lo, la) {
             xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -99,7 +105,10 @@
             let url = `https://www.openstreetmap.org/#map=18/${la}/${lo}`; //`https://yandex.ru/maps/?ll=${lo}%2C${la}&z=13`;
             xmlhttp.open("POST", url, true);
             xmlhttp.send();
-            
+
+        }
+        function bigSVG(div) {
+            document.getElementById('bigAzimuth').innerHTML = '<svg viewBox="0 0 56 56" class="bigpie">' + document.getElementById(div.id).innerHTML + '</svg>';
         }
         function drawSVGsector(id, angle) {
             let posPoint1 = 22 + (Math.cos(angle) * 18); // 25- центр, 18 радиус
