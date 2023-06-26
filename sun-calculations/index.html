@@ -61,6 +61,10 @@
         <p id="status"></p>
         <a id="map-link" target="_blank"></a>
         <div id="mapYand" width="100%" height="300"> </div>
+        <div>
+            <embed id="sunearthtools" src=' https://www.sunearthtools.com/tools/sun-position-widgetIF.php?point=55.7558333,37.6177778&modeMapH=8&dst=0' width='100%' height='450'/>
+        </div>
+            
     </div>
 
     <script>
@@ -94,6 +98,11 @@
             document.getElementById("moonLen").textContent = moonPos.distance.toFixed(1);
             document.getElementById("shadowLen").textContent = shadow.toFixed(2) + "м, азимут: " + (sunPosition.azimuth * 180 / Math.PI).toFixed(1);
             //getMap(lo,la);
+            let src= 'https://www.sunearthtools.com/tools/sun-position-widgetIF.php?point='+la+','+lo+'&modeMapH=8';
+            src += '&year=' + ti.getFullYear() +'&month='+ (ti.getMonth()+1)+'&day='+(ti.getDate())+'&hour='+ti.getHours()+'&minute='+ti.getMinutes()+'&dst=0';
+            console.log(ti,ti.getDate(), src);
+            document.getElementById("sunearthtools").src = src;
+
         }
         function getMap(lo, la) {
             xmlhttp = new XMLHttpRequest();
