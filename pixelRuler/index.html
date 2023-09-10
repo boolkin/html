@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <input type="file" id="image-input" accept="image/*">
+        <input type="checkbox" id="scaleline" name="scales" checked /> <label for="scales">Scale line</label>
+        <br>
+        Real length: <input id="ratio" type="number" value="1" style="width: 70px;">
+        pixels: <span id="pixelCount"></span> pixels length: <span id="length"></span>
+        
+        <div style="display: inline;float:left;width:20px;height:20px;background:green;" id="green"
+            onclick="color(this)"></div>
+        <div style="display: inline;float:left;width:20px;height:20px;background:blue;" id="blue" onclick="color(this)">
+        </div>
+        <div style="display: inline;float:left;width:20px;height:20px;background:white;" id="white"
+            onclick="color(this)"></div>
+        <div style="display: inline;float:left;width:20px;height:20px;background:yellow;" id="yellow"
+            onclick="color(this)"></div>
+        <div style="display: inline;float:left;width:20px;height:20px;background:orange;" id="orange"
+            onclick="color(this)"></div>
+        <div style="display: inline;float:left;width:20px;height:20px;background:black;" id="black"
+            onclick="color(this)"></div>
+        <br>
+        <canvas id="can"></canvas>
+
+    </div>
+
+    <script>
+        // resize https://imagekit.io/blog/how-to-resize-image-in-javascript/
+        // how to draw https://stackoverflow.com/questions/2368784/draw-on-html5-canvas-using-a-mouse
+        var pixelCount = 0, firstStart = true;
+        let imgInput = document.getElementById('image-input');
+        let startPointX = 0, endPointX = 0, startPointY = 0, endPointY = 0;
+        var stratLine = false;
+        var canvas, ctx;
+        var colorset = false;
+        var flag = false,
+            prevX = 0,
+            currX = 0,
+            prevY = 0,
+            currY = 0,
+            dot_flag = false,
+            x = "black",
+            y = 1;
+        let scaledLine = 0;
+        imgInput.addEventListener('change', function (e) {
+            if (e.target.files) {
+                let imageFile = e.target.files[0];
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var img = document.createElement("img");
+                    img.onload = function (event) {
+                        var MAX_WIDTH = 1200;
+                        var MAX_HEIGHT = 800;
+
+                        var width = img.width;
+                        var height = img.height;
+
+                        // Change the resizing logic
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height = height * (MAX_WIDTH / width);
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width = width * (MAX_HEIGHT / height);
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        stratLine = false; flag = false; dot_flag = false;
+                        startPointX = 0, endPointX = 0, startPointY = 0, endPointY = 0;
+                        colorset = false;
+                        canvas = document.getElementById('can');
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, width, height);
+                        document.getElementById("scaleline").checked = true;
+                        if (firstStart) {
+                            canvas.addEventListener("mousemove", function (e) {
+                                findxy('move', e)
+                            }, false);
+                            canvas.addEventListener("mousedown", function (e) {
+                                findxy('down', e)
+                            }, false);
+                            canvas.addEventListener("mouseup", function (e) {
+                                findxy('up', e)
+                            }, false);
+                            canvas.addEventListener("mouseout", function (e) {
+                                findxy('out', e)
+                            }, false);
+                            firstStart = false;
+                        }
+
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(imageFile);
+            }
+        });
+        function findxy(res, e) {
+            if (res == 'down') {
+                prevX = currX;
+                prevY = currY;
+                currX = e.clientX - canvas.offsetLeft;
+                currY = e.clientY - canvas.offsetTop;
+                flag = true;
+                dot_flag = true;
+
+                if (!stratLine) {
+                    startPointX = e.clientX - canvas.offsetLeft;
+                    startPointY = e.clientY - canvas.offsetTop;
+                    stratLine = true;
+                }
+                else {
+                    endPointX = e.clientX - canvas.offsetLeft;
+                    endPointY = e.clientY - canvas.offsetTop;
+                    drawlineXY();
+                }
+
+                if (document.getElementById("scaleline").checked) {
+                    x = "red";
+                    y = 2;
+                }
+                else {
+                    if (!colorset) {
+                        x = "black";
+                        y = 1;
+                    }
+                }
+                if (dot_flag) {
+                    ctx.beginPath();
+                    ctx.fillStyle = x;
+                    ctx.fillRect(currX, currY, 1, 1);
+                    ctx.closePath();
+                    dot_flag = false;
+                }
+            }
+            if (res == 'up' || res == "out") {
+                flag = false;
+                document.getElementById("pixelCount").innerHTML = pixelCount;
+                pixelCount = 0;
+            }
+            if (res == 'move') {
+                if (flag) {
+                    prevX = currX;
+                    prevY = currY;
+                    currX = e.clientX - canvas.offsetLeft;
+                    currY = e.clientY - canvas.offsetTop;
+                    draw();
+                }
+            }
+        }
+
+        function draw() {
+            ctx.beginPath();
+            ctx.moveTo(prevX, prevY);
+            ctx.lineTo(currX, currY);
+            ctx.strokeStyle = x;
+            ctx.lineWidth = y;
+            ctx.stroke();
+            ctx.closePath();
+            pixelCount++;
+        }
+
+        function drawlineXY() {
+            ctx.beginPath();
+            ctx.moveTo(startPointX, startPointY);
+            ctx.lineTo(endPointX, endPointY);
+            ctx.strokeStyle = x;
+            ctx.lineWidth = y;
+            ctx.stroke();
+            ctx.closePath();
+            stratLine = false;
+            let ratio = document.getElementById("ratio").value;
+            let length = Math.sqrt((endPointX - startPointX) ** 2 + (endPointY - startPointY) ** 2);
+            if (document.getElementById("scaleline").checked) {
+                scaledLine = length;
+                document.getElementById("scaleline").checked = false;
+            }
+            document.getElementById("length").innerHTML = length;
+            let realLength = (length * ratio / scaledLine).toFixed(2);
+            console.log(endPointX, endPointY, startPointX, startPointY)
+            ctx.font = "12px serif";
+            ctx.fillText(realLength, (endPointX + startPointX) / 2, (endPointY + startPointY) / 2 - 5);
+        }
+
+        function color(obj) {
+            colorset = true;
+            switch (obj.id) {
+                case "green":
+                    x = "green";
+                    break;
+                case "blue":
+                    x = "blue";
+                    break;
+                case "white":
+                    x = "white";
+                    break;
+                case "yellow":
+                    x = "yellow";
+                    break;
+                case "orange":
+                    x = "orange";
+                    break;
+                case "black":
+                    x = "black";
+                    break;
+                case "white":
+                    x = "white";
+                    break;
+            }
+            y = 1;
+        }
+    </script>
+</body>
+
+</html>

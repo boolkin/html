@@ -46,3 +46,6 @@ https://boolkin.github.io/html/StaticFromCSV/
 
 Sun and moon calculations  
 https://boolkin.github.io/html/sun-calculations/  
+
+Pixel Ruler - count lengh of things on photo  
+https://boolkin.github.io/html/pixelRuler/  
