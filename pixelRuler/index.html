@@ -13,7 +13,7 @@
         <input type="checkbox" id="scaleline" name="scales" checked /> <label for="scales">Scale line</label>
         <br>
         Real length: <input id="ratio" type="number" value="1" style="width: 70px;">
-        pixels: <span id="pixelCount"></span> pixels length: <span id="length"></span>
+        Pixels length: <span id="length"></span> pixlength/scalelength = <span id="pixtobase"></span>
         
         <div style="display: inline;float:left;width:20px;height:20px;background:green;" id="green"
             onclick="color(this)"></div>
@@ -35,7 +35,7 @@
     <script>
         // resize https://imagekit.io/blog/how-to-resize-image-in-javascript/
         // how to draw https://stackoverflow.com/questions/2368784/draw-on-html5-canvas-using-a-mouse
-        var pixelCount = 0, firstStart = true;
+        var firstStart = true;
         let imgInput = document.getElementById('image-input');
         let startPointX = 0, endPointX = 0, startPointY = 0, endPointY = 0;
         var stratLine = false;
@@ -146,8 +146,6 @@
             }
             if (res == 'up' || res == "out") {
                 flag = false;
-                document.getElementById("pixelCount").innerHTML = pixelCount;
-                pixelCount = 0;
             }
             if (res == 'move') {
                 if (flag) {
@@ -155,21 +153,10 @@
                     prevY = currY;
                     currX = e.clientX - canvas.offsetLeft;
                     currY = e.clientY - canvas.offsetTop;
-                    draw();
                 }
             }
         }
 
-        function draw() {
-            ctx.beginPath();
-            ctx.moveTo(prevX, prevY);
-            ctx.lineTo(currX, currY);
-            ctx.strokeStyle = x;
-            ctx.lineWidth = y;
-            ctx.stroke();
-            ctx.closePath();
-            pixelCount++;
-        }
 
         function drawlineXY() {
             ctx.beginPath();
@@ -186,7 +173,8 @@
                 scaledLine = length;
                 document.getElementById("scaleline").checked = false;
             }
-            document.getElementById("length").innerHTML = length;
+            document.getElementById("length").innerHTML = length.toFixed(2);
+            document.getElementById("pixtobase").innerHTML = (length/scaledLine).toFixed(2);
             let realLength = (length * ratio / scaledLine).toFixed(2);
             console.log(endPointX, endPointY, startPointX, startPointY)
             ctx.font = "12px serif";
