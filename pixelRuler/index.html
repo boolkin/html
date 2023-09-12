@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Pixel Ruler</title>
 </head>
 
 <body>
@@ -12,9 +12,10 @@
         <input type="file" id="image-input" accept="image/*">
         <input type="checkbox" id="scaleline" name="scales" checked /> <label for="scales">Scale line</label>
         <br>
-        Real length: <input id="ratio" type="number" value="1" style="width: 70px;">
+        Real length:<input id="baseLength" type="number" value="1" style="width: 70px;">
+        Angle:<input id="angle" type="number" value="90" style="width: 70px;">
         Pixels length: <span id="length"></span> pixlength/scalelength = <span id="pixtobase"></span>
-        
+
         <div style="display: inline;float:left;width:20px;height:20px;background:green;" id="green"
             onclick="color(this)"></div>
         <div style="display: inline;float:left;width:20px;height:20px;background:blue;" id="blue" onclick="color(this)">
@@ -36,6 +37,7 @@
         // resize https://imagekit.io/blog/how-to-resize-image-in-javascript/
         // how to draw https://stackoverflow.com/questions/2368784/draw-on-html5-canvas-using-a-mouse
         var firstStart = true;
+        let width = 0, height = 0;
         let imgInput = document.getElementById('image-input');
         let startPointX = 0, endPointX = 0, startPointY = 0, endPointY = 0;
         var stratLine = false;
@@ -50,6 +52,7 @@
             x = "black",
             y = 1;
         let scaledLine = 0;
+
         imgInput.addEventListener('change', function (e) {
             if (e.target.files) {
                 let imageFile = e.target.files[0];
@@ -60,8 +63,8 @@
                         var MAX_WIDTH = 1200;
                         var MAX_HEIGHT = 800;
 
-                        var width = img.width;
-                        var height = img.height;
+                        width = img.width;
+                        height = img.height;
 
                         // Change the resizing logic
                         if (width > height) {
@@ -157,7 +160,6 @@
             }
         }
 
-
         function drawlineXY() {
             ctx.beginPath();
             ctx.moveTo(startPointX, startPointY);
@@ -167,16 +169,23 @@
             ctx.stroke();
             ctx.closePath();
             stratLine = false;
-            let ratio = document.getElementById("ratio").value;
+            let baseLength = document.getElementById("baseLength").value;
             let length = Math.sqrt((endPointX - startPointX) ** 2 + (endPointY - startPointY) ** 2);
+            let vertPoint = (endPointY + startPointY) / 2;
+            let angle = document.getElementById("angle").value;
+            let rangeMax = Math.sin(angle * Math.PI / 180);
+            let rangeMin = 1 + (1 - rangeMax);
+            let angleRatio = vertPoint / height * (rangeMax - rangeMin) + rangeMin;
+
             if (document.getElementById("scaleline").checked) {
-                scaledLine = length;
+                scaledLine = length * angleRatio;
                 document.getElementById("scaleline").checked = false;
             }
             document.getElementById("length").innerHTML = length.toFixed(2);
-            document.getElementById("pixtobase").innerHTML = (length/scaledLine).toFixed(2);
-            let realLength = (length * ratio / scaledLine).toFixed(2);
-            console.log(endPointX, endPointY, startPointX, startPointY)
+            document.getElementById("pixtobase").innerHTML = (length / scaledLine).toFixed(2);
+            
+            let realLength = (length * baseLength * angleRatio / scaledLine).toFixed(2);
+
             ctx.font = "12px serif";
             ctx.fillText(realLength, (endPointX + startPointX) / 2, (endPointY + startPointY) / 2 - 5);
         }
@@ -201,9 +210,6 @@
                     break;
                 case "black":
                     x = "black";
-                    break;
-                case "white":
-                    x = "white";
                     break;
             }
             y = 1;
