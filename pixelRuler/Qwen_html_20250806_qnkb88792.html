@@ -21,6 +21,16 @@
         h1 {
             text-align: center;
             color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+        .instructions {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
         }
         .controls {
             display: flex;
@@ -63,13 +73,6 @@
             display: block;
             cursor: crosshair;
         }
-        .instructions {
-            background-color: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
         .clear-btn {
             padding: 10px 20px;
             background-color: #dc3545;
@@ -103,9 +106,10 @@
             padding: 2px 6px;
             border-radius: 3px;
             font-size: 12px;
-            pointer-events: none;
+            pointer-events: auto;
             z-index: 20;
             transform: translate(-50%, -100%);
+            cursor: pointer;
         }
         .color-preview {
             width: 30px;
@@ -122,24 +126,39 @@
             pointer-events: none;
             z-index: 15;
         }
+        .base-length-input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100px;
+        }
+        .toggle-icon {
+            margin-left: 10px;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Пиксельная рулетка с множественными линиями</h1>
-        <div class="instructions">
+        <h1 id="titleHeader">Пиксельная рулетка <span class="toggle-icon" id="toggleIcon">▼</span></h1>
+        <div class="instructions" id="instructions">
             <h3>Инструкция:</h3>
             <p>1. Загрузите изображение с помощью кнопки ниже</p>
-            <p>2. Выберите цвет линии</p>
-            <p>3. Кликните по изображению, чтобы установить первую точку</p>
-            <p>4. Кликните второй раз, чтобы установить вторую точку и создать линию</p>
-            <p>5. Повторите для создания дополнительных линий</p>
-            <p>6. Правый клик на линии для удаления</p>
+            <p>2. Введите базовую длину в поле "Базовая длина"</p>
+            <p>3. Выберите цвет линии</p>
+            <p>4. Кликните по изображению, чтобы установить первую точку</p>
+            <p>5. Кликните второй раз, чтобы установить вторую точку и создать линию</p>
+            <p>6. Повторите для создания дополнительных линий</p>
+            <p>7. Правый клик на линии или на числе с длиной для удаления</p>
         </div>
         <div class="controls">
             <div class="control-group">
                 <label for="fileInput">Загрузить изображение:</label>
                 <input type="file" id="fileInput" accept="image/*">
+            </div>
+            <div class="control-group">
+                <label for="baseLength">Базовая длина:</label>
+                <input type="number" id="baseLength" class="base-length-input" value="100">
             </div>
             <div class="control-group">
                 <label for="lineColor">Цвет линии:</label>
@@ -166,16 +185,42 @@
         const colorPreview = document.getElementById('colorPreview');
         const clearBtn = document.getElementById('clearBtn');
         const canvasContainer = document.getElementById('canvasContainer');
+        const baseLengthInput = document.getElementById('baseLength');
+        const titleHeader = document.getElementById('titleHeader');
+        const instructions = document.getElementById('instructions');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
         let img = null;
         let currentPoints = [];
         let lines = [];
         let currentColor = '#ff0000';
+        let baseLength = 100; // Установлено значение по умолчанию
+        let baseLineLength = null;
         let tempLineElement = null; // Элемент для временной линии
+        
+        // Переключение отображения инструкции
+        titleHeader.addEventListener('click', function() {
+            if (instructions.style.display === 'none') {
+                instructions.style.display = 'block';
+                toggleIcon.textContent = '▲';
+            } else {
+                instructions.style.display = 'none';
+                toggleIcon.textContent = '▼';
+            }
+        });
+        
         // Обновление предпросмотра цвета
         lineColorInput.addEventListener('input', function() {
             currentColor = this.value;
             colorPreview.style.backgroundColor = currentColor;
         });
+        
+        // Обновление базовой длины
+        baseLengthInput.addEventListener('input', function() {
+            baseLength = this.value ? parseFloat(this.value) : null;
+            redrawAllLines();
+        });
+        
         // Загрузка изображения
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -194,6 +239,7 @@
                 reader.readAsDataURL(file);
             }
         });
+        
         // Добавляем обработчик mousemove для отображения временной линии
         canvas.addEventListener('mousemove', function(e) {
             if (!img || currentPoints.length !== 1) return;
@@ -225,6 +271,7 @@
             
             canvasContainer.appendChild(tempLineElement);
         });
+        
         // Клик по canvas для создания точек
         canvas.addEventListener('click', function(e) {
             if (!img) return;
@@ -262,37 +309,65 @@
                     color: currentColor,
                     id: Date.now()
                 };
+                
+                // Если это первая линия, сохраняем её длину как базовую
+                if (lines.length === 0) {
+                    baseLineLength = Math.sqrt(Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2));
+                }
+                
                 lines.push(line);
                 drawLine(line);
                 currentPoints = [];
             }
         });
-        // Правый клик для удаления линии
+        
+        // Правый клик для удаления линии или метки
         canvasContainer.addEventListener('contextmenu', function(e) {
             e.preventDefault();
-            // Проверяем, кликнули ли мы на линию
+            // Проверяем, кликнули ли мы на линию или на метку с длиной
             const elements = document.elementsFromPoint(e.clientX, e.clientY);
-            const lineElement = elements.find(el => el.classList.contains('line-overlay'));
+            let lineElement = elements.find(el => el.classList.contains('line-overlay'));
+            let labelElement = elements.find(el => el.classList.contains('distance-label'));
+            
+            // Если кликнули на метку, ищем соответствующую линию
+            if (labelElement && !lineElement) {
+                const lineId = parseInt(labelElement.dataset.id);
+                lineElement = canvasContainer.querySelector(`.line-overlay[data-id="${lineId}"]`);
+            }
+            
             if (lineElement) {
                 const lineId = parseInt(lineElement.dataset.id);
                 removeLine(lineId);
             }
         });
+        
         // Очистка всех линий
         clearBtn.addEventListener('click', function() {
             lines = [];
             currentPoints = [];
+            baseLineLength = null;
             clearCanvasOverlays();
             redrawCanvas();
         });
+        
         // Отрисовка линии
         function drawLine(line) {
-            const length = Math.sqrt(Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2));
+            const pixelLength = Math.sqrt(Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2));
+            let displayLength = Math.round(pixelLength);
+            let unit = 'px';
+            
+            // Если задана базовая длина и базовая линия существует, пересчитываем
+            if (baseLength !== null && baseLength > 0 && baseLineLength !== null && baseLineLength > 0) {
+                displayLength = (pixelLength / baseLineLength) * baseLength;
+                displayLength = Math.round(displayLength * 100) / 100; // Округляем до 2 знаков после запятой
+                unit = '';
+            }
+            
             const angle = Math.atan2(line.y2 - line.y1, line.x2 - line.x1) * 180 / Math.PI;
             // Создание линии
             const lineElement = document.createElement('div');
             lineElement.className = 'line-overlay';
-            lineElement.style.width = `${length}px`;
+            lineElement.style.width = `${pixelLength}px`;
             lineElement.style.height = '2px';
             lineElement.style.left = `${line.x1}px`;
             lineElement.style.top = `${line.y1}px`;
@@ -320,21 +395,46 @@
             label.className = 'distance-label';
             label.style.left = `${midX}px`;
             label.style.top = `${midY}px`;
-            label.textContent = `${Math.round(length)} px`;
+            label.dataset.id = line.id; // Добавляем ID для связи с линией
+            
+            // Формируем текст метки с длиной в пикселях в скобках
+            let labelText = `${displayLength} ${unit}`;
+            if (baseLength !== null && baseLength > 0 && baseLineLength !== null && baseLineLength > 0) {
+                labelText += ` (${Math.round(pixelLength)} px)`;
+            }
+            label.textContent = labelText;
+            
             label.style.backgroundColor = line.color;
             canvasContainer.appendChild(label);
         }
+        
         // Удаление линии
         function removeLine(lineId) {
-            lines = lines.filter(line => line.id !== lineId);
+            const lineIndex = lines.findIndex(line => line.id === lineId);
+            if (lineIndex !== -1) {
+                // Если удаляем первую линию, сбрасываем базовую длину
+                if (lineIndex === 0) {
+                    baseLineLength = null;
+                }
+                lines.splice(lineIndex, 1);
+                // Если остались линии и удаляли первую, обновляем базовую длину
+                if (lines.length > 0 && lineIndex === 0) {
+                    baseLineLength = Math.sqrt(
+                        Math.pow(lines[0].x2 - lines[0].x1, 2) + 
+                        Math.pow(lines[0].y2 - lines[0].y1, 2)
+                    );
+                }
+            }
             clearCanvasOverlays();
             redrawAllLines();
         }
+        
         // Перерисовка всех линий
         function redrawAllLines() {
             clearCanvasOverlays();
             lines.forEach(line => drawLine(line));
         }
+        
         // Очистка всех элементов поверх canvas
         function clearCanvasOverlays() {
             const overlays = canvasContainer.querySelectorAll('.line-overlay, .pixel-marker, .distance-label');
@@ -349,6 +449,7 @@
                 tempMarker.remove();
             }
         }
+        
         // Перерисовка canvas
         function redrawCanvas() {
             if (img) {
