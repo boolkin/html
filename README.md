@@ -49,3 +49,6 @@ https://boolkin.github.io/html/sun-calculations/
 
 Pixel Ruler - count lengh of things on photo  
 https://boolkin.github.io/html/pixelRuler/  
+https://boolkin.github.io/html/pixelRuler/bookmarklet.html  
+https://boolkin.github.io/html/pixelRuler/minify.txt  
+https://boolkin.github.io/html/pixelRuler/Qwen_html_20250806_qnkb88792.html  

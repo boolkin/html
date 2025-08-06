@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пиксельная рулетка с множественными линиями</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .upload-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #fileInput {
+            margin: 10px 0;
+        }
+        .canvas-container {
+            position: relative;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            display: inline-block;
+            background-image: 
+                linear-gradient(45deg, #eee 25%, transparent 25%), 
+                linear-gradient(-45deg, #eee 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #eee 75%),
+                linear-gradient(-45deg, transparent 75%, #eee 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+        .instructions {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .clear-btn {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .clear-btn:hover {
+            background-color: #c82333;
+        }
+        .pixel-marker {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .line-overlay {
+            position: absolute;
+            transform-origin: 0 0;
+            pointer-events: auto;
+        }
+        .distance-label {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 20;
+            transform: translate(-50%, -100%);
+        }
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        /* Стили для временной линии */
+        .temp-line {
+            position: absolute;
+            height: 2px;
+            background-color: rgba(255, 255, 255, 0.7);
+            transform-origin: 0 0;
+            pointer-events: none;
+            z-index: 15;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Пиксельная рулетка с множественными линиями</h1>
+        <div class="instructions">
+            <h3>Инструкция:</h3>
+            <p>1. Загрузите изображение с помощью кнопки ниже</p>
+            <p>2. Выберите цвет линии</p>
+            <p>3. Кликните по изображению, чтобы установить первую точку</p>
+            <p>4. Кликните второй раз, чтобы установить вторую точку и создать линию</p>
+            <p>5. Повторите для создания дополнительных линий</p>
+            <p>6. Правый клик на линии для удаления</p>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <label for="fileInput">Загрузить изображение:</label>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+            <div class="control-group">
+                <label for="lineColor">Цвет линии:</label>
+                <input type="color" id="lineColor" value="#ff0000">
+            </div>
+            <div class="control-group">
+                <label>Предпросмотр цвета:</label>
+                <div class="color-preview" id="colorPreview" style="background-color: #ff0000;"></div>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button class="clear-btn" id="clearBtn">Очистить все линии</button>
+            </div>
+        </div>
+        <div class="canvas-container" id="canvasContainer">
+            <canvas id="imageCanvas"></canvas>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+        const lineColorInput = document.getElementById('lineColor');
+        const colorPreview = document.getElementById('colorPreview');
+        const clearBtn = document.getElementById('clearBtn');
+        const canvasContainer = document.getElementById('canvasContainer');
+        let img = null;
+        let currentPoints = [];
+        let lines = [];
+        let currentColor = '#ff0000';
+        let tempLineElement = null; // Элемент для временной линии
+        // Обновление предпросмотра цвета
+        lineColorInput.addEventListener('input', function() {
+            currentColor = this.value;
+            colorPreview.style.backgroundColor = currentColor;
+        });
+        // Загрузка изображения
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    img = new Image();
+                    img.onload = function() {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        redrawAllLines();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        // Добавляем обработчик mousemove для отображения временной линии
+        canvas.addEventListener('mousemove', function(e) {
+            if (!img || currentPoints.length !== 1) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            // Удаляем предыдущую временную линию, если она существует
+            if (tempLineElement) {
+                tempLineElement.remove();
+            }
+            
+            // Создаем новую временную линию
+            const startX = currentPoints[0].x;
+            const startY = currentPoints[0].y;
+            const length = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
+            const angle = Math.atan2(y - startY, x - startX) * 180 / Math.PI;
+            
+            tempLineElement = document.createElement('div');
+            tempLineElement.className = 'temp-line';
+            tempLineElement.style.width = `${length}px`;
+            tempLineElement.style.left = `${startX}px`;
+            tempLineElement.style.top = `${startY}px`;
+            tempLineElement.style.transform = `rotate(${angle}deg)`;
+            tempLineElement.style.backgroundColor = currentColor;
+            
+            canvasContainer.appendChild(tempLineElement);
+        });
+        // Клик по canvas для создания точек
+        canvas.addEventListener('click', function(e) {
+            if (!img) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            currentPoints.push({x, y});
+            if (currentPoints.length === 1) {
+                // Создаем маркер для первой точки
+                const marker = document.createElement('div');
+                marker.className = 'pixel-marker';
+                marker.style.left = `${x}px`;
+                marker.style.top = `${y}px`;
+                marker.style.backgroundColor = currentColor;
+                marker.id = 'temp-marker';
+                canvasContainer.appendChild(marker);
+            } else if (currentPoints.length === 2) {
+                // Удаляем временные элементы
+                if (tempLineElement) {
+                    tempLineElement.remove();
+                    tempLineElement = null;
+                }
+                const tempMarker = document.getElementById('temp-marker');
+                if (tempMarker) {
+                    tempMarker.remove();
+                }
+                
+                const line = {
+                    x1: currentPoints[0].x,
+                    y1: currentPoints[0].y,
+                    x2: currentPoints[1].x,
+                    y2: currentPoints[1].y,
+                    color: currentColor,
+                    id: Date.now()
+                };
+                lines.push(line);
+                drawLine(line);
+                currentPoints = [];
+            }
+        });
+        // Правый клик для удаления линии
+        canvasContainer.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            // Проверяем, кликнули ли мы на линию
+            const elements = document.elementsFromPoint(e.clientX, e.clientY);
+            const lineElement = elements.find(el => el.classList.contains('line-overlay'));
+            if (lineElement) {
+                const lineId = parseInt(lineElement.dataset.id);
+                removeLine(lineId);
+            }
+        });
+        // Очистка всех линий
+        clearBtn.addEventListener('click', function() {
+            lines = [];
+            currentPoints = [];
+            clearCanvasOverlays();
+            redrawCanvas();
+        });
+        // Отрисовка линии
+        function drawLine(line) {
+            const length = Math.sqrt(Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2));
+            const angle = Math.atan2(line.y2 - line.y1, line.x2 - line.x1) * 180 / Math.PI;
+            // Создание линии
+            const lineElement = document.createElement('div');
+            lineElement.className = 'line-overlay';
+            lineElement.style.width = `${length}px`;
+            lineElement.style.height = '2px';
+            lineElement.style.left = `${line.x1}px`;
+            lineElement.style.top = `${line.y1}px`;
+            lineElement.style.backgroundColor = line.color;
+            lineElement.style.transform = `rotate(${angle}deg)`;
+            lineElement.dataset.id = line.id;
+            canvasContainer.appendChild(lineElement);
+            // Создание маркеров
+            const marker1 = document.createElement('div');
+            marker1.className = 'pixel-marker';
+            marker1.style.left = `${line.x1}px`;
+            marker1.style.top = `${line.y1}px`;
+            marker1.style.backgroundColor = line.color;
+            canvasContainer.appendChild(marker1);
+            const marker2 = document.createElement('div');
+            marker2.className = 'pixel-marker';
+            marker2.style.left = `${line.x2}px`;
+            marker2.style.top = `${line.y2}px`;
+            marker2.style.backgroundColor = line.color;
+            canvasContainer.appendChild(marker2);
+            // Создание метки с расстоянием
+            const midX = (line.x1 + line.x2) / 2;
+            const midY = (line.y1 + line.y2) / 2;
+            const label = document.createElement('div');
+            label.className = 'distance-label';
+            label.style.left = `${midX}px`;
+            label.style.top = `${midY}px`;
+            label.textContent = `${Math.round(length)} px`;
+            label.style.backgroundColor = line.color;
+            canvasContainer.appendChild(label);
+        }
+        // Удаление линии
+        function removeLine(lineId) {
+            lines = lines.filter(line => line.id !== lineId);
+            clearCanvasOverlays();
+            redrawAllLines();
+        }
+        // Перерисовка всех линий
+        function redrawAllLines() {
+            clearCanvasOverlays();
+            lines.forEach(line => drawLine(line));
+        }
+        // Очистка всех элементов поверх canvas
+        function clearCanvasOverlays() {
+            const overlays = canvasContainer.querySelectorAll('.line-overlay, .pixel-marker, .distance-label');
+            overlays.forEach(el => el.remove());
+            // Также удаляем временные элементы
+            if (tempLineElement) {
+                tempLineElement.remove();
+                tempLineElement = null;
+            }
+            const tempMarker = document.getElementById('temp-marker');
+            if (tempMarker) {
+                tempMarker.remove();
+            }
+        }
+        // Перерисовка canvas
+        function redrawCanvas() {
+            if (img) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+            }
+        }
+    </script>
+</body>
+</html>

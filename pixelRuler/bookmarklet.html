@@ -1,0 +1,120 @@
+<script>
+    let el = document.getElementsByTagName("body")[0];
+    let canvas = document.createElement("canvas");
+    canvas.id = "can";
+    el.insertBefore(canvas, el.firstChild);
+
+    canvas.width = document.documentElement.scrollWidth;
+    canvas.height = document.documentElement.scrollHeight;
+    canvas.style.zIndex = "2000";
+    canvas.style.position = "absolute";
+    canvas.style.top = "0";
+    ctx = canvas.getContext("2d");
+
+    document.addEventListener("keydown", function () {
+        var x = event.key || event.code;
+        if (x == "Escape") {
+            canvas.remove();
+        }
+    })
+    var firstStart = true;
+	let mainlength = 0;
+    let width = 0, height = 0;
+    let imgInput = document.getElementById('image-input');
+    let startPointX = 0, endPointX = 0, startPointY = 0, endPointY = 0;
+    var stratLine = false;
+    var colorset = false;
+    var flag = false,
+        prevX = 0,
+        currX = 0,
+        prevY = 0,
+        currY = 0,
+        dot_flag = false,
+        x = "black",
+        y = 1;
+
+
+    canvas.addEventListener("mousemove", function (e) {
+        findxy('move', e)
+    }, false);
+    canvas.addEventListener("mousedown", function (e) {
+        findxy('down', e)
+    }, false);
+    canvas.addEventListener("mouseup", function (e) {
+        findxy('up', e)
+    }, false);
+    canvas.addEventListener("mouseout", function (e) {
+        findxy('out', e)
+    }, false);
+
+    function findxy(res, e) {
+        if (res == 'down') {
+            prevX = currX;
+            prevY = currY;
+            currX = e.clientX - canvas.offsetLeft + window.pageXOffset;
+            currY = e.clientY - canvas.offsetTop + window.pageYOffset;
+            flag = true;
+            dot_flag = true;
+
+            if (!stratLine) {
+                startPointX = e.clientX - canvas.offsetLeft + window.pageXOffset;
+                startPointY = e.clientY - canvas.offsetTop + window.pageYOffset;
+                stratLine = true;
+            }
+            else {
+                endPointX = e.clientX - canvas.offsetLeft + window.pageXOffset;
+                endPointY = e.clientY - canvas.offsetTop + window.pageYOffset;
+                drawlineXY();
+            }
+
+            if (firstStart) {
+                x = "red";
+                y = 2;
+            }
+            else {
+                if (!colorset) {
+                    x = "black";
+                    y = 1;
+                }
+            }
+            if (dot_flag) {
+                ctx.beginPath();
+                ctx.fillStyle = x;
+                ctx.fillRect(currX, currY, 1, 1);
+                ctx.closePath();
+                dot_flag = false;
+            }
+        }
+        if (res == 'up' || res == "out") {
+            flag = false;
+        }
+        if (res == 'move') {
+            if (flag) {
+                prevX = currX;
+                prevY = currY;
+                currX = e.clientX - canvas.offsetLeft + window.pageXOffset;
+                currY = e.clientY - canvas.offsetTop + window.pageYOffset;
+            }
+        }
+    }
+    function drawlineXY() {
+        ctx.beginPath();
+        ctx.moveTo(startPointX, startPointY);
+        ctx.lineTo(endPointX, endPointY);
+        ctx.strokeStyle = x;
+        ctx.lineWidth = y;
+        ctx.stroke();
+        ctx.closePath();
+        stratLine = false;
+        let length = Math.sqrt((endPointX - startPointX) ** 2 + (endPointY - startPointY) ** 2);
+		if (firstStart) {
+			mainlength = length;
+            firstStart = false;
+        }
+        let realLength = (length).toFixed(1) +" (" + (length/mainlength).toFixed(2) + ")" ;
+        ctx.font = "12px serif";
+        ctx.fillText(realLength, (endPointX + startPointX) / 2 -20, (endPointY + startPointY) / 2 - 5);
+    }
+
+
+</script>
