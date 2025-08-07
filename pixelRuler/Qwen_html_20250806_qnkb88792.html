@@ -111,12 +111,6 @@
             transform: translate(-50%, -100%);
             cursor: pointer;
         }
-        .color-preview {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
         /* Стили для временной линии */
         .temp-line {
             position: absolute;
@@ -135,6 +129,31 @@
         .toggle-icon {
             margin-left: 10px;
             font-size: 0.8em;
+        }
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .font-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .font-btn:hover {
+            background-color: #f0f0f0;
+        }
+        .font-size-display {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -165,8 +184,12 @@
                 <input type="color" id="lineColor" value="#ff0000">
             </div>
             <div class="control-group">
-                <label>Предпросмотр цвета:</label>
-                <div class="color-preview" id="colorPreview" style="background-color: #ff0000;"></div>
+                <label>Размер шрифта:</label>
+                <div class="font-controls">
+                    <button class="font-btn" id="decreaseFont">-</button>
+                    <span class="font-size-display" id="fontSizeDisplay">12</span>
+                    <button class="font-btn" id="increaseFont">+</button>
+                </div>
             </div>
             <div class="control-group">
                 <label>&nbsp;</label>
@@ -182,13 +205,15 @@
         const ctx = canvas.getContext('2d');
         const fileInput = document.getElementById('fileInput');
         const lineColorInput = document.getElementById('lineColor');
-        const colorPreview = document.getElementById('colorPreview');
         const clearBtn = document.getElementById('clearBtn');
         const canvasContainer = document.getElementById('canvasContainer');
         const baseLengthInput = document.getElementById('baseLength');
         const titleHeader = document.getElementById('titleHeader');
         const instructions = document.getElementById('instructions');
         const toggleIcon = document.getElementById('toggleIcon');
+        const increaseFontBtn = document.getElementById('increaseFont');
+        const decreaseFontBtn = document.getElementById('decreaseFont');
+        const fontSizeDisplay = document.getElementById('fontSizeDisplay');
         
         let img = null;
         let currentPoints = [];
@@ -197,6 +222,7 @@
         let baseLength = 100; // Установлено значение по умолчанию
         let baseLineLength = null;
         let tempLineElement = null; // Элемент для временной линии
+        let fontSize = 12; // Начальный размер шрифта
         
         // Переключение отображения инструкции
         titleHeader.addEventListener('click', function() {
@@ -209,10 +235,31 @@
             }
         });
         
-        // Обновление предпросмотра цвета
+        // Увеличение размера шрифта
+        increaseFontBtn.addEventListener('click', function() {
+            fontSize = Math.min(fontSize + 1, 36); // Ограничим максимальный размер
+            fontSizeDisplay.textContent = fontSize;
+            updateFontSizes();
+        });
+        
+        // Уменьшение размера шрифта
+        decreaseFontBtn.addEventListener('click', function() {
+            fontSize = Math.max(fontSize - 1, 8); // Ограничим минимальный размер
+            fontSizeDisplay.textContent = fontSize;
+            updateFontSizes();
+        });
+        
+        // Обновление размеров шрифта для всех меток
+        function updateFontSizes() {
+            const labels = document.querySelectorAll('.distance-label');
+            labels.forEach(label => {
+                label.style.fontSize = `${fontSize}px`;
+            });
+        }
+        
+        // Обновление цвета линии
         lineColorInput.addEventListener('input', function() {
             currentColor = this.value;
-            colorPreview.style.backgroundColor = currentColor;
         });
         
         // Обновление базовой длины
@@ -396,6 +443,7 @@
             label.style.left = `${midX}px`;
             label.style.top = `${midY}px`;
             label.dataset.id = line.id; // Добавляем ID для связи с линией
+            label.style.fontSize = `${fontSize}px`; // Устанавливаем размер шрифта
             
             // Формируем текст метки с длиной в пикселях в скобках
             let labelText = `${displayLength} ${unit}`;
