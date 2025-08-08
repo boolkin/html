@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" type="image/png" href="d11.png" />
+    <link rel="icon" type="image/png" href="d11.png" />
     <title>Расписание электричек</title>
     <style>
         body {
@@ -254,7 +254,6 @@
                 <div class="dropdown-content" id="stationDropdown"></div>
             </div>
             <div class="geo-container">
-                <button onclick="getUserLocation()">Получить мои координаты</button>
                 <div id="coordinates" class="coordinates" style="display: none;"></div>
             </div>
         </div>
@@ -896,9 +895,10 @@
             }
         }
         
-        // При загрузке страницы создаем выпадающий список
+        // При загрузке страницы создаем выпадающий список и запрашиваем геолокацию
         window.onload = function() {
             createStationDropdown();
+            getUserLocation();
         };
     </script>
 </body>

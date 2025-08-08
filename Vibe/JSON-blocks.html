@@ -215,22 +215,22 @@
         .node-children.expanded {
             display: block;
         }
-        .tooltip {
+        .context-menu {
             position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-size: 14px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             z-index: 1000;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-            max-width: 300px;
-            word-break: break-all;
+            display: none;
         }
-        .tooltip.show {
-            opacity: 1;
+        .context-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .context-menu-item:hover {
+            background: #f0f0f0;
         }
         .error {
             background: #ffebee;
@@ -352,32 +352,6 @@
             resize: vertical;
             background: #f8f9fa;
         }
-        .scroll-to-top {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(45deg, #4a90e2, #5e60ce);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-        .scroll-to-top:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-        }
-        .scroll-to-top:active {
-            transform: translateY(0);
-        }
         @media (max-width: 768px) {
             .button-group {
                 flex-direction: column;
@@ -430,7 +404,7 @@
             <section class="blocks-section">
                 <h2 class="section-title">Рабочая область</h2>
                 <div class="instructions">
-                    Дважды кликните на любом узле в дереве, чтобы скопировать его сюда. Перетаскивайте блоки и удаляйте их при необходимости.
+                    Щелкните правой кнопкой мыши на любом узле в дереве, чтобы скопировать его сюда. Перетаскивайте блоки и удаляйте их при необходимости.
                 </div>
                 <div class="blocks-container" id="blocksContainer">
                     <div class="empty-state">
@@ -452,8 +426,9 @@
             <textarea id="exportCode" placeholder="Здесь будет отображаться HTML код расположения блоков"></textarea>
         </section>
     </div>
-    <button class="scroll-to-top" id="scrollToTopBtn">↑</button>
-    <div id="tooltip" class="tooltip"></div>
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="copyToBlocks">Копировать в рабочую область</div>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const jsonInput = document.getElementById('jsonInput');
@@ -462,14 +437,15 @@
             const exportBtn = document.getElementById('exportBtn');
             const selectAllBtn = document.getElementById('selectAllBtn');
             const copyBtn = document.getElementById('copyBtn');
-            const scrollToTopBtn = document.getElementById('scrollToTopBtn');
             const treeContainer = document.getElementById('tree');
             const blocksContainer = document.getElementById('blocksContainer');
             const exportCode = document.getElementById('exportCode');
-            const tooltip = document.getElementById('tooltip');
+            const contextMenu = document.getElementById('contextMenu');
+            const copyToBlocksMenuItem = document.getElementById('copyToBlocks');
             
             let blockCounter = 0;
             let selectedNode = null;
+            let contextMenuNode = null;
             
             // Генерация случайного цвета
             function getRandomColor() {
@@ -492,36 +468,24 @@
                 node.dataset.value = typeof value === 'object' ? JSON.stringify(value) : String(value);
                 node.dataset.type = typeof value;
                 
-                // Добавляем обработчики для подсказки
-                node.addEventListener('mouseenter', function(e) {
-                    tooltip.textContent = path;
-                    tooltip.style.left = (e.pageX + 10) + 'px';
-                    tooltip.style.top = (e.pageY + 10) + 'px';
-                    tooltip.classList.add('show');
-                });
-                
-                node.addEventListener('mousemove', function(e) {
-                    tooltip.style.left = (e.pageX + 10) + 'px';
-                    tooltip.style.top = (e.pageY + 10) + 'px';
-                });
-                
-                node.addEventListener('mouseleave', function() {
-                    tooltip.classList.remove('show');
-                });
-                
-                // Двойной клик для копирования в блоки
-                node.addEventListener('dblclick', function(e) {
+                // Остановка всплытия события для предотвращения выделения родительских элементов
+                node.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    copyNodeToBlocks(node);
-                });
-                
-                // Выбор узла
-                node.addEventListener('click', function() {
                     if (selectedNode) {
                         selectedNode.classList.remove('selected');
                     }
                     node.classList.add('selected');
                     selectedNode = node;
+                });
+                
+                // Контекстное меню
+                node.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Останавливаем всплытие события
+                    contextMenuNode = node;
+                    contextMenu.style.display = 'block';
+                    contextMenu.style.left = e.pageX + 'px';
+                    contextMenu.style.top = e.pageY + 'px';
                 });
                 
                 const nodeHeader = document.createElement('div');
@@ -608,8 +572,8 @@
                 
                 // Установка случайной позиции в пределах контейнера
                 const containerRect = blocksContainer.getBoundingClientRect();
-                const maxX = containerRect.width - 250;
-                const maxY = containerRect.height - 100;
+                const maxX = containerRect.width - 150;
+                const maxY = containerRect.height/2-50;
                 
                 const posX = Math.max(0, Math.min(maxX, Math.random() * maxX));
                 const posY = Math.max(0, Math.min(maxY, Math.random() * maxY));
@@ -826,7 +790,7 @@
             <div class="block-header">
                 <div class="block-title">${title}</div>
             </div>
-            <div class="block-content">${content.replace(/</g, '<').replace(/>/g, '>')}</div>
+            <div class="block-content">${content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
         </div>
 `;
                 });
@@ -855,21 +819,10 @@
                 }, 2000);
             }
             
-            // Прокрутка вверх
-            function scrollToTop() {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            }
-            
-            // Показ/скрытие кнопки прокрутки
-            function toggleScrollButton() {
-                if (window.scrollY > 300) {
-                    scrollToTopBtn.style.display = 'flex';
-                } else {
-                    scrollToTopBtn.style.display = 'none';
-                }
+            // Скрытие контекстного меню при клике вне его
+            function hideContextMenu() {
+                contextMenu.style.display = 'none';
+                contextMenuNode = null;
             }
             
             // Обработчики событий
@@ -878,11 +831,21 @@
             exportBtn.addEventListener('click', exportHTML);
             selectAllBtn.addEventListener('click', selectAllText);
             copyBtn.addEventListener('click', copyToClipboard);
-            scrollToTopBtn.addEventListener('click', scrollToTop);
-            window.addEventListener('scroll', toggleScrollButton);
             
-            // Скрываем кнопку при загрузке страницы
-            scrollToTopBtn.style.display = 'none';
+            // Контекстное меню
+            copyToBlocksMenuItem.addEventListener('click', function() {
+                if (contextMenuNode) {
+                    copyNodeToBlocks(contextMenuNode);
+                    hideContextMenu();
+                }
+            });
+            
+            // Скрытие контекстного меню при клике вне его
+            document.addEventListener('click', function(e) {
+                if (!contextMenu.contains(e.target)) {
+                    hideContextMenu();
+                }
+            });
             
             // Поддержка Enter для генерации
             jsonInput.addEventListener('keydown', function(e) {
