@@ -52,3 +52,8 @@ https://boolkin.github.io/html/pixelRuler/
 https://boolkin.github.io/html/pixelRuler/bookmarklet.html  
 https://boolkin.github.io/html/pixelRuler/minify.txt  
 https://boolkin.github.io/html/pixelRuler/Qwen_html_20250806_qnkb88792.html  
+
+VibeCoding projects:  
+D1 - расписание 
+https://boolkin.github.io/html/Vibe/D1.html  
+https://boolkin.github.io/html/Vibe/pixRul.html  
