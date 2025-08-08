@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Дерево с Блоками</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .subtitle {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .input-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #generateBtn {
+            background: linear-gradient(45deg, #4a90e2, #5e60ce);
+            color: white;
+        }
+        #clearBtn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            color: white;
+        }
+        #exportBtn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+        }
+        #selectAllBtn {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+        #copyBtn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .tree-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            resize: horizontal;
+            max-width: 1000px;
+        }
+        .blocks-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            min-height: 300px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        #tree-wrapper {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+            padding: 10px 0;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        #tree {
+            position: relative;
+            min-width: 2000px;
+            padding: 10px;
+        }
+        .node {
+            margin: 8px 0;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+            cursor: pointer;
+        }
+        .node:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .node.selected {
+            background-color: rgba(74, 144, 226, 0.2);
+        }
+        .node-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .node-toggle {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            background: #eee;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        .node-toggle.hidden {
+            visibility: hidden;
+        }
+        .node-key {
+            font-weight: bold;
+            font-size: 1.1em;
+            flex-grow: 1;
+        }
+        .node-value {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 8px 12px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+        .node-children {
+            margin-left: 30px;
+            padding-left: 20px;
+            border-left: 2px dashed rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .node-children.expanded {
+            display: block;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 300px;
+            word-break: break-all;
+        }
+        .tooltip.show {
+            opacity: 1;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #c62828;
+        }
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            color: #bdc3c7;
+        }
+        .blocks-container {
+            flex: 1;
+            position: relative;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 200px;
+            overflow: auto;
+            resize: both;
+        }
+        .block-item {
+            position: absolute;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            min-width: 150px;
+            max-width: 250px;
+            word-break: break-word;
+            transition: box-shadow 0.2s;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        .block-item:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .block-title {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .block-delete {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .block-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        .export-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .export-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .export-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        #exportCode {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #4a90e2, #5e60ce);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .scroll-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .scroll-to-top:active {
+            transform: translateY(0);
+        }
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+            .node-children {
+                margin-left: 15px;
+                padding-left: 10px;
+            }
+            .content-wrapper {
+                flex-direction: column;
+            }
+            .export-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .export-buttons {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JSON Дерево с Блоками</h1>
+            <p class="subtitle">Визуализация JSON структуры с возможностью копирования узлов в рабочую область</p>
+        </header>
+        <section class="input-section">
+            <textarea id="jsonInput" placeholder='Введите JSON строку, например: {"name": "Иван", "age": 30, "address": {"city": "Москва", "street": "Тверская"}}'></textarea>
+            <div class="button-group">
+                <button id="generateBtn">Сгенерировать дерево</button>
+                <button id="clearBtn">Очистить</button>
+            </div>
+        </section>
+        <div class="content-wrapper">
+            <section class="tree-section">
+                <h2 class="section-title">Дерево значений</h2>
+                <div id="tree-wrapper">
+                    <div id="tree">
+                        <div class="empty-state">
+                            <div>🌳</div>
+                            <p>Введите JSON строку и нажмите "Сгенерировать дерево"</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="blocks-section">
+                <h2 class="section-title">Рабочая область</h2>
+                <div class="instructions">
+                    Дважды кликните на любом узле в дереве, чтобы скопировать его сюда. Перетаскивайте блоки и удаляйте их при необходимости.
+                </div>
+                <div class="blocks-container" id="blocksContainer">
+                    <div class="empty-state">
+                        <div>📋</div>
+                        <p>Здесь будут появляться скопированные блоки</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <section class="export-section">
+            <div class="export-header">
+                <h2 class="export-title">Экспорт HTML</h2>
+                <div class="export-buttons">
+                    <button id="exportBtn">Экспортировать HTML</button>
+                    <button id="selectAllBtn">Выделить все</button>
+                    <button id="copyBtn">Копировать</button>
+                </div>
+            </div>
+            <textarea id="exportCode" placeholder="Здесь будет отображаться HTML код расположения блоков"></textarea>
+        </section>
+    </div>
+    <button class="scroll-to-top" id="scrollToTopBtn">↑</button>
+    <div id="tooltip" class="tooltip"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const jsonInput = document.getElementById('jsonInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+            const treeContainer = document.getElementById('tree');
+            const blocksContainer = document.getElementById('blocksContainer');
+            const exportCode = document.getElementById('exportCode');
+            const tooltip = document.getElementById('tooltip');
+            
+            let blockCounter = 0;
+            let selectedNode = null;
+            
+            // Генерация случайного цвета
+            function getRandomColor() {
+                const colors = [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+                    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+                    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            // Создание узла дерева
+            function createNode(key, value, path, level = 0) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.style.borderLeftColor = getRandomColor();
+                node.style.marginLeft = `${level * 20}px`;
+                node.dataset.path = path;
+                node.dataset.key = key;
+                node.dataset.value = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                node.dataset.type = typeof value;
+                
+                // Добавляем обработчики для подсказки
+                node.addEventListener('mouseenter', function(e) {
+                    tooltip.textContent = path;
+                    tooltip.style.left = (e.pageX + 10) + 'px';
+                    tooltip.style.top = (e.pageY + 10) + 'px';
+                    tooltip.classList.add('show');
+                });
+                
+                node.addEventListener('mousemove', function(e) {
+                    tooltip.style.left = (e.pageX + 10) + 'px';
+                    tooltip.style.top = (e.pageY + 10) + 'px';
+                });
+                
+                node.addEventListener('mouseleave', function() {
+                    tooltip.classList.remove('show');
+                });
+                
+                // Двойной клик для копирования в блоки
+                node.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    copyNodeToBlocks(node);
+                });
+                
+                // Выбор узла
+                node.addEventListener('click', function() {
+                    if (selectedNode) {
+                        selectedNode.classList.remove('selected');
+                    }
+                    node.classList.add('selected');
+                    selectedNode = node;
+                });
+                
+                const nodeHeader = document.createElement('div');
+                nodeHeader.className = 'node-header';
+                
+                // Создаем переключатель для сворачивания/разворачивания
+                const toggle = document.createElement('div');
+                toggle.className = 'node-toggle';
+                
+                // Скрываем переключатель для примитивных значений
+                if (typeof value !== 'object' || value === null) {
+                    toggle.classList.add('hidden');
+                } else {
+                    toggle.textContent = '+';
+                }
+                
+                const keyElement = document.createElement('div');
+                keyElement.className = 'node-key';
+                keyElement.textContent = key;
+                
+                nodeHeader.appendChild(toggle);
+                nodeHeader.appendChild(keyElement);
+                node.appendChild(nodeHeader);
+                
+                if (typeof value === 'object' && value !== null) {
+                    // Рекурсивно создаем дочерние узлы
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'node-children';
+                    
+                    // Добавляем обработчик для переключателя
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        childrenContainer.classList.toggle('expanded');
+                        toggle.textContent = childrenContainer.classList.contains('expanded') ? '-' : '+';
+                    });
+                    
+                    for (const childKey in value) {
+                        if (value.hasOwnProperty(childKey)) {
+                            const childPath = path ? `${path}.${childKey}` : childKey;
+                            const childNode = createNode(childKey, value[childKey], childPath, level + 1);
+                            childrenContainer.appendChild(childNode);
+                        }
+                    }
+                    node.appendChild(childrenContainer);
+                } else {
+                    // Создаем элемент значения
+                    const valueElement = document.createElement('div');
+                    valueElement.className = 'node-value';
+                    // Форматируем значение для отображения
+                    if (value === null) {
+                        valueElement.textContent = 'null';
+                        valueElement.style.color = '#999';
+                    } else if (typeof value === 'string') {
+                        valueElement.textContent = `"${value}"`;
+                        valueElement.style.color = '#27ae60';
+                    } else if (typeof value === 'number') {
+                        valueElement.textContent = value;
+                        valueElement.style.color = '#2980b9';
+                    } else if (typeof value === 'boolean') {
+                        valueElement.textContent = value.toString();
+                        valueElement.style.color = '#8e44ad';
+                    } else {
+                        valueElement.textContent = String(value);
+                    }
+                    node.appendChild(valueElement);
+                }
+                
+                return node;
+            }
+            
+            // Копирование узла в блоки
+            function copyNodeToBlocks(node) {
+                // Удаляем пустое состояние, если оно есть
+                const emptyState = blocksContainer.querySelector('.empty-state');
+                if (emptyState) {
+                    blocksContainer.removeChild(emptyState);
+                }
+                
+                blockCounter++;
+                
+                const block = document.createElement('div');
+                block.className = 'block-item';
+                block.dataset.blockId = blockCounter;
+                
+                // Установка случайной позиции в пределах контейнера
+                const containerRect = blocksContainer.getBoundingClientRect();
+                const maxX = containerRect.width - 250;
+                const maxY = containerRect.height - 100;
+                
+                const posX = Math.max(0, Math.min(maxX, Math.random() * maxX));
+                const posY = Math.max(0, Math.min(maxY, Math.random() * maxY));
+                
+                block.style.left = `${posX}px`;
+                block.style.top = `${posY}px`;
+                
+                // Создание заголовка блока
+                const blockHeader = document.createElement('div');
+                blockHeader.className = 'block-header';
+                
+                const blockTitle = document.createElement('div');
+                blockTitle.className = 'block-title';
+                blockTitle.textContent = node.dataset.path;
+                
+                const deleteBtn = document.createElement('div');
+                deleteBtn.className = 'block-delete';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    blocksContainer.removeChild(block);
+                    checkEmptyBlocks();
+                });
+                
+                blockHeader.appendChild(blockTitle);
+                blockHeader.appendChild(deleteBtn);
+                block.appendChild(blockHeader);
+                
+                // Создание содержимого блока
+                const blockContent = document.createElement('div');
+                blockContent.className = 'block-content';
+                
+                if (node.dataset.type === 'object') {
+                    blockContent.textContent = JSON.stringify(JSON.parse(node.dataset.value), null, 2);
+                } else {
+                    blockContent.textContent = node.dataset.value;
+                }
+                
+                block.appendChild(blockContent);
+                
+                // Добавление блока в контейнер
+                blocksContainer.appendChild(block);
+                
+                // Добавление возможности перетаскивания
+                makeDraggable(block);
+            }
+            
+            // Проверка, пуста ли рабочая область
+            function checkEmptyBlocks() {
+                if (blocksContainer.children.length === 0) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'empty-state';
+                    emptyState.innerHTML = '<div>📋</div><p>Здесь будут появляться скопированные блоки</p>';
+                    blocksContainer.appendChild(emptyState);
+                }
+            }
+            
+            // Сделать элемент перетаскиваемым
+            function makeDraggable(element) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                
+                element.onmousedown = dragMouseDown;
+                
+                function dragMouseDown(e) {
+                    e.preventDefault();
+                    // Получаем позицию курсора при запуске
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                }
+                
+                function elementDrag(e) {
+                    e.preventDefault();
+                    // Вычисляем новую позицию курсора
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    
+                    // Устанавливаем новую позицию элемента
+                    const newTop = (element.offsetTop - pos2);
+                    const newLeft = (element.offsetLeft - pos1);
+                    
+                    // Ограничиваем перемещение границами контейнера
+                    const containerRect = blocksContainer.getBoundingClientRect();
+                    const elementRect = element.getBoundingClientRect();
+                    
+                    const maxTop = containerRect.height - elementRect.height;
+                    const maxLeft = containerRect.width - elementRect.width;
+                    
+                    element.style.top = Math.max(0, Math.min(maxTop, newTop)) + "px";
+                    element.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + "px";
+                }
+                
+                function closeDragElement() {
+                    // Останавливаем перемещение при отпускании кнопки мыши
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                }
+            }
+            
+            // Генерация дерева из JSON
+            function generateTree() {
+                const jsonString = jsonInput.value.trim();
+                if (!jsonString) {
+                    treeContainer.innerHTML = '<div class="empty-state"><div>🌳</div><p>Введите JSON строку и нажмите "Сгенерировать дерево"</p></div>';
+                    return;
+                }
+                try {
+                    const jsonData = JSON.parse(jsonString);
+                    treeContainer.innerHTML = '';
+                    // Создаем корневой узел
+                    if (typeof jsonData === 'object' && jsonData !== null) {
+                        for (const key in jsonData) {
+                            if (jsonData.hasOwnProperty(key)) {
+                                const node = createNode(key, jsonData[key], key);
+                                treeContainer.appendChild(node);
+                            }
+                        }
+                    } else {
+                        // Если JSON - примитивное значение
+                        const node = createNode('root', jsonData, 'root');
+                        treeContainer.appendChild(node);
+                    }
+                } catch (error) {
+                    treeContainer.innerHTML = `<div class="error">Ошибка парсинга JSON: ${error.message}</div>`;
+                }
+            }
+            
+            // Очистка
+            function clearAll() {
+                jsonInput.value = '';
+                treeContainer.innerHTML = '<div class="empty-state"><div>🌳</div><p>Введите JSON строку и нажмите "Сгенерировать дерево"</p></div>';
+                blocksContainer.innerHTML = '<div class="empty-state"><div>📋</div><p>Здесь будут появляться скопированные блоки</p></div>';
+                exportCode.value = '';
+                blockCounter = 0;
+                selectedNode = null;
+            }
+            
+            // Экспорт HTML
+            function exportHTML() {
+                if (blocksContainer.children.length === 0 || 
+                    (blocksContainer.children.length === 1 && blocksContainer.querySelector('.empty-state'))) {
+                    exportCode.value = '<!-- Нет блоков для экспорта -->';
+                    return;
+                }
+                
+                let html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Экспортированные блоки</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .blocks-container {
+            position: relative;
+            min-height: 500px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .block-item {
+            position: absolute;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            min-width: 150px;
+            max-width: 250px;
+            word-break: break-word;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .block-title {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .block-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="blocks-container">
+`;
+                
+                // Проходим по всем блокам и добавляем их в HTML
+                const blocks = blocksContainer.querySelectorAll('.block-item');
+                blocks.forEach(block => {
+                    const rect = block.getBoundingClientRect();
+                    const containerRect = blocksContainer.getBoundingClientRect();
+                    
+                    // Вычисляем позицию относительно контейнера
+                    const left = rect.left - containerRect.left;
+                    const top = rect.top - containerRect.top;
+                    
+                    const title = block.querySelector('.block-title').textContent;
+                    const content = block.querySelector('.block-content').textContent;
+                    
+                    html += `        <div class="block-item" style="left: ${left}px; top: ${top}px;">
+            <div class="block-header">
+                <div class="block-title">${title}</div>
+            </div>
+            <div class="block-content">${content.replace(/</g, '<').replace(/>/g, '>')}</div>
+        </div>
+`;
+                });
+                
+                html += `    </div>
+</body>
+</html>`;
+                
+                exportCode.value = html;
+            }
+            
+            // Выделить весь текст в поле экспорта
+            function selectAllText() {
+                exportCode.select();
+            }
+            
+            // Копировать текст в буфер обмена
+            function copyToClipboard() {
+                exportCode.select();
+                document.execCommand('copy');
+                // Показываем визуальную обратную связь
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Скопировано!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            }
+            
+            // Прокрутка вверх
+            function scrollToTop() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Показ/скрытие кнопки прокрутки
+            function toggleScrollButton() {
+                if (window.scrollY > 300) {
+                    scrollToTopBtn.style.display = 'flex';
+                } else {
+                    scrollToTopBtn.style.display = 'none';
+                }
+            }
+            
+            // Обработчики событий
+            generateBtn.addEventListener('click', generateTree);
+            clearBtn.addEventListener('click', clearAll);
+            exportBtn.addEventListener('click', exportHTML);
+            selectAllBtn.addEventListener('click', selectAllText);
+            copyBtn.addEventListener('click', copyToClipboard);
+            scrollToTopBtn.addEventListener('click', scrollToTop);
+            window.addEventListener('scroll', toggleScrollButton);
+            
+            // Скрываем кнопку при загрузке страницы
+            scrollToTopBtn.style.display = 'none';
+            
+            // Поддержка Enter для генерации
+            jsonInput.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    generateTree();
+                }
+            });
+            
+            // Пример JSON для демонстрации
+            jsonInput.value = JSON.stringify({
+                "имя": "Иван Иванов",
+                "возраст": 30,
+                "адрес": {
+                    "город": "Москва",
+                    "улица": "Тверская",
+                    "дом": 15
+                },
+                "хобби": ["чтение", "путешествия", "фотография"],
+                "активен": true,
+                "баланс": null
+            }, null, 2);
+        });
+    </script>
+</body>
+</html>

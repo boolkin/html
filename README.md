@@ -57,3 +57,4 @@ VibeCoding projects:
 D1 - расписание 
 https://boolkin.github.io/html/Vibe/D1.html  
 https://boolkin.github.io/html/Vibe/pixRul.html  
+https://boolkin.github.io/html/Vibe/JSON-blocks.html  
