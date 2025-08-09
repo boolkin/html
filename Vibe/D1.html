@@ -653,6 +653,10 @@
                 // Загружаем расписания для выбранной станции в обоих направлениях
                 const schedulePromises = stationSchedules.map(urlInfo => loadSchedule(urlInfo));
                 const results = await Promise.all(schedulePromises);
+                
+                // Сортируем результаты: сначала направление 2 (на Москву), затем направление 1 (из Москвы)
+                results.sort((a, b) => a.direction - b.direction);
+                
                 displayAllSchedules(results);
             } catch (error) {
                 resultDiv.innerHTML = `<div class="error">Ошибка загрузки данных: ${error.message}</div>`;
