@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписание электричек</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            padding: 10px;
+            max-width: 245px;
+            margin: 0 auto;
+        }
+
+        .widget {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .widget-header {
+            background: #ed9f2d;
+            color: white;
+            padding: 14px 10px;
+            text-align: center;
+        }
+
+        .station-name {
+            font-size: 17px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .distance {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .trains-section {
+            padding: 14px 10px;
+        }
+
+        .trains-to-moscow-section {
+            background-color: #e3f2fd;
+        }
+
+        .trains-from-moscow-section {
+            background-color: #f3e5f5;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3a3a3c;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e5e5ea;
+        }
+
+        .train-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .train-item:last-child {
+            border-bottom: none;
+        }
+
+        .train-time {
+            font-size: 18px;
+            font-weight: 700;
+            color: #007aff;
+        }
+
+        .train-info {
+            text-align: right;
+        }
+
+        .train-destination {
+            font-size: 13px;
+            font-weight: 500;
+            color: #3a3a3c;
+        }
+
+        .train-class {
+            font-size: 11px;
+            color: #8e8e93;
+            margin-top: 2px;
+        }
+
+        .train-class-name {
+            font-weight: 500;
+        }
+
+        .train-class-abbr {
+            background: #ff9500;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .delay {
+            color: #ff3b30;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 25px 15px;
+            color: #8e8e93;
+            font-size: 13px;
+        }
+
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e5e5ea;
+            border-top: 2px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ff3b30;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 245px) {
+            body {
+                padding: 6px;
+            }
+            
+            .widget-header {
+                padding: 12px 8px;
+            }
+            
+            .station-name {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget">
+        <div class="widget-header">
+            <h1 id="station-name" class="station-name">Определение местоположения...</h1>
+            <div id="station-distance" class="distance"></div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            Загрузка расписания...
+        </div>
+        
+        <div id="trains-to-moscow" class="trains-section trains-to-moscow-section">
+            <div class="section-title">На Москву</div>
+            <div id="to-moscow-container"></div>
+        </div>
+        
+        <div id="trains-from-moscow" class="trains-section trains-from-moscow-section">
+            <div class="section-title">Из Москвы</div>
+            <div id="from-moscow-container"></div>
+        </div>
+        
+        <div id="error-message"></div>
+    </div>
+
+    <script>
+        // Данные станций
+        const stations = [
+            {
+                stationName: "Лобня",
+                stationId: 5132,
+                latitude: 56.012828,
+                longitude: 37.48505,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=5132",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=5132"
+            },
+            {
+                stationName: "Шереметьевская",
+                stationId: 5131,
+                latitude: 55.983564,
+                longitude: 37.498972,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=5131",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=5131"
+            },
+            {
+                stationName: "Хлебниково",
+                stationId: 5130,
+                latitude: 55.97036,
+                longitude: 37.504807,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=5130",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=5130"
+            },
+            {
+                stationName: "Водники",
+                stationId: 5129,
+                latitude: 55.952298,
+                longitude: 37.512824,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=5129",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=5129"
+            },
+            {
+                stationName: "Новодачная",
+                stationId: 5127,
+                latitude: 55.924282,
+                longitude: 37.528021,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=5127",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=5127"
+            },
+            {
+                stationName: "Марк",
+                stationId: 5126,
+                latitude: 55.904417,
+                longitude: 37.538291,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=5126",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=5126"
+            },
+            {
+                stationName: "Бескудниково",
+                stationId: 4120,
+                latitude: 55.882577,
+                longitude: 37.567692,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=4120",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=4120"
+            },
+            {
+                stationName: "Дегунино",
+                stationId: 4125,
+                latitude: 55.865381,
+                longitude: 37.573356,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=4125",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=4125"
+            },
+            {
+                stationName: "Беговая",
+                stationId: 4192,
+                latitude: 55.772352,
+                longitude: 37.541935,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=4192",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=4192"
+            },
+            {
+                stationName: "Тестовская",
+                stationId: 4193,
+                latitude: 55.757383,
+                longitude: 37.533068,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=4193",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=4193"
+            },
+            {
+                stationName: "Фили",
+                stationId: 3737,
+                latitude: 55.743874,
+                longitude: 37.514442,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=3737",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=3737"
+            },
+            {
+                stationName: "Кунцевская",
+                stationId: 43368,
+                latitude: 55.726866,
+                longitude: 37.448103,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=43368",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=43368"
+            },
+            {
+                stationName: "Рабочий пос.",
+                stationId: 3739,
+                latitude: 55.727001,
+                longitude: 37.41778,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=3739",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=3739"
+            },
+            {
+                stationName: "Сетунь",
+                stationId: 3740,
+                latitude: 55.723763,
+                longitude: 37.397494,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=3740",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=3740"
+            },
+            {
+                stationName: "Немчиновка",
+                stationId: 3741,
+                latitude: 55.715579,
+                longitude: 37.374486,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=3741",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=3741"
+            },
+            {
+                stationName: "Баковка",
+                stationId: 3743,
+                latitude: 55.682393,
+                longitude: 37.313961,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=3743",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=3743"
+            },
+            {
+                stationName: "Одинцово",
+                stationId: 3751,
+                latitude: 55.672773,
+                longitude: 37.283208,
+                urlToMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=2&station=3751",
+                urlFromMoscow: "https://mcd.nata-info.ru/api/v2?build=84&diameter=1&direction=1&station=3751"
+            }
+        ];
+
+        // Глобальные переменные
+        let userLocation = null;
+        let nearestStation = null;
+
+        // DOM элементы
+        const loadingElement = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const stationNameElement = document.getElementById('station-name');
+        const stationDistanceElement = document.getElementById('station-distance');
+        const trainsToMoscowSection = document.getElementById('trains-to-moscow');
+        const trainsFromMoscowSection = document.getElementById('trains-from-moscow');
+        const toMoscowContainer = document.getElementById('to-moscow-container');
+        const fromMoscowContainer = document.getElementById('from-moscow-container');
+
+        // Вычисление расстояния между двумя точками (формула гаверсинусов)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Радиус Земли в километрах
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; // Расстояние в километрах
+        }
+
+        // Нахождение ближайшей станции
+        function findNearestStation(userLat, userLon) {
+            let minDistance = Infinity;
+            let nearest = null;
+            let nearestDistance = 0;
+
+            stations.forEach(station => {
+                const distance = calculateDistance(userLat, userLon, station.latitude, station.longitude);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = station;
+                    nearestDistance = distance;
+                }
+            });
+
+            return { station: nearest, distance: nearestDistance };
+        }
+
+        // Форматирование времени
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // Получение данных о расписании
+        async function fetchTrainSchedule(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении данных');
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Ошибка при получении расписания:', error);
+                return null;
+            }
+        }
+
+        // Отображение информации о станции с расстоянием
+        function displayStationInfo(station, distance = null) {
+            stationNameElement.textContent = station.stationName;
+            if (distance !== null) {
+                stationDistanceElement.textContent = `${distance.toFixed(1)} км`;
+            } else {
+                stationDistanceElement.textContent = '';
+            }
+        }
+
+        // Отображение списка поездов (только 2 поезда)
+        function displayTrains(trains, container) {
+            container.innerHTML = '';
+
+            if (!trains || trains.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#8e8e93;padding:15px 0;">Нет данных</div>';
+                return;
+            }
+
+            // Берем первые 2 поезда
+            const limitedTrains = trains.slice(0, 2);
+
+            limitedTrains.forEach(train => {
+                const trainItem = document.createElement('div');
+                trainItem.className = 'train-item';
+                
+                const destination = train.i18n?.ru?.destination || 'Неизвестно';
+                const trainClassInfo = train.i18n?.ru?.trainClass || {};
+                const trainClassName = trainClassInfo.name || '';
+                const trainClassAbbr = trainClassInfo.abbr || '';
+                
+                // Расчет задержки
+                let delayInfo = '';
+                if (train.delaySeconds > 0) {
+                    const minutes = Math.floor(train.delaySeconds / 60);
+                    delayInfo = `+${minutes} мин`;
+                }
+
+                trainItem.innerHTML = `
+                    <div class="train-time">${formatTime(train.departureTime)}</div>
+                    <div class="train-info">
+                        <div class="train-destination">${destination}</div>
+                        ${trainClassName ? `
+                            <div class="train-class">
+                                <span class="train-class-name">${trainClassName}</span>
+                                ${trainClassAbbr ? `<span class="train-class-abbr">${trainClassAbbr}</span>` : ''}
+                            </div>
+                        ` : ''}
+                        ${delayInfo ? `<div class="delay">${delayInfo}</div>` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(trainItem);
+            });
+        }
+
+        // Обновление всего расписания
+        async function updateSchedule() {
+            if (!nearestStation) return;
+
+            loadingElement.style.display = 'block';
+            toMoscowContainer.innerHTML = '';
+            fromMoscowContainer.innerHTML = '';
+
+            // Получаем расписание на Москву
+            const toMoscowData = await fetchTrainSchedule(nearestStation.station.urlToMoscow);
+            displayTrains(toMoscowData?.trains, toMoscowContainer);
+
+            // Получаем расписание из Москвы
+            const fromMoscowData = await fetchTrainSchedule(nearestStation.station.urlFromMoscow);
+            displayTrains(fromMoscowData?.trains, fromMoscowContainer);
+
+            loadingElement.style.display = 'none';
+        }
+
+        // Получение геопозиции пользователя
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        
+                        const result = findNearestStation(userLocation.latitude, userLocation.longitude);
+                        nearestStation = result;
+                        
+                        displayStationInfo(result.station, result.distance);
+                        updateSchedule();
+                    },
+                    (error) => {
+                        console.error('Ошибка получения геопозиции:', error);
+                        stationNameElement.textContent = 'Лобня';
+                        stationDistanceElement.textContent = '';
+                        errorMessage.innerHTML = `
+                            <div class="error">
+                                Не удалось определить местоположение. Показано расписание для Лобни.
+                            </div>
+                        `;
+                        
+                        // По умолчанию используем первую станцию
+                        nearestStation = { station: stations[0], distance: 0 };
+                        displayStationInfo(nearestStation.station);
+                        updateSchedule();
+                    }
+                );
+            } else {
+                errorMessage.innerHTML = `
+                    <div class="error">
+                        Геолокация не поддерживается. Показано расписание для Лобни.
+                    </div>
+                `;
+                
+                // По умолчанию используем первую станцию
+                nearestStation = { station: stations[0], distance: 0 };
+                stationNameElement.textContent = 'Лобня';
+                displayStationInfo(nearestStation.station);
+                updateSchedule();
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            getUserLocation();
+        });
+    </script>
+</body>
+</html>
