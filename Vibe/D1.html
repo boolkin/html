@@ -649,13 +649,13 @@
             try {
                 // Фильтруем расписания для выбранной станции
                 const stationSchedules = scheduleUrls.filter(urlInfo => urlInfo.stationId === stationId);
-                
+
+                // Сортируем результаты: сначала направление 2 (на Москву), затем направление 1 (из Москвы)
+                stationSchedules.sort((a, b) => b.direction - a.direction);
+
                 // Загружаем расписания для выбранной станции в обоих направлениях
                 const schedulePromises = stationSchedules.map(urlInfo => loadSchedule(urlInfo));
-                const results = await Promise.all(schedulePromises);
-                
-                // Сортируем результаты: сначала направление 2 (на Москву), затем направление 1 (из Москвы)
-                results.sort((a, b) => a.direction - b.direction);
+                const results = await Promise.all(schedulePromises);          
                 
                 displayAllSchedules(results);
             } catch (error) {
