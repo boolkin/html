@@ -68,6 +68,7 @@
                 linear-gradient(-45deg, transparent 75%, #eee 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            transform-origin: top left;
         }
         canvas {
             display: block;
@@ -155,6 +156,31 @@
             text-align: center;
             font-weight: bold;
         }
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .zoom-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .zoom-btn:hover {
+            background-color: #f0f0f0;
+        }
+        .zoom-display {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +218,14 @@
                 </div>
             </div>
             <div class="control-group">
+                <label>Масштаб изображения:</label>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="decreaseZoom">-</button>
+                    <span class="zoom-display" id="zoomDisplay">100%</span>
+                    <button class="zoom-btn" id="increaseZoom">+</button>
+                </div>
+            </div>
+            <div class="control-group">
                 <label>&nbsp;</label>
                 <button class="clear-btn" id="clearBtn">Очистить все линии</button>
             </div>
@@ -214,6 +248,9 @@
         const increaseFontBtn = document.getElementById('increaseFont');
         const decreaseFontBtn = document.getElementById('decreaseFont');
         const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+        const increaseZoomBtn = document.getElementById('increaseZoom');
+        const decreaseZoomBtn = document.getElementById('decreaseZoom');
+        const zoomDisplay = document.getElementById('zoomDisplay');
         
         let img = null;
         let currentPoints = [];
@@ -223,6 +260,9 @@
         let baseLineLength = null;
         let tempLineElement = null; // Элемент для временной линии
         let fontSize = 12; // Начальный размер шрифта
+        let zoomLevel = 100; // Начальный уровень масштабирования в процентах
+        let originalWidth = 0;
+        let originalHeight = 0;
         
         // Переключение отображения инструкции
         titleHeader.addEventListener('click', function() {
@@ -249,12 +289,40 @@
             updateFontSizes();
         });
         
+        // Увеличение масштаба
+        increaseZoomBtn.addEventListener('click', function() {
+            zoomLevel = Math.min(zoomLevel + 10, 200); // Ограничим максимальный масштаб 200%
+            zoomDisplay.textContent = `${zoomLevel}%`;
+            updateZoom();
+        });
+        
+        // Уменьшение масштаба
+        decreaseZoomBtn.addEventListener('click', function() {
+            zoomLevel = Math.max(zoomLevel - 10, 20); // Ограничим минимальный масштаб 20%
+            zoomDisplay.textContent = `${zoomLevel}%`;
+            updateZoom();
+        });
+        
         // Обновление размеров шрифта для всех меток
         function updateFontSizes() {
             const labels = document.querySelectorAll('.distance-label');
             labels.forEach(label => {
                 label.style.fontSize = `${fontSize}px`;
             });
+        }
+        
+        // Обновление масштаба изображения
+        function updateZoom() {
+            if (originalWidth > 0 && originalHeight > 0) {
+                const scale = zoomLevel / 100;
+                
+                // Применяем масштаб к контейнеру
+                canvasContainer.style.transform = `scale(${scale})`;
+                
+                // Перерисовываем все элементы
+                redrawCanvas();
+                redrawAllLines();
+            }
         }
         
         // Обновление цвета линии
@@ -276,10 +344,16 @@
                 reader.onload = function(event) {
                     img = new Image();
                     img.onload = function() {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
+                        originalWidth = img.width;
+                        originalHeight = img.height;
+                        
+                        // Устанавливаем размер canvas
+                        canvas.width = originalWidth;
+                        canvas.height = originalHeight;
                         ctx.drawImage(img, 0, 0);
-                        redrawAllLines();
+                        
+                        // Применяем текущий масштаб
+                        updateZoom();
                     };
                     img.src = event.target.result;
                 };
