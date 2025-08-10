@@ -28,8 +28,8 @@
         }
         
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #ff6b9d 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
             min-height: 100vh;
             padding: 5px;
             display: flex;
@@ -52,46 +52,47 @@
             color: white;
             margin-bottom: 10px;
             font-size: 5vw;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             position: absolute;
             top: 5px;
             left: 10%;
             right: 10%;
             width: 80%;
+            font-weight: 600;
         }
         
         .game-area {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 10px;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 12px;
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #ffffff #667eea;
-            max-height: calc(100vh - 200px);
+            scrollbar-color: #6c8ebd #2c3e50;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .game-area::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
         
         .game-area::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+            background: rgba(44, 62, 80, 0.3);
+            border-radius: 4px;
         }
         
         .game-area::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 3px;
+            background: #6c8ebd;
+            border-radius: 4px;
         }
         
         .game-area::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.7);
+            background: #7da0d6;
         }
         
         .sequence-container {
@@ -105,16 +106,18 @@
         .sequence-row {
             display: flex;
             gap: 2%;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             align-items: center;
             width: 100%;
-            padding: 5px;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
         }
         
         .attempt-number {
             font-size: 4vw;
-            font-weight: bold;
-            color: white;
+            font-weight: 600;
+            color: #e0e0e0;
             min-width: 8%;
             text-align: center;
             height: 100%;
@@ -133,34 +136,35 @@
             width: 20%;
             aspect-ratio: 1/1;
             border-radius: 50%;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            background: #f0f0f0;
+            border: 2px solid #ffffff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            background: #2c3e50;
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
         
         .feedback {
             display: flex;
-            gap: 3px;
+            gap: 4px;
             margin-left: 2%;
             flex-wrap: wrap;
             width: 20%;
         }
         
         .feedback-dot {
-            width: 25%;
+            width: 30%;
             aspect-ratio: 1/1;
             border-radius: 50%;
-            border: 1px solid #fff;
+            border: 1px solid #ffffff;
         }
         
-        .black { background: #000; }
-        .white { background: #888; }
+        .black { background: #000000; }
+        .white { background: #cccccc; }
         
         .color-palette {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin: 10px 0;
+            gap: 12px;
+            margin: 12px 0;
         }
         
         .palette-row {
@@ -179,95 +183,101 @@
             min-width: 45px;
             min-height: 45px;
             border-radius: 50%;
-            border: 2px solid #fff;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: all 0.2s ease;
             aspect-ratio: 1/1;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .color-circle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
         }
         
         .color-circle:active {
-            transform: scale(0.9);
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 5px;
+            gap: 12px;
+            margin-bottom: 8px;
         }
         
         .control-row {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
             align-items: center;
         }
         
         .btn {
-            padding: 3vw 5vw;
-            font-size: 4vw;
+            padding: 2.5vw 4vw;
+            font-size: 3.5vw;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            transition: all 0.1s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         }
         
         .btn:active {
             transform: translateY(1px);
-            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .btn-check {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            min-width: 25%;
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
         }
         
         .btn-remove {
-            background: linear-gradient(45deg, #f44336, #da190b);
-            color: white;
-            min-width: 25%;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
         
         .btn-new-game {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
+            background: linear-gradient(135deg, #5d6d7e 0%, #4d5d6d 100%);
             min-width: 30%;
-            font-size: 3.5vw;
+            font-size: 3vw;
         }
         
         .btn-help {
-            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
-            color: white;
+            background: linear-gradient(135deg, #5d6d7e 0%, #4d5d6d 100%);
             min-width: 30%;
-            font-size: 3.5vw;
+            font-size: 3vw;
         }
         
         .btn-difficulty {
-            background: linear-gradient(45deg, #FF9800, #F57C00);
-            color: white;
+            background: linear-gradient(135deg, #5d6d7e 0%, #4d5d6d 100%);
             min-width: 30%;
-            font-size: 3.5vw;
+            font-size: 3vw;
         }
         
         .btn-surrender {
-            background: linear-gradient(45deg, #607D8B, #455A64);
-            color: white;
+            background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
             min-width: 25%;
-            font-size: 3.5vw;
+            font-size: 3vw;
         }
         
         .current-row {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 5px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
         
         .modal {
@@ -278,32 +288,36 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             justify-content: center;
             align-items: center;
         }
         
         .modal-content {
-            background: linear-gradient(135deg, #667eea 0%, #ff6b9d 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             margin: auto;
             padding: 5vw;
-            border-radius: 10px;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
             max-width: 90%;
             width: 80vw;
             text-align: center;
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .modal h2 {
             margin-bottom: 4vw;
             font-size: 5vw;
+            font-weight: 600;
+            color: #ecf0f1;
         }
         
         .modal p {
             margin-bottom: 3vw;
             font-size: 3.5vw;
-            line-height: 1.4;
+            line-height: 1.5;
+            color: #bdc3c7;
         }
         
         .modal-buttons {
@@ -317,24 +331,38 @@
         .modal-btn {
             padding: 2vw 4vw;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 3.5vw;
-            min-height: 35px;
+            min-height: 40px;
             margin: 5px;
-        }
-        
-        .close-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
         }
         
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .modal-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .close-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+        }
+        
         .stats {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             padding: 3vw;
             border-radius: 8px;
             margin: 3vw 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .secret-code {
@@ -347,11 +375,11 @@
         .secret-color {
             width: 8vw;
             height: 8vw;
-            max-width: 30px;
-            max-height: 30px;
+            max-width: 35px;
+            max-height: 35px;
             border-radius: 50%;
-            border: 1px solid #fff;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .notification {
@@ -359,39 +387,58 @@
             top: 20%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
+            background: rgba(44, 62, 80, 0.95);
+            color: #ecf0f1;
+            padding: 18px 30px;
+            border-radius: 10px;
             font-size: 18px;
+            font-weight: 500;
             z-index: 2000;
             display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            text-align: center;
+            min-width: 250px;
         }
         
         .difficulty-selector {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin: 20px 0;
+            gap: 18px;
+            margin: 25px 0;
         }
         
         .difficulty-option {
-            padding: 15px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 18px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s ease;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .difficulty-option:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
         
         .difficulty-option.selected {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .difficulty-option h3 {
+            color: #ecf0f1;
+            margin-bottom: 8px;
+            font-size: 4vw;
+        }
+        
+        .difficulty-option p {
+            color: #bdc3c7;
+            font-size: 3vw;
+            line-height: 1.4;
         }
         
         @media (max-width: 480px) {
@@ -405,12 +452,12 @@
             }
             
             .btn {
-                padding: 2.5vw 4vw;
-                font-size: 3.5vw;
+                padding: 2vw 3vw;
+                font-size: 3vw;
             }
             
             .btn-new-game, .btn-help, .btn-difficulty {
-                font-size: 3vw;
+                font-size: 2.8vw;
             }
             
             .modal-content {
@@ -439,7 +486,16 @@
             
             .notification {
                 font-size: 16px;
-                padding: 12px 20px;
+                padding: 15px 25px;
+                min-width: 220px;
+            }
+            
+            .difficulty-option h3 {
+                font-size: 16px;
+            }
+            
+            .difficulty-option p {
+                font-size: 14px;
             }
         }
         
@@ -450,37 +506,47 @@
             }
             
             .btn {
-                font-size: 18px;
+                font-size: 16px;
                 padding: 12px 20px;
             }
             
             .btn-new-game, .btn-help, .btn-difficulty {
-                font-size: 16px;
+                font-size: 15px;
             }
             
             .modal-content {
-                padding: 20px;
+                padding: 25px;
             }
             
             .modal h2 {
-                font-size: 24px;
+                font-size: 26px;
             }
             
             .modal p {
-                font-size: 16px;
+                font-size: 17px;
             }
             
             .modal-btn {
                 font-size: 16px;
+                padding: 12px 20px;
             }
             
             h1 {
-                font-size: 28px;
+                font-size: 30px;
             }
             
             .notification {
-                font-size: 18px;
-                padding: 15px 25px;
+                font-size: 19px;
+                padding: 20px 35px;
+                min-width: 300px;
+            }
+            
+            .difficulty-option h3 {
+                font-size: 20px;
+            }
+            
+            .difficulty-option p {
+                font-size: 16px;
             }
         }
     </style>
