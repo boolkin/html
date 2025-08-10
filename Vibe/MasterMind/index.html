@@ -40,7 +40,8 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
-            min-height: 100vh;
+            min-height: calc(var(--vh) * 100);
+			height: calc(var(--vh) * 100);
             padding: 5px;
             display: flex;
             flex-direction: column;
@@ -52,10 +53,11 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            justify-content: flex-end;
+            height: calc(var(--vh) * 100);
+			justify-content: flex-start; /* было flex-end — может мешать */
             padding-top: 50px;
         }
+		
         
         h1 {
             text-align: center;
@@ -559,6 +561,28 @@
                 font-size: 16px;
             }
         }
+		
+		@media (orientation: landscape) and (max-height: 500px) {
+		  .container {
+			width: 40vw !important;
+			max-width: none;
+			margin: 0 auto;
+			padding: 20px 10px;
+		  }
+
+		  h1 {
+			font-size: 6vw;
+			top: 10px;
+			left: 5%;
+			right: 5%;
+			width: 90%;
+		  }
+
+		  .btn {
+			font-size: 3vw;
+			padding: 2vw 3vw;
+		  }
+		}
     </style>
 </head>
 <body>
