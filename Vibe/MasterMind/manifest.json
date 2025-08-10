@@ -1,0 +1,14 @@
+{
+  "display": "standalone",
+  "name": "MasterMind",
+  "orientation": "any",
+  "short_name": "MasterMind",
+  "start_url": "./index.html",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

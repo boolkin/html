@@ -59,4 +59,4 @@ https://boolkin.github.io/html/Vibe/D1.html
 https://boolkin.github.io/html/Vibe/pixRul.html  
 https://boolkin.github.io/html/Vibe/JSON-blocks.html  
 https://boolkin.github.io/html/Vibe/D1_widget.html  
-https://boolkin.github.io/html/Vibe/MasterMind.html  
+https://boolkin.github.io/html/Vibe/MasterMind/  
