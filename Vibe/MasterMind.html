@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastermind</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #ff6b9d 100%);
+            min-height: 100vh;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            justify-content: flex-end;
+            padding-top: 50px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 5vw;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            position: absolute;
+            top: 5px;
+            left: 10%;
+            right: 10%;
+            width: 80%;
+        }
+        
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ffffff #667eea;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .game-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .game-area::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .game-area::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 3px;
+        }
+        
+        .game-area::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.7);
+        }
+        
+        .sequence-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-top: auto;
+            width: 100%;
+        }
+        
+        .sequence-row {
+            display: flex;
+            gap: 2%;
+            margin-bottom: 8px;
+            align-items: center;
+            width: 100%;
+            padding: 5px;
+        }
+        
+        .attempt-number {
+            font-size: 4vw;
+            font-weight: bold;
+            color: white;
+            min-width: 8%;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .color-slots {
+            display: flex;
+            gap: 2%;
+            width: 65%;
+        }
+        
+        .color-slot {
+            width: 20%;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: #f0f0f0;
+        }
+        
+        .feedback {
+            display: flex;
+            gap: 3px;
+            margin-left: 2%;
+            flex-wrap: wrap;
+            width: 20%;
+        }
+        
+        .feedback-dot {
+            width: 25%;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            border: 1px solid #fff;
+        }
+        
+        .black { background: #000; }
+        .white { background: #888; }
+        
+        .color-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .palette-row {
+            display: flex;
+            gap: 4%;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 5%;
+        }
+        
+        .color-circle {
+            width: 15vw;
+            height: 15vw;
+            max-width: 70px;
+            max-height: 70px;
+            min-width: 45px;
+            min-height: 45px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            aspect-ratio: 1/1;
+        }
+        
+        .color-circle:active {
+            transform: scale(0.9);
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 3vw 5vw;
+            font-size: 4vw;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+        
+        .btn-check {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            min-width: 25%;
+        }
+        
+        .btn-remove {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            color: white;
+            min-width: 25%;
+        }
+        
+        .btn-new-game {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+            min-width: 35%;
+            font-size: 3.5vw;
+        }
+        
+        .btn-help {
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+            color: white;
+            min-width: 35%;
+            font-size: 3.5vw;
+        }
+        
+        .current-row {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 5px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #ff6b9d 100%);
+            margin: auto;
+            padding: 5vw;
+            border-radius: 10px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+            max-width: 90%;
+            width: 80vw;
+            text-align: center;
+            color: white;
+        }
+        
+        .modal h2 {
+            margin-bottom: 4vw;
+            font-size: 5vw;
+        }
+        
+        .modal p {
+            margin-bottom: 3vw;
+            font-size: 3.5vw;
+            line-height: 1.4;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 3vw;
+            justify-content: center;
+            margin-top: 4vw;
+        }
+        
+        .modal-btn {
+            padding: 2vw 4vw;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 3.5vw;
+            min-height: 35px;
+        }
+        
+        .close-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .stats {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 3vw;
+            border-radius: 8px;
+            margin: 3vw 0;
+        }
+        
+        .secret-code {
+            display: flex;
+            justify-content: center;
+            gap: 2vw;
+            margin: 3vw 0;
+        }
+        
+        .secret-color {
+            width: 8vw;
+            height: 8vw;
+            max-width: 30px;
+            max-height: 30px;
+            border-radius: 50%;
+            border: 1px solid #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 480px) {
+            .color-circle {
+                width: 14vw;
+                height: 14vw;
+                max-width: 65px;
+                max-height: 65px;
+                min-width: 40px;
+                min-height: 40px;
+            }
+            
+            .btn {
+                padding: 2.5vw 4vw;
+                font-size: 3.5vw;
+            }
+            
+            .btn-new-game, .btn-help {
+                font-size: 3vw;
+            }
+            
+            .modal-content {
+                padding: 4vw;
+            }
+            
+            .modal h2 {
+                font-size: 4.5vw;
+            }
+            
+            .modal p {
+                font-size: 3vw;
+            }
+            
+            .modal-btn {
+                font-size: 3vw;
+            }
+            
+            .container {
+                padding-top: 40px;
+            }
+            
+            h1 {
+                font-size: 6vw;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .color-circle {
+                width: 65px;
+                height: 65px;
+            }
+            
+            .btn {
+                font-size: 18px;
+                padding: 12px 20px;
+            }
+            
+            .btn-new-game, .btn-help {
+                font-size: 16px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .modal h2 {
+                font-size: 24px;
+            }
+            
+            .modal p {
+                font-size: 16px;
+            }
+            
+            .modal-btn {
+                font-size: 16px;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mastermind</h1>
+        
+        <div class="game-area" id="gameArea">
+            <div class="sequence-container" id="sequenceContainer">
+                <!-- Игровые строки будут добавляться здесь -->
+            </div>
+        </div>
+        
+        <div class="color-palette">
+            <div class="palette-row">
+                <div class="color-circle" style="background: #FF4136;" data-color="#FF4136"></div>
+                <div class="color-circle" style="background: #0074D9;" data-color="#0074D9"></div>
+                <div class="color-circle" style="background: #2ECC40;" data-color="#2ECC40"></div>
+                <button class="btn btn-check" id="checkBtn">Проверить</button>
+            </div>
+            <div class="palette-row">
+                <div class="color-circle" style="background: #FFDC00;" data-color="#FFDC00"></div>
+                <div class="color-circle" style="background: #FF69B4;" data-color="#FF69B4"></div>
+                <div class="color-circle" style="background: #FF851B;" data-color="#FF851B"></div>
+                <button class="btn btn-remove" id="removeBtn">Убрать</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-row">
+                <button class="btn btn-new-game" id="newGameBtn">Новая игра</button>
+                <button class="btn btn-help" id="helpBtn">Помощь</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно победы -->
+    <div id="winModal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 Поздравляем! 🎉</h2>
+            <p>Вы успешно угадали последовательность!</p>
+            <div class="stats">
+                <p>Количество попыток: <span id="attemptsCount">0</span></p>
+            </div>
+            <p>Правильная последовательность:</p>
+            <div class="secret-code" id="winSecretCode">
+                <!-- Цвета будут добавлены здесь -->
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn close-btn" id="closeWinModal">Продолжить</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно помощи -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <h2>❓ Помощь ❓</h2>
+            <p><strong>Цель игры:</strong> Угадать секретную последовательность из 4 цветов.</p>
+            <p><strong>Как играть:</strong></p>
+            <p>1. Выбирайте цвета, нажимая на кружки внизу экрана</p>
+            <p>2. Заполните строку 4 цветами</p>
+            <p>3. Нажмите "Проверить" для получения подсказок</p>
+            <p>4. Черные точки = правильный цвет на правильном месте</p>
+            <p>5. Серые точки = правильный цвет на неправильном месте</p>
+            <p>6. Угадайте последовательность за минимальное количество попыток!</p>
+            <div class="modal-buttons">
+                <button class="modal-btn close-btn" id="closeHelpModal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MastermindGame {
+            constructor() {
+                this.colors = ['#FF4136', '#0074D9', '#2ECC40', '#FFDC00', '#FF69B4', '#FF851B'];
+                this.sequenceLength = 4;
+                this.maxAttempts = 10;
+                this.currentAttempt = 0;
+                this.secretCode = this.generateSecretCode();
+                this.gameArea = document.getElementById('gameArea');
+                this.sequenceContainer = document.getElementById('sequenceContainer');
+                this.removeBtn = document.getElementById('removeBtn');
+                this.checkBtn = document.getElementById('checkBtn');
+                this.newGameBtn = document.getElementById('newGameBtn');
+                this.helpBtn = document.getElementById('helpBtn');
+                this.winModal = document.getElementById('winModal');
+                this.helpModal = document.getElementById('helpModal');
+                this.closeWinModal = document.getElementById('closeWinModal');
+                this.closeHelpModal = document.getElementById('closeHelpModal');
+                
+                this.initializeGame();
+                this.bindEvents();
+            }
+            
+            generateSecretCode() {
+                const code = [];
+                for (let i = 0; i < this.sequenceLength; i++) {
+                    const randomIndex = Math.floor(Math.random() * this.colors.length);
+                    code.push(this.colors[randomIndex]);
+                }
+                return code;
+            }
+            
+            initializeGame() {
+                this.sequenceContainer.innerHTML = '';
+                this.currentAttempt = 0;
+                this.addNewRow();
+            }
+            
+            addNewRow() {
+                if (this.currentAttempt >= this.maxAttempts) return;
+                
+                const row = document.createElement('div');
+                row.className = 'sequence-row current-row';
+                row.id = `row-${this.currentAttempt}`;
+                
+                // Номер попытки
+                const attemptNumber = document.createElement('div');
+                attemptNumber.className = 'attempt-number';
+                attemptNumber.textContent = this.currentAttempt + 1;
+                row.appendChild(attemptNumber);
+                
+                // Слоты для цветов
+                const colorSlots = document.createElement('div');
+                colorSlots.className = 'color-slots';
+                
+                for (let i = 0; i < this.sequenceLength; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'color-slot';
+                    slot.dataset.index = i;
+                    colorSlots.appendChild(slot);
+                }
+                
+                row.appendChild(colorSlots);
+                
+                this.sequenceContainer.appendChild(row);
+                this.currentAttempt++;
+                
+                // Прокручиваем к новой строке
+                this.scrollToBottom();
+            }
+            
+            scrollToBottom() {
+                // Прокручиваем к новой строке с небольшой задержкой
+                setTimeout(() => {
+                    this.gameArea.scrollTop = this.gameArea.scrollHeight;
+                }, 50);
+            }
+            
+            getCurrentRow() {
+                return document.querySelector('.current-row');
+            }
+            
+            addColorToRow(color) {
+                const currentRow = this.getCurrentRow();
+                if (!currentRow) return;
+                
+                const slots = currentRow.querySelectorAll('.color-slot');
+                for (let slot of slots) {
+                    if (!slot.style.backgroundColor) {
+                        slot.style.backgroundColor = color;
+                        slot.dataset.color = color;
+                        break;
+                    }
+                }
+            }
+            
+            removeLastColor() {
+                const currentRow = this.getCurrentRow();
+                if (!currentRow) return;
+                
+                const slots = Array.from(currentRow.querySelectorAll('.color-slot'));
+                for (let i = slots.length - 1; i >= 0; i--) {
+                    if (slots[i].style.backgroundColor) {
+                        slots[i].style.backgroundColor = '';
+                        delete slots[i].dataset.color;
+                        break;
+                    }
+                }
+            }
+            
+            checkCurrentRow() {
+                const currentRow = this.getCurrentRow();
+                if (!currentRow) return;
+                
+                const slots = currentRow.querySelectorAll('.color-slot');
+                const userColors = Array.from(slots).map(slot => slot.dataset.color || null);
+                
+                // Проверяем, заполнена ли вся строка
+                if (userColors.includes(null)) {
+                    alert('Заполните всю последовательность!');
+                    return;
+                }
+                
+                // Убираем класс текущей строки
+                currentRow.classList.remove('current-row');
+                
+                // Добавляем индикаторы обратной связи
+                const feedback = document.createElement('div');
+                feedback.className = 'feedback';
+                currentRow.appendChild(feedback);
+                
+                // Вычисляем обратную связь
+                const result = this.calculateFeedback(userColors);
+                
+                // Добавляем точки обратной связи только если есть совпадения
+                if (result.black > 0 || result.white > 0) {
+                    // Сначала черные точки
+                    for (let i = 0; i < result.black; i++) {
+                        const dot = document.createElement('div');
+                        dot.className = 'feedback-dot black';
+                        feedback.appendChild(dot);
+                    }
+                    
+                    // Затем серые точки
+                    for (let i = 0; i < result.white; i++) {
+                        const dot = document.createElement('div');
+                        dot.className = 'feedback-dot white';
+                        feedback.appendChild(dot);
+                    }
+                }
+                
+                // Проверяем победу
+                if (result.black === this.sequenceLength) {
+                    this.showWinModal(this.currentAttempt);
+                    return;
+                }
+                
+                // Проверяем поражение
+                if (this.currentAttempt >= this.maxAttempts) {
+                    setTimeout(() => {
+                        alert(`Игра окончена! Правильный код: ${this.secretCode.join(', ')}`);
+                        this.initializeGame();
+                    }, 500);
+                    return;
+                }
+                
+                // Добавляем новую строку
+                this.addNewRow();
+            }
+            
+            showWinModal(attempts) {
+                document.getElementById('attemptsCount').textContent = attempts;
+                const secretCodeContainer = document.getElementById('winSecretCode');
+                secretCodeContainer.innerHTML = '';
+                
+                this.secretCode.forEach(color => {
+                    const colorDiv = document.createElement('div');
+                    colorDiv.className = 'secret-color';
+                    colorDiv.style.backgroundColor = color;
+                    secretCodeContainer.appendChild(colorDiv);
+                });
+                
+                this.winModal.style.display = 'flex';
+            }
+            
+            calculateFeedback(userColors) {
+                let black = 0; // Правильный цвет на правильной позиции
+                let white = 0; // Правильный цвет на неправильной позиции
+                
+                // Создаем копии для подсчета
+                const secretCopy = [...this.secretCode];
+                const userCopy = [...userColors];
+                const usedSecret = new Array(this.sequenceLength).fill(false);
+                const usedUser = new Array(this.sequenceLength).fill(false);
+                
+                // Сначала считаем черные точки (точные совпадения)
+                for (let i = 0; i < this.sequenceLength; i++) {
+                    if (userCopy[i] === secretCopy[i]) {
+                        black++;
+                        usedSecret[i] = true;
+                        usedUser[i] = true;
+                    }
+                }
+                
+                // Затем считаем серые точки (цвета на неправильных позициях)
+                for (let i = 0; i < this.sequenceLength; i++) {
+                    if (!usedUser[i]) {
+                        for (let j = 0; j < this.sequenceLength; j++) {
+                            if (!usedSecret[j] && userCopy[i] === secretCopy[j]) {
+                                white++;
+                                usedSecret[j] = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                return { black, white };
+            }
+            
+            bindEvents() {
+                // Добавление цветов
+                document.querySelectorAll('.color-circle').forEach(circle => {
+                    circle.addEventListener('click', (e) => {
+                        const color = e.target.dataset.color;
+                        this.addColorToRow(color);
+                    });
+                });
+                
+                // Кнопка "Убрать"
+                this.removeBtn.addEventListener('click', () => {
+                    this.removeLastColor();
+                });
+                
+                // Кнопка "Проверить"
+                this.checkBtn.addEventListener('click', () => {
+                    this.checkCurrentRow();
+                });
+                
+                // Кнопка "Новая игра"
+                this.newGameBtn.addEventListener('click', () => {
+                    this.secretCode = this.generateSecretCode();
+                    this.initializeGame();
+                });
+                
+                // Кнопка "Помощь"
+                this.helpBtn.addEventListener('click', () => {
+                    this.helpModal.style.display = 'flex';
+                });
+                
+                // Закрытие модальных окон
+                this.closeWinModal.addEventListener('click', () => {
+                    this.winModal.style.display = 'none';
+                });
+                
+                this.closeHelpModal.addEventListener('click', () => {
+                    this.helpModal.style.display = 'none';
+                });
+                
+                // Закрытие модальных окон при клике вне контента
+                window.addEventListener('click', (e) => {
+                    if (e.target === this.winModal) {
+                        this.winModal.style.display = 'none';
+                    }
+                    if (e.target === this.helpModal) {
+                        this.helpModal.style.display = 'none';
+                    }
+                });
+                
+                // Поддержка клавиатуры для тестирования
+                document.addEventListener('keydown', (e) => {
+                    if (e.key >= '1' && e.key <= '6') {
+                        const color = this.colors[parseInt(e.key) - 1];
+                        this.addColorToRow(color);
+                    } else if (e.key === 'Backspace') {
+                        this.removeLastColor();
+                    } else if (e.key === 'Enter') {
+                        this.checkCurrentRow();
+                    } else if (e.key === 'Escape') {
+                        this.winModal.style.display = 'none';
+                        this.helpModal.style.display = 'none';
+                    }
+                });
+                
+                // Обработка прокрутки колесиком мыши
+                this.gameArea.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    this.gameArea.scrollTop += e.deltaY;
+                });
+            }
+        }
+        
+        // Инициализация игры
+        document.addEventListener('DOMContentLoaded', () => {
+            new MastermindGame();
+        });
+    </script>
+</body>
+</html>
