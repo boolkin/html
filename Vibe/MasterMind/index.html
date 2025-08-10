@@ -17,14 +17,6 @@
 				navigator.serviceWorker.register('/html/Vibe/MasterMind/sw.js', { scope: '/html/Vibe/MasterMind/' });
 			});
 		}
-		function setFullHeight() {
-			const vh = window.innerHeight * 0.01;
-			document.documentElement.style.setProperty('--vh', `${vh}px`);
-		}
-
-		// Вызов при загрузке и при изменении ориентации
-		window.addEventListener('resize', setFullHeight);
-		setFullHeight();
 	</script>
     <title>Mastermind</title>
     <style>
@@ -34,14 +26,11 @@
             box-sizing: border-box;
             touch-action: manipulation;
         }
-        .full-height {
-			height: calc(var(--vh) * 100); /* 100 * 1% от реальной высоты */
-		}
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
-            min-height: calc(var(--vh) * 100);
-			height: calc(var(--vh) * 100);
+            min-height: 100vh;
             padding: 5px;
             display: flex;
             flex-direction: column;
@@ -53,11 +42,10 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            height: calc(var(--vh) * 100);
-			justify-content: flex-start; /* было flex-end — может мешать */
+            height: 100vh;
+            justify-content: flex-end;
             padding-top: 50px;
         }
-		
         
         h1 {
             text-align: center;
@@ -561,28 +549,6 @@
                 font-size: 16px;
             }
         }
-		
-		@media (orientation: landscape) and (max-height: 500px) {
-		  .container {
-			width: 40vw !important;
-			max-width: none;
-			margin: 0 auto;
-			padding: 20px 10px;
-		  }
-
-		  h1 {
-			font-size: 6vw;
-			top: 10px;
-			left: 5%;
-			right: 5%;
-			width: 90%;
-		  }
-
-		  .btn {
-			font-size: 3vw;
-			padding: 2vw 3vw;
-		  }
-		}
     </style>
 </head>
 <body>
