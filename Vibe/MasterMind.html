@@ -1,8 +1,16 @@
-<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Mastermind - классическая логическая игра">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Mastermind">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIk1hc3Rlcm1pbmQiLAogICJzaG9ydF9uYW1lIjogIk1hc3Rlcm1pbmQiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzY2N2VlYSIsCiAgInRoZW1lX2NvbG9yIjogIiM2NjdlZWEiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQzBBQUFBdENBUUFBQUFkLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQUNBUVFBQUFHZlFBQUFCZ0FBQUFBLzhJQUFBQ......">
+    
     <title>Mastermind</title>
     <style>
         * {
@@ -769,6 +777,37 @@
         document.addEventListener('DOMContentLoaded', () => {
             new MastermindGame();
         });
+        
+        // Регистрация Service Worker для PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+                    const CACHE_NAME = 'mastermind-v1';
+                    const urlsToCache = [
+                        './',
+                        './index.html'
+                    ];
+                    
+                    self.addEventListener('install', (event) => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then((cache) => cache.addAll(urlsToCache))
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', (event) => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then((response) => {
+                                    return response || fetch(event.request);
+                                })
+                        );
+                    });
+                `)).catch((error) => {
+                    console.log('Service Worker registration failed:', error);
+                });
+            });
+        }
     </script>
 </body>
 </html>
