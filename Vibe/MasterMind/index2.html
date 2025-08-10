@@ -1,9 +1,8 @@
-<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#667eea">
     <meta name="description" content="Mastermind - классическая логическая игра">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Mastermind">
@@ -18,6 +17,8 @@
 			});
 		}
 	</script>
+
+    
     <title>Mastermind</title>
     <style>
         * {
@@ -239,28 +240,14 @@
         .btn-new-game {
             background: linear-gradient(45deg, #2196F3, #1976D2);
             color: white;
-            min-width: 30%;
+            min-width: 35%;
             font-size: 3.5vw;
         }
         
         .btn-help {
             background: linear-gradient(45deg, #9C27B0, #7B1FA2);
             color: white;
-            min-width: 30%;
-            font-size: 3.5vw;
-        }
-        
-        .btn-difficulty {
-            background: linear-gradient(45deg, #FF9800, #F57C00);
-            color: white;
-            min-width: 30%;
-            font-size: 3.5vw;
-        }
-        
-        .btn-surrender {
-            background: linear-gradient(45deg, #607D8B, #455A64);
-            color: white;
-            min-width: 25%;
+            min-width: 35%;
             font-size: 3.5vw;
         }
         
@@ -311,7 +298,6 @@
             gap: 3vw;
             justify-content: center;
             margin-top: 4vw;
-            flex-wrap: wrap;
         }
         
         .modal-btn {
@@ -322,7 +308,6 @@
             font-weight: bold;
             font-size: 3.5vw;
             min-height: 35px;
-            margin: 5px;
         }
         
         .close-btn {
@@ -354,46 +339,6 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         
-        .notification {
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-size: 18px;
-            z-index: 2000;
-            display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        
-        .difficulty-selector {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .difficulty-option {
-            padding: 15px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s ease;
-        }
-        
-        .difficulty-option:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .difficulty-option.selected {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-        }
-        
         @media (max-width: 480px) {
             .color-circle {
                 width: 14vw;
@@ -409,7 +354,7 @@
                 font-size: 3.5vw;
             }
             
-            .btn-new-game, .btn-help, .btn-difficulty {
+            .btn-new-game, .btn-help {
                 font-size: 3vw;
             }
             
@@ -436,11 +381,6 @@
             h1 {
                 font-size: 6vw;
             }
-            
-            .notification {
-                font-size: 16px;
-                padding: 12px 20px;
-            }
         }
         
         @media (min-width: 768px) {
@@ -454,7 +394,7 @@
                 padding: 12px 20px;
             }
             
-            .btn-new-game, .btn-help, .btn-difficulty {
+            .btn-new-game, .btn-help {
                 font-size: 16px;
             }
             
@@ -476,11 +416,6 @@
             
             h1 {
                 font-size: 28px;
-            }
-            
-            .notification {
-                font-size: 18px;
-                padding: 15px 25px;
             }
         }
     </style>
@@ -506,17 +441,13 @@
                 <div class="color-circle" style="background: #FFDC00;" data-color="#FFDC00"></div>
                 <div class="color-circle" style="background: #FF69B4;" data-color="#FF69B4"></div>
                 <div class="color-circle" style="background: #FF851B;" data-color="#FF851B"></div>
-                <div>
-                    <button class="btn btn-remove" id="removeBtn">Убрать</button>
-                    <button class="btn btn-surrender" id="surrenderBtn" style="display: none;">Сдаться</button>
-                </div>
+                <button class="btn btn-remove" id="removeBtn">Убрать</button>
             </div>
         </div>
         
         <div class="controls">
             <div class="control-row">
                 <button class="btn btn-new-game" id="newGameBtn">Новая игра</button>
-                <button class="btn btn-difficulty" id="difficultyBtn">Сложность</button>
                 <button class="btn btn-help" id="helpBtn">Помощь</button>
             </div>
         </div>
@@ -551,76 +482,18 @@
             <p>3. Нажмите "Проверить" для получения подсказок</p>
             <p>4. Черные точки = правильный цвет на правильном месте</p>
             <p>5. Серые точки = правильный цвет на неправильном месте</p>
-            <p>6. Цвета в последовательности могут повторяться!</p>
-            <p>7. Угадайте последовательность за минимальное количество попыток!</p>
+            <p>6. Угадайте последовательность за минимальное количество попыток!</p>
             <div class="modal-buttons">
                 <button class="modal-btn close-btn" id="closeHelpModal">Закрыть</button>
             </div>
         </div>
     </div>
-    
-    <!-- Модальное окно поражения -->
-    <div id="loseModal" class="modal">
-        <div class="modal-content">
-            <h2>😔 Игра окончена</h2>
-            <p>Вы не смогли угадать последовательность.</p>
-            <p>Правильная последовательность:</p>
-            <div class="secret-code" id="loseSecretCode">
-                <!-- Цвета будут добавлены здесь -->
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn close-btn" id="closeLoseModal">Новая игра</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Модальное окно выбора сложности -->
-    <div id="difficultyModal" class="modal">
-        <div class="modal-content">
-            <h2>🎚️ Выбор сложности</h2>
-            <div class="difficulty-selector">
-                <div class="difficulty-option" data-difficulty="1">
-                    <h3>Легкий (20 попыток)</h3>
-                    <p>Больше времени на размышление. Доступна кнопка "Сдаться"</p>
-                </div>
-                <div class="difficulty-option" data-difficulty="2">
-                    <h3>Средний (10 попыток)</h3>
-                    <p>Стандартная сложность игры</p>
-                </div>
-                <div class="difficulty-option" data-difficulty="3">
-                    <h3>Сложный (6 попыток)</h3>
-                    <p>Минимум попыток для настоящих мастеров</p>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn close-btn" id="closeDifficultyModal">Закрыть</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Модальное окно сдачи -->
-    <div id="surrenderModal" class="modal">
-        <div class="modal-content">
-            <h2>🏳️ Сдача</h2>
-            <p>Правильная последовательность:</p>
-            <div class="secret-code" id="surrenderSecretCode">
-                <!-- Цвета будут добавлены здесь -->
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn close-btn" id="closeSurrenderModal">Закрыть</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Уведомление -->
-    <div id="notification" class="notification"></div>
 
     <script>
         class MastermindGame {
             constructor() {
                 this.colors = ['#FF4136', '#0074D9', '#2ECC40', '#FFDC00', '#FF69B4', '#FF851B'];
                 this.sequenceLength = 4;
-                this.difficulty = 2; // 1 - легкий (20), 2 - средний (10), 3 - сложный (6)
                 this.maxAttempts = 10;
                 this.currentAttempt = 0;
                 this.secretCode = this.generateSecretCode();
@@ -630,31 +503,13 @@
                 this.checkBtn = document.getElementById('checkBtn');
                 this.newGameBtn = document.getElementById('newGameBtn');
                 this.helpBtn = document.getElementById('helpBtn');
-                this.difficultyBtn = document.getElementById('difficultyBtn');
-                this.surrenderBtn = document.getElementById('surrenderBtn');
                 this.winModal = document.getElementById('winModal');
                 this.helpModal = document.getElementById('helpModal');
-                this.loseModal = document.getElementById('loseModal');
-                this.difficultyModal = document.getElementById('difficultyModal');
-                this.surrenderModal = document.getElementById('surrenderModal');
                 this.closeWinModal = document.getElementById('closeWinModal');
                 this.closeHelpModal = document.getElementById('closeHelpModal');
-                this.closeLoseModal = document.getElementById('closeLoseModal');
-                this.closeDifficultyModal = document.getElementById('closeDifficultyModal');
-                this.closeSurrenderModal = document.getElementById('closeSurrenderModal');
-                this.notification = document.getElementById('notification');
                 
                 this.initializeGame();
                 this.bindEvents();
-            }
-            
-            getAttemptsByDifficulty(difficulty) {
-                switch(difficulty) {
-                    case 1: return 20;
-                    case 2: return 10;
-                    case 3: return 6;
-                    default: return 10;
-                }
             }
             
             generateSecretCode() {
@@ -669,8 +524,6 @@
             initializeGame() {
                 this.sequenceContainer.innerHTML = '';
                 this.currentAttempt = 0;
-                this.maxAttempts = this.getAttemptsByDifficulty(this.difficulty);
-                this.updateSurrenderButton();
                 this.addNewRow();
             }
             
@@ -746,14 +599,6 @@
                 }
             }
             
-            showNotification(message) {
-                this.notification.textContent = message;
-                this.notification.style.display = 'block';
-                setTimeout(() => {
-                    this.notification.style.display = 'none';
-                }, 2000);
-            }
-            
             checkCurrentRow() {
                 const currentRow = this.getCurrentRow();
                 if (!currentRow) return;
@@ -763,7 +608,7 @@
                 
                 // Проверяем, заполнена ли вся строка
                 if (userColors.includes(null)) {
-                    this.showNotification('Заполните всю последовательность!');
+                    alert('Заполните всю последовательность!');
                     return;
                 }
                 
@@ -803,7 +648,10 @@
                 
                 // Проверяем поражение
                 if (this.currentAttempt >= this.maxAttempts) {
-                    this.showLoseModal();
+                    setTimeout(() => {
+                        alert(`Игра окончена! Правильный код: ${this.secretCode.join(', ')}`);
+                        this.initializeGame();
+                    }, 500);
                     return;
                 }
                 
@@ -824,43 +672,6 @@
                 });
                 
                 this.winModal.style.display = 'flex';
-            }
-            
-            showLoseModal() {
-                const secretCodeContainer = document.getElementById('loseSecretCode');
-                secretCodeContainer.innerHTML = '';
-                
-                this.secretCode.forEach(color => {
-                    const colorDiv = document.createElement('div');
-                    colorDiv.className = 'secret-color';
-                    colorDiv.style.backgroundColor = color;
-                    secretCodeContainer.appendChild(colorDiv);
-                });
-                
-                this.loseModal.style.display = 'flex';
-            }
-            
-            showSurrenderModal() {
-                const secretCodeContainer = document.getElementById('surrenderSecretCode');
-                secretCodeContainer.innerHTML = '';
-                
-                this.secretCode.forEach(color => {
-                    const colorDiv = document.createElement('div');
-                    colorDiv.className = 'secret-color';
-                    colorDiv.style.backgroundColor = color;
-                    secretCodeContainer.appendChild(colorDiv);
-                });
-                
-                this.surrenderModal.style.display = 'flex';
-            }
-            
-            updateSurrenderButton() {
-                // Показываем кнопку сдаться только в легком режиме
-                if (this.difficulty === 1) {
-                    this.surrenderBtn.style.display = 'block';
-                } else {
-                    this.surrenderBtn.style.display = 'none';
-                }
             }
             
             calculateFeedback(userColors) {
@@ -898,19 +709,6 @@
                 return { black, white };
             }
             
-            setDifficulty(difficulty) {
-                this.difficulty = difficulty;
-                this.initializeGame();
-                
-                // Обновляем выделение в модальном окне
-                document.querySelectorAll('.difficulty-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                    if (parseInt(opt.dataset.difficulty) === difficulty) {
-                        opt.classList.add('selected');
-                    }
-                });
-            }
-            
             bindEvents() {
                 // Добавление цветов
                 document.querySelectorAll('.color-circle').forEach(circle => {
@@ -941,25 +739,6 @@
                     this.helpModal.style.display = 'flex';
                 });
                 
-                // Кнопка "Сложность"
-                this.difficultyBtn.addEventListener('click', () => {
-                    this.difficultyModal.style.display = 'flex';
-                });
-                
-                // Кнопка "Сдаться"
-                this.surrenderBtn.addEventListener('click', () => {
-                    this.showSurrenderModal();
-                });
-                
-                // Выбор сложности
-                document.querySelectorAll('.difficulty-option').forEach(option => {
-                    option.addEventListener('click', (e) => {
-                        const difficulty = parseInt(e.target.closest('.difficulty-option').dataset.difficulty);
-                        this.setDifficulty(difficulty);
-                        this.difficultyModal.style.display = 'none';
-                    });
-                });
-                
                 // Закрытие модальных окон
                 this.closeWinModal.addEventListener('click', () => {
                     this.winModal.style.display = 'none';
@@ -969,20 +748,6 @@
                     this.helpModal.style.display = 'none';
                 });
                 
-                this.closeLoseModal.addEventListener('click', () => {
-                    this.loseModal.style.display = 'none';
-                    this.secretCode = this.generateSecretCode();
-                    this.initializeGame();
-                });
-                
-                this.closeDifficultyModal.addEventListener('click', () => {
-                    this.difficultyModal.style.display = 'none';
-                });
-                
-                this.closeSurrenderModal.addEventListener('click', () => {
-                    this.surrenderModal.style.display = 'none';
-                });
-                
                 // Закрытие модальных окон при клике вне контента
                 window.addEventListener('click', (e) => {
                     if (e.target === this.winModal) {
@@ -990,17 +755,6 @@
                     }
                     if (e.target === this.helpModal) {
                         this.helpModal.style.display = 'none';
-                    }
-                    if (e.target === this.loseModal) {
-                        this.loseModal.style.display = 'none';
-                        this.secretCode = this.generateSecretCode();
-                        this.initializeGame();
-                    }
-                    if (e.target === this.difficultyModal) {
-                        this.difficultyModal.style.display = 'none';
-                    }
-                    if (e.target === this.surrenderModal) {
-                        this.surrenderModal.style.display = 'none';
                     }
                 });
                 
@@ -1016,9 +770,6 @@
                     } else if (e.key === 'Escape') {
                         this.winModal.style.display = 'none';
                         this.helpModal.style.display = 'none';
-                        this.loseModal.style.display = 'none';
-                        this.difficultyModal.style.display = 'none';
-                        this.surrenderModal.style.display = 'none';
                     }
                 });
                 
@@ -1027,9 +778,6 @@
                     e.preventDefault();
                     this.gameArea.scrollTop += e.deltaY;
                 });
-                
-                // Устанавливаем начальное выделение для средней сложности
-                document.querySelector('.difficulty-option[data-difficulty="2"]').classList.add('selected');
             }
         }
         
@@ -1037,6 +785,37 @@
         document.addEventListener('DOMContentLoaded', () => {
             new MastermindGame();
         });
+        
+        // Регистрация Service Worker для PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+                    const CACHE_NAME = 'mastermind-v1';
+                    const urlsToCache = [
+                        './',
+                        './index.html'
+                    ];
+                    
+                    self.addEventListener('install', (event) => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then((cache) => cache.addAll(urlsToCache))
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', (event) => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then((response) => {
+                                    return response || fetch(event.request);
+                                })
+                        );
+                    });
+                `)).catch((error) => {
+                    console.log('Service Worker registration failed:', error);
+                });
+            });
+        }
     </script>
 </body>
 </html>
