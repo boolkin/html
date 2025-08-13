@@ -695,6 +695,7 @@
             <p>Вы успешно угадали последовательность!</p>
             <div class="stats">
                 <p>Количество попыток: <span id="attemptsCount">0</span></p>
+                <p>Время: <span id="winTime">0</span> сек</p>
             </div>
             <p>Правильная последовательность:</p>
             <div class="secret-code" id="winSecretCode">
@@ -730,6 +731,9 @@
         <div class="modal-content">
             <h2>😔 Игра окончена</h2>
             <p>Вы не смогли угадать последовательность.</p>
+            <div class="stats">
+                <p>Время: <span id="loseTime">0</span> сек</p>
+            </div>
             <p>Правильная последовательность:</p>
             <div class="secret-code" id="loseSecretCode">
                 <!-- Цвета будут добавлены здесь -->
@@ -768,6 +772,9 @@
     <div id="surrenderModal" class="modal">
         <div class="modal-content">
             <h2>🏳️ Сдача</h2>
+            <div class="stats">
+                <p>Время: <span id="surrenderTime">0</span> сек</p>
+            </div>
             <p>Правильная последовательность:</p>
             <div class="secret-code" id="surrenderSecretCode">
                 <!-- Цвета будут добавлены здесь -->
@@ -798,6 +805,14 @@
                 <div class="stat-item">
                     <div class="stat-value" id="avgAttempts">0</div>
                     <div class="stat-label">Сред. попыток</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgTime">0</div>
+                    <div class="stat-label">Сред. время (сек)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalTime">0</div>
+                    <div class="stat-label">Всего времени (мин)</div>
                 </div>
             </div>
             
@@ -861,6 +876,7 @@
                 this.notification = document.getElementById('notification');
                 
                 this.gameStartTime = Date.now();
+                this.gamePlayed = false; // Флаг для отслеживания, была ли сделана хотя бы одна попытка
                 this.loadStats();
                 this.initializeGame();
                 this.bindEvents();
@@ -885,10 +901,16 @@
             }
             
             initializeGame() {
+                // Если была сделана хотя бы одна попытка, считаем игру сыгранной
+                if (this.currentAttempt > 0) {
+                    this.updateStats(false, 0, Date.now() - this.gameStartTime);
+                }
+                
                 this.sequenceContainer.innerHTML = '';
                 this.currentAttempt = 0;
                 this.maxAttempts = this.getAttemptsByDifficulty(this.difficulty);
                 this.gameStartTime = Date.now();
+                this.gamePlayed = false;
                 this.updateSurrenderButton();
                 this.addNewRow();
             }
@@ -986,6 +1008,11 @@
                     return;
                 }
                 
+                // Отмечаем, что игра началась (была сделана первая попытка)
+                if (!this.gamePlayed) {
+                    this.gamePlayed = true;
+                }
+                
                 // Убираем класс текущей строки
                 currentRow.classList.remove('current-row');
                 
@@ -1025,7 +1052,7 @@
                 // Проверяем поражение
                 if (this.currentAttempt >= this.maxAttempts) {
                     const gameTime = Date.now() - this.gameStartTime;
-                    this.showLoseModal();
+                    this.showLoseModal(gameTime);
                     this.updateStats(false, this.maxAttempts, gameTime);
                     return;
                 }
@@ -1036,6 +1063,7 @@
             
             showWinModal(attempts, gameTime) {
                 document.getElementById('attemptsCount').textContent = attempts;
+                document.getElementById('winTime').textContent = Math.round(gameTime / 1000);
                 const secretCodeContainer = document.getElementById('winSecretCode');
                 secretCodeContainer.innerHTML = '';
                 
@@ -1049,7 +1077,8 @@
                 this.winModal.style.display = 'flex';
             }
             
-            showLoseModal() {
+            showLoseModal(gameTime) {
+                document.getElementById('loseTime').textContent = Math.round(gameTime / 1000);
                 const secretCodeContainer = document.getElementById('loseSecretCode');
                 secretCodeContainer.innerHTML = '';
                 
@@ -1064,6 +1093,8 @@
             }
             
             showSurrenderModal() {
+                const gameTime = Date.now() - this.gameStartTime;
+                document.getElementById('surrenderTime').textContent = Math.round(gameTime / 1000);
                 const secretCodeContainer = document.getElementById('surrenderSecretCode');
                 secretCodeContainer.innerHTML = '';
                 
@@ -1145,6 +1176,7 @@
                         totalWins: 0,
                         totalWinAttempts: 0, // Сумма попыток только для побед
                         totalTime: 0,
+                        totalWinTime: 0, // Сумма времени только для побед
                         difficulty: {
                             1: { games: 0, wins: 0 },
                             2: { games: 0, wins: 0 },
@@ -1164,6 +1196,7 @@
                 if (isWin) {
                     this.stats.totalWins++;
                     this.stats.totalWinAttempts += attempts; // Учитываем только победные попытки
+                    this.stats.totalWinTime += gameTime; // Учитываем только время побед
                 }
                 
                 this.stats.totalTime += gameTime;
@@ -1184,6 +1217,7 @@
                         totalWins: 0,
                         totalWinAttempts: 0,
                         totalTime: 0,
+                        totalWinTime: 0,
                         difficulty: {
                             1: { games: 0, wins: 0 },
                             2: { games: 0, wins: 0 },
@@ -1207,6 +1241,15 @@
                 const avgAttempts = this.stats.totalWins > 0 ? 
                     (this.stats.totalWinAttempts / this.stats.totalWins).toFixed(1) : 0;
                 document.getElementById('avgAttempts').textContent = avgAttempts;
+                
+                // Среднее время считаем только по выигранным играм
+                const avgTime = this.stats.totalWins > 0 ? 
+                    Math.round(this.stats.totalWinTime / this.stats.totalWins / 1000) : 0;
+                document.getElementById('avgTime').textContent = avgTime;
+                
+                // Общее время в минутах
+                const totalTime = Math.round(this.stats.totalTime / 1000 / 60);
+                document.getElementById('totalTime').textContent = totalTime;
                 
                 // Статистика по сложности
                 const easyStats = this.stats.difficulty[1];
@@ -1272,7 +1315,7 @@
                 // Кнопка "Сдаться"
                 this.surrenderBtn.addEventListener('click', () => {
                     const gameTime = Date.now() - this.gameStartTime;
-                    this.updateStats(false, this.currentAttempt, gameTime);
+                    this.updateStats(false, 0, gameTime);
                     this.showSurrenderModal();
                 });
                 
