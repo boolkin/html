@@ -18,7 +18,6 @@
 			});
 		}
 	</script>
-	
     <title>Mastermind</title>
     <style>
         * {
@@ -362,6 +361,10 @@
         
         .close-btn {
             background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
         
         .stats {
@@ -815,8 +818,8 @@
             </div>
             
             <div class="modal-buttons">
+                <button class="modal-btn reset-btn" id="resetStatsBtn">Сбросить</button>
                 <button class="modal-btn close-btn" id="closeStatsModal">Закрыть</button>
-                <button class="modal-btn" id="resetStatsBtn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">Сбросить</button>
             </div>
         </div>
     </div>
@@ -1174,19 +1177,21 @@
             }
             
             resetStats() {
-                this.stats = {
-                    totalGames: 0,
-                    totalWins: 0,
-                    totalAttempts: 0,
-                    totalTime: 0,
-                    difficulty: {
-                        1: { games: 0, wins: 0 },
-                        2: { games: 0, wins: 0 },
-                        3: { games: 0, wins: 0 }
-                    }
-                };
-                this.saveStats();
-                this.updateStatsDisplay();
+                if (confirm('Вы уверены, что хотите сбросить всю статистику? Это действие нельзя отменить.')) {
+                    this.stats = {
+                        totalGames: 0,
+                        totalWins: 0,
+                        totalAttempts: 0,
+                        totalTime: 0,
+                        difficulty: {
+                            1: { games: 0, wins: 0 },
+                            2: { games: 0, wins: 0 },
+                            3: { games: 0, wins: 0 }
+                        }
+                    };
+                    this.saveStats();
+                    this.updateStatsDisplay();
+                }
             }
             
             updateStatsDisplay() {
