@@ -15,23 +15,20 @@
       max-width: 1200px;
       margin: auto;
       padding: 20px;
-      display: flex;
-      gap: 20px;
     }
     .image-column {
-      flex: 1;
       text-align: center;
+      margin-bottom: 20px;
     }
     .circuit-diagram {
       width: 100%;
-      height: 400px;
+      height: 300px;
       background-image: url('https://thumb.cloud.mail.ru/weblink/thumb/xw1/BhcQ/B9ML4RqZA');
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
     }
     .input-column {
-      flex: 2;
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -88,85 +85,111 @@
       color: #555;
       font-size: 18px;
     }
+    
+    /* Для больших экранов - двухколоночный режим */
+    @media (min-width: 992px) {
+      .main-content {
+        display: flex;
+        gap: 20px;
+      }
+      .image-column {
+        flex: 1;
+        margin-bottom: 0;
+      }
+      .input-column {
+        flex: 2;
+      }
+      .circuit-diagram {
+        height: 400px;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>Расчет сопротивлений тензодатчика</h1>
   
   <div class="container">
-    <!-- Левая колонка с изображением -->
+    <!-- Изображение в начале для маленьких экранов -->
     <div class="image-column">
       <div class="circuit-diagram"></div>
     </div>
-
-    <!-- Правая колонка с параметрами и результатами -->
-    <div class="input-column">
-      <form id="calcForm">
-        <div class="input-section">
-          <div class="input-row">
-            <div class="input-group">
-              <label for="R1">R1 (Ом):</label>
-              <input type="number" id="R1" value="350" step="1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-              <label for="R2">R2 (Ом):</label>
-              <input type="number" id="R2" value="350" step="1" oninput="calculate()">
-            </div>
-          </div>
-          <div class="input-row">
-            <div class="input-group">
-              <label for="R3">R3 (Ом):</label>
-              <input type="number" id="R3" value="350" step="1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-              <label for="R4">R4 (Ом):</label>
-              <input type="number" id="R4" value="350" step="1" oninput="calculate()">
-            </div>
-          </div>
-          <div class="input-row">
-            <div class="input-group">
-              <label for="R5">R5 (Ом):</label>
-              <input type="number" id="R5" value="25" step="1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-              <label for="R6">R6 (Ом):</label>
-              <input type="number" id="R6" value="25" step="1" oninput="calculate()">
-            </div>
-          </div>
-          <div class="input-row">
-            <div class="input-group">
-              <label for="Vcc">Vcc (В):</label>
-              <input type="number" id="Vcc" value="10" step="0.1" oninput="calculate()">
-            </div>
-          </div>
-        </div>
-      </form>
-
-      <div class="result-section">
-        <h2>Результаты расчетов:</h2>
-        <div class="formula">Формула входного сопротивления: <span>Rin = (R1 + R2) || (R3 + R4)</span></div>
-        <div class="result" id="RinResult">Входное сопротивление: <span id="RinValue">-</span> Ом</div>
-
-        <div class="formula">Формула выходного сопротивления: <span>Rout = R5 + R6 + ((R1 + R3) || (R2 + R4))</span></div>
-        <div class="result" id="RoutResult">Выходное сопротивление: <span id="RoutValue">-</span> Ом</div>
-
-        <div class="formula">Формула выходного напряжения: <span>Vout = Vcc * (R4 / (R4 + R2) - R3 / (R3 + R1))</span></div>
-        <div class="result" id="VoutResult">Выходное напряжение: <span id="VoutValue">-</span> В</div>
+    
+    <!-- Основной контент -->
+    <div class="main-content">
+      <!-- Для больших экранов изображение будет слева -->
+      <div class="image-column large-screen-only" style="display: none;">
+        <div class="circuit-diagram"></div>
       </div>
 
-      <div class="result-section">
-        <h2>Измерения сопротивления между входами/выходами:</h2>
-        <div class="formula">Формула сопротивления между In+ и Out+: <span>R_in+_out+ = R5 + ((R1 + R3 + R4) || R2)</span></div>
-        <div class="result" id="RinOutPlusResult">Сопротивление между In+ и Out+: <span id="RinOutPlusValue">-</span> Ом</div>
+      <!-- Правая колонка с параметрами и результатами -->
+      <div class="input-column">
+        <form id="calcForm">
+          <div class="input-section">
+            <div class="input-row">
+              <div class="input-group">
+                <label for="R1">R1 (Ом):</label>
+                <input type="number" id="R1" value="350" step="1" oninput="calculate()">
+              </div>
+              <div class="input-group">
+                <label for="R2">R2 (Ом):</label>
+                <input type="number" id="R2" value="350" step="1" oninput="calculate()">
+              </div>
+            </div>
+            <div class="input-row">
+              <div class="input-group">
+                <label for="R3">R3 (Ом):</label>
+                <input type="number" id="R3" value="350" step="1" oninput="calculate()">
+              </div>
+              <div class="input-group">
+                <label for="R4">R4 (Ом):</label>
+                <input type="number" id="R4" value="350" step="1" oninput="calculate()">
+              </div>
+            </div>
+            <div class="input-row">
+              <div class="input-group">
+                <label for="R5">R5 (Ом):</label>
+                <input type="number" id="R5" value="25" step="1" oninput="calculate()">
+              </div>
+              <div class="input-group">
+                <label for="R6">R6 (Ом):</label>
+                <input type="number" id="R6" value="25" step="1" oninput="calculate()">
+              </div>
+            </div>
+            <div class="input-row">
+              <div class="input-group">
+                <label for="Vcc">Vcc (В):</label>
+                <input type="number" id="Vcc" value="10" step="0.1" oninput="calculate()">
+              </div>
+            </div>
+          </div>
+        </form>
 
-        <div class="formula">Формула сопротивления между In+ и Out-: <span>R_in+_out- = R5 + ((R2 + R3 + R4) || R1)</span></div>
-        <div class="result" id="RinPlusOutMinusResult">Сопротивление между In+ и Out-: <span id="RinPlusOutMinusValue">-</span> Ом</div>
+        <div class="result-section">
+          <h2>Результаты расчетов:</h2>
+          <div class="formula">Формула входного сопротивления: <span>Rin = (R1 + R2) || (R3 + R4)</span></div>
+          <div class="result" id="RinResult">Входное сопротивление: <span id="RinValue">-</span> Ом</div>
 
-        <div class="formula">Формула сопротивления между In- и Out-: <span>R_in-_out- = R6 + ((R1 + R2 + R4) || R3)</span></div>
-        <div class="result" id="RinMinusOutMinusResult">Сопротивление между In- и Out-: <span id="RinMinusOutMinusValue">-</span> Ом</div>
+          <div class="formula">Формула выходного сопротивления: <span>Rout = R5 + R6 + ((R1 + R3) || (R2 + R4))</span></div>
+          <div class="result" id="RoutResult">Выходное сопротивление: <span id="RoutValue">-</span> Ом</div>
 
-        <div class="formula">Формула сопротивления между In- и Out+: <span>R_in-_out+ = R6 + ((R1 + R2 + R3) || R4)</span></div>
-        <div class="result" id="RinMinusOutPlusResult">Сопротивление между In- и Out+: <span id="RinMinusOutPlusValue">-</span> Ом</div>
+          <div class="formula">Формула выходного напряжения: <span>Vout = Vcc * (R4 / (R4 + R2) - R3 / (R3 + R1))</span></div>
+          <div class="result" id="VoutResult">Выходное напряжение: <span id="VoutValue">-</span> В</div>
+        </div>
+
+        <div class="result-section">
+          <h2>Измерения сопротивления между входами/выходами:</h2>
+          <div class="formula">Формула сопротивления между In+ и Out+: <span>R_in+_out+ = R5 + ((R1 + R3 + R4) || R2)</span></div>
+          <div class="result" id="RinOutPlusResult">Сопротивление между In+ и Out+: <span id="RinOutPlusValue">-</span> Ом</div>
+
+          <div class="formula">Формула сопротивления между In+ и Out-: <span>R_in+_out- = R5 + ((R2 + R3 + R4) || R1)</span></div>
+          <div class="result" id="RinPlusOutMinusResult">Сопротивление между In+ и Out-: <span id="RinPlusOutMinusValue">-</span> Ом</div>
+
+          <div class="formula">Формула сопротивления между In- и Out-: <span>R_in-_out- = R6 + ((R1 + R2 + R4) || R3)</span></div>
+          <div class="result" id="RinMinusOutMinusResult">Сопротивление между In- и Out-: <span id="RinMinusOutMinusValue">-</span> Ом</div>
+
+          <div class="formula">Формула сопротивления между In- и Out+: <span>R_in-_out+ = R6 + ((R1 + R2 + R3) || R4)</span></div>
+          <div class="result" id="RinMinusOutPlusResult">Сопротивление между In- и Out+: <span id="RinMinusOutPlusValue">-</span> Ом</div>
+        </div>
       </div>
     </div>
   </div>
@@ -212,6 +235,26 @@
 
     // Initial calculation on page load
     calculate();
+    
+    // Handle responsive layout
+    function handleResponsiveLayout() {
+      const largeScreenImage = document.querySelector('.large-screen-only');
+      const smallScreenImage = document.querySelector('.image-column:not(.large-screen-only)');
+      
+      if (window.innerWidth >= 992) {
+        largeScreenImage.style.display = 'block';
+        smallScreenImage.style.display = 'none';
+      } else {
+        largeScreenImage.style.display = 'none';
+        smallScreenImage.style.display = 'block';
+      }
+    }
+    
+    // Initial check
+    handleResponsiveLayout();
+    
+    // Listen for resize events
+    window.addEventListener('resize', handleResponsiveLayout);
   </script>
 </body>
 </html>
