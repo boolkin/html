@@ -1050,6 +1050,7 @@
                 if (this.currentAttempt >= this.maxAttempts) {
                     const gameTime = Date.now() - this.gameStartTime;
                     this.showLoseModal(gameTime);
+                    // Не обновляем статистику здесь, так как игра уже была учтена при первой попытке
                     return;
                 }
                 
@@ -1189,6 +1190,7 @@
             // Обновляем только общее количество игр
             updateGameStats() {
                 this.stats.totalGames++;
+                this.stats.totalTime += Date.now() - this.gameStartTime;
                 // Обновляем статистику по сложности
                 this.stats.difficulty[this.difficulty].games++;
                 this.saveStats();
