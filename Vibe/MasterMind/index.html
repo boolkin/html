@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-	<meta name="theme-color" content="#2c3e50">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
     <meta name="description" content="Mastermind - классическая логическая игра">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Mastermind">
@@ -18,6 +18,7 @@
 			});
 		}
 	</script>
+	
     <title>Mastermind</title>
     <style>
         * {
@@ -26,7 +27,7 @@
             box-sizing: border-box;
             touch-action: manipulation;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
@@ -253,19 +254,25 @@
         
         .btn-new-game {
             background: linear-gradient(135deg, #5d6d7e 0%, #4d5d6d 100%);
-            min-width: 30%;
+            min-width: 22%;
             font-size: 3vw;
         }
         
         .btn-help {
             background: linear-gradient(135deg, #5d6d7e 0%, #4d5d6d 100%);
-            min-width: 30%;
+            min-width: 22%;
             font-size: 3vw;
         }
         
         .btn-difficulty {
             background: linear-gradient(135deg, #5d6d7e 0%, #4d5d6d 100%);
-            min-width: 30%;
+            min-width: 22%;
+            font-size: 3vw;
+        }
+        
+        .btn-stats {
+            background: linear-gradient(135deg, #5d6d7e 0%, #4d5d6d 100%);
+            min-width: 22%;
             font-size: 3vw;
         }
         
@@ -441,6 +448,63 @@
             line-height: 1.4;
         }
         
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 6vw;
+            font-weight: 700;
+            color: #27ae60;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 3vw;
+            color: #bdc3c7;
+        }
+        
+        .difficulty-stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .difficulty-stats h3 {
+            color: #ecf0f1;
+            margin-bottom: 10px;
+            font-size: 4vw;
+        }
+        
+        .difficulty-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 3vw;
+        }
+        
+        .difficulty-name {
+            color: #bdc3c7;
+        }
+        
+        .difficulty-value {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
         @media (max-width: 480px) {
             .color-circle {
                 width: 14vw;
@@ -456,8 +520,8 @@
                 font-size: 3vw;
             }
             
-            .btn-new-game, .btn-help, .btn-difficulty {
-                font-size: 2.8vw;
+            .btn-new-game, .btn-help, .btn-difficulty, .btn-stats {
+                font-size: 2.5vw;
             }
             
             .modal-content {
@@ -497,6 +561,22 @@
             .difficulty-option p {
                 font-size: 14px;
             }
+            
+            .stat-value {
+                font-size: 24px;
+            }
+            
+            .stat-label {
+                font-size: 14px;
+            }
+            
+            .difficulty-stats h3 {
+                font-size: 16px;
+            }
+            
+            .difficulty-row {
+                font-size: 14px;
+            }
         }
         
         @media (min-width: 768px) {
@@ -510,7 +590,7 @@
                 padding: 12px 20px;
             }
             
-            .btn-new-game, .btn-help, .btn-difficulty {
+            .btn-new-game, .btn-help, .btn-difficulty, .btn-stats {
                 font-size: 15px;
             }
             
@@ -546,6 +626,22 @@
             }
             
             .difficulty-option p {
+                font-size: 16px;
+            }
+            
+            .stat-value {
+                font-size: 28px;
+            }
+            
+            .stat-label {
+                font-size: 16px;
+            }
+            
+            .difficulty-stats h3 {
+                font-size: 20px;
+            }
+            
+            .difficulty-row {
                 font-size: 16px;
             }
         }
@@ -584,6 +680,7 @@
                 <button class="btn btn-new-game" id="newGameBtn">Новая игра</button>
                 <button class="btn btn-difficulty" id="difficultyBtn">Сложность</button>
                 <button class="btn btn-help" id="helpBtn">Помощь</button>
+                <button class="btn btn-stats" id="statsBtn">Статистика</button>
             </div>
         </div>
     </div>
@@ -678,6 +775,52 @@
         </div>
     </div>
     
+    <!-- Модальное окно статистики -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <h2>📊 Статистика</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalGames">0</div>
+                    <div class="stat-label">Всего игр</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalWins">0</div>
+                    <div class="stat-label">Побед</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="winRate">0%</div>
+                    <div class="stat-label">Процент побед</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgAttempts">0</div>
+                    <div class="stat-label">Сред. попыток</div>
+                </div>
+            </div>
+            
+            <div class="difficulty-stats">
+                <h3>По сложности:</h3>
+                <div class="difficulty-row">
+                    <span class="difficulty-name">Легкий:</span>
+                    <span class="difficulty-value" id="easyStats">0/0 (0%)</span>
+                </div>
+                <div class="difficulty-row">
+                    <span class="difficulty-name">Средний:</span>
+                    <span class="difficulty-value" id="mediumStats">0/0 (0%)</span>
+                </div>
+                <div class="difficulty-row">
+                    <span class="difficulty-name">Сложный:</span>
+                    <span class="difficulty-value" id="hardStats">0/0 (0%)</span>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn close-btn" id="closeStatsModal">Закрыть</button>
+                <button class="modal-btn" id="resetStatsBtn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">Сбросить</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Уведомление -->
     <div id="notification" class="notification"></div>
 
@@ -697,19 +840,25 @@
                 this.newGameBtn = document.getElementById('newGameBtn');
                 this.helpBtn = document.getElementById('helpBtn');
                 this.difficultyBtn = document.getElementById('difficultyBtn');
+                this.statsBtn = document.getElementById('statsBtn');
                 this.surrenderBtn = document.getElementById('surrenderBtn');
                 this.winModal = document.getElementById('winModal');
                 this.helpModal = document.getElementById('helpModal');
                 this.loseModal = document.getElementById('loseModal');
                 this.difficultyModal = document.getElementById('difficultyModal');
                 this.surrenderModal = document.getElementById('surrenderModal');
+                this.statsModal = document.getElementById('statsModal');
                 this.closeWinModal = document.getElementById('closeWinModal');
                 this.closeHelpModal = document.getElementById('closeHelpModal');
                 this.closeLoseModal = document.getElementById('closeLoseModal');
                 this.closeDifficultyModal = document.getElementById('closeDifficultyModal');
                 this.closeSurrenderModal = document.getElementById('closeSurrenderModal');
+                this.closeStatsModal = document.getElementById('closeStatsModal');
+                this.resetStatsBtn = document.getElementById('resetStatsBtn');
                 this.notification = document.getElementById('notification');
                 
+                this.gameStartTime = Date.now();
+                this.loadStats();
                 this.initializeGame();
                 this.bindEvents();
             }
@@ -736,6 +885,7 @@
                 this.sequenceContainer.innerHTML = '';
                 this.currentAttempt = 0;
                 this.maxAttempts = this.getAttemptsByDifficulty(this.difficulty);
+                this.gameStartTime = Date.now();
                 this.updateSurrenderButton();
                 this.addNewRow();
             }
@@ -863,13 +1013,17 @@
                 
                 // Проверяем победу
                 if (result.black === this.sequenceLength) {
-                    this.showWinModal(this.currentAttempt);
+                    const gameTime = Date.now() - this.gameStartTime;
+                    this.showWinModal(this.currentAttempt, gameTime);
+                    this.updateStats(true, this.currentAttempt, gameTime);
                     return;
                 }
                 
                 // Проверяем поражение
                 if (this.currentAttempt >= this.maxAttempts) {
+                    const gameTime = Date.now() - this.gameStartTime;
                     this.showLoseModal();
+                    this.updateStats(false, this.maxAttempts, gameTime);
                     return;
                 }
                 
@@ -877,7 +1031,7 @@
                 this.addNewRow();
             }
             
-            showWinModal(attempts) {
+            showWinModal(attempts, gameTime) {
                 document.getElementById('attemptsCount').textContent = attempts;
                 const secretCodeContainer = document.getElementById('winSecretCode');
                 secretCodeContainer.innerHTML = '';
@@ -977,6 +1131,96 @@
                 });
             }
             
+            // Статистика
+            loadStats() {
+                const savedStats = localStorage.getItem('mastermindStats');
+                if (savedStats) {
+                    this.stats = JSON.parse(savedStats);
+                } else {
+                    this.stats = {
+                        totalGames: 0,
+                        totalWins: 0,
+                        totalAttempts: 0,
+                        totalTime: 0,
+                        difficulty: {
+                            1: { games: 0, wins: 0 },
+                            2: { games: 0, wins: 0 },
+                            3: { games: 0, wins: 0 }
+                        }
+                    };
+                }
+            }
+            
+            saveStats() {
+                localStorage.setItem('mastermindStats', JSON.stringify(this.stats));
+            }
+            
+            updateStats(isWin, attempts, gameTime) {
+                this.stats.totalGames++;
+                this.stats.totalAttempts += attempts;
+                this.stats.totalTime += gameTime;
+                
+                if (isWin) {
+                    this.stats.totalWins++;
+                }
+                
+                // Обновляем статистику по сложности
+                this.stats.difficulty[this.difficulty].games++;
+                if (isWin) {
+                    this.stats.difficulty[this.difficulty].wins++;
+                }
+                
+                this.saveStats();
+            }
+            
+            resetStats() {
+                this.stats = {
+                    totalGames: 0,
+                    totalWins: 0,
+                    totalAttempts: 0,
+                    totalTime: 0,
+                    difficulty: {
+                        1: { games: 0, wins: 0 },
+                        2: { games: 0, wins: 0 },
+                        3: { games: 0, wins: 0 }
+                    }
+                };
+                this.saveStats();
+                this.updateStatsDisplay();
+            }
+            
+            updateStatsDisplay() {
+                document.getElementById('totalGames').textContent = this.stats.totalGames;
+                document.getElementById('totalWins').textContent = this.stats.totalWins;
+                
+                const winRate = this.stats.totalGames > 0 ? 
+                    Math.round((this.stats.totalWins / this.stats.totalGames) * 100) : 0;
+                document.getElementById('winRate').textContent = `${winRate}%`;
+                
+                const avgAttempts = this.stats.totalGames > 0 ? 
+                    (this.stats.totalAttempts / this.stats.totalGames).toFixed(1) : 0;
+                document.getElementById('avgAttempts').textContent = avgAttempts;
+                
+                // Статистика по сложности
+                const easyStats = this.stats.difficulty[1];
+                const easyRate = easyStats.games > 0 ? 
+                    Math.round((easyStats.wins / easyStats.games) * 100) : 0;
+                document.getElementById('easyStats').textContent = 
+                    `${easyStats.wins}/${easyStats.games} (${easyRate}%)`;
+                
+                const mediumStats = this.stats.difficulty[2];
+                const mediumRate = mediumStats.games > 0 ? 
+                    Math.round((mediumStats.wins / mediumStats.games) * 100) : 0;
+                document.getElementById('mediumStats').textContent = 
+                    `${mediumStats.wins}/${mediumStats.games} (${mediumRate}%)`;
+                
+                const hardStats = this.stats.difficulty[3];
+                const hardRate = hardStats.games > 0 ? 
+                    Math.round((hardStats.wins / hardStats.games) * 100) : 0;
+                document.getElementById('hardStats').textContent = 
+                    `${hardStats.wins}/${hardStats.games} (${hardRate}%)`;
+            }
+            
             bindEvents() {
                 // Добавление цветов
                 document.querySelectorAll('.color-circle').forEach(circle => {
@@ -1012,8 +1256,16 @@
                     this.difficultyModal.style.display = 'flex';
                 });
                 
+                // Кнопка "Статистика"
+                this.statsBtn.addEventListener('click', () => {
+                    this.updateStatsDisplay();
+                    this.statsModal.style.display = 'flex';
+                });
+                
                 // Кнопка "Сдаться"
                 this.surrenderBtn.addEventListener('click', () => {
+                    const gameTime = Date.now() - this.gameStartTime;
+                    this.updateStats(false, this.currentAttempt, gameTime);
                     this.showSurrenderModal();
                 });
                 
@@ -1049,6 +1301,14 @@
                     this.surrenderModal.style.display = 'none';
                 });
                 
+                this.closeStatsModal.addEventListener('click', () => {
+                    this.statsModal.style.display = 'none';
+                });
+                
+                this.resetStatsBtn.addEventListener('click', () => {
+                    this.resetStats();
+                });
+                
                 // Закрытие модальных окон при клике вне контента
                 window.addEventListener('click', (e) => {
                     if (e.target === this.winModal) {
@@ -1068,6 +1328,9 @@
                     if (e.target === this.surrenderModal) {
                         this.surrenderModal.style.display = 'none';
                     }
+                    if (e.target === this.statsModal) {
+                        this.statsModal.style.display = 'none';
+                    }
                 });
                 
                 // Поддержка клавиатуры для тестирования
@@ -1085,6 +1348,7 @@
                         this.loseModal.style.display = 'none';
                         this.difficultyModal.style.display = 'none';
                         this.surrenderModal.style.display = 'none';
+                        this.statsModal.style.display = 'none';
                     }
                 });
                 
