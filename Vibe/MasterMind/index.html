@@ -901,11 +901,6 @@
             }
             
             initializeGame() {
-                // Если была сделана хотя бы одна попытка, считаем игру сыгранной
-                if (this.currentAttempt > 0) {
-                    this.updateStats(false, 0, Date.now() - this.gameStartTime);
-                }
-                
                 this.sequenceContainer.innerHTML = '';
                 this.currentAttempt = 0;
                 this.maxAttempts = this.getAttemptsByDifficulty(this.difficulty);
@@ -1011,6 +1006,8 @@
                 // Отмечаем, что игра началась (была сделана первая попытка)
                 if (!this.gamePlayed) {
                     this.gamePlayed = true;
+                    // Добавляем игру в статистику только один раз при первой попытке
+                    this.updateGameStats();
                 }
                 
                 // Убираем класс текущей строки
@@ -1045,7 +1042,7 @@
                 if (result.black === this.sequenceLength) {
                     const gameTime = Date.now() - this.gameStartTime;
                     this.showWinModal(this.currentAttempt, gameTime);
-                    this.updateStats(true, this.currentAttempt, gameTime);
+                    this.updateWinStats(this.currentAttempt, gameTime);
                     return;
                 }
                 
@@ -1053,7 +1050,6 @@
                 if (this.currentAttempt >= this.maxAttempts) {
                     const gameTime = Date.now() - this.gameStartTime;
                     this.showLoseModal(gameTime);
-                    this.updateStats(false, this.maxAttempts, gameTime);
                     return;
                 }
                 
@@ -1190,23 +1186,21 @@
                 localStorage.setItem('mastermindStats', JSON.stringify(this.stats));
             }
             
-            updateStats(isWin, attempts, gameTime) {
+            // Обновляем только общее количество игр
+            updateGameStats() {
                 this.stats.totalGames++;
-                
-                if (isWin) {
-                    this.stats.totalWins++;
-                    this.stats.totalWinAttempts += attempts; // Учитываем только победные попытки
-                    this.stats.totalWinTime += gameTime; // Учитываем только время побед
-                }
-                
-                this.stats.totalTime += gameTime;
-                
                 // Обновляем статистику по сложности
                 this.stats.difficulty[this.difficulty].games++;
-                if (isWin) {
-                    this.stats.difficulty[this.difficulty].wins++;
-                }
-                
+                this.saveStats();
+            }
+            
+            // Обновляем статистику побед
+            updateWinStats(attempts, gameTime) {
+                this.stats.totalWins++;
+                this.stats.totalWinAttempts += attempts;
+                this.stats.totalWinTime += gameTime;
+                // Обновляем статистику по сложности
+                this.stats.difficulty[this.difficulty].wins++;
                 this.saveStats();
             }
             
@@ -1314,8 +1308,6 @@
                 
                 // Кнопка "Сдаться"
                 this.surrenderBtn.addEventListener('click', () => {
-                    const gameTime = Date.now() - this.gameStartTime;
-                    this.updateStats(false, 0, gameTime);
                     this.showSurrenderModal();
                 });
                 
