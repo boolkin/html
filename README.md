@@ -54,9 +54,10 @@ https://boolkin.github.io/html/pixelRuler/minify.txt
 https://boolkin.github.io/html/pixelRuler/Qwen_html_20250806_qnkb88792.html  
 
 VibeCoding projects:  
-D1 - расписание 
-https://boolkin.github.io/html/Vibe/D1.html  
-https://boolkin.github.io/html/Vibe/pixRul.html  
-https://boolkin.github.io/html/Vibe/JSON-blocks.html  
+D1 - расписание - https://boolkin.github.io/html/Vibe/D1.html  
 https://boolkin.github.io/html/Vibe/D1_widget.html  
-https://boolkin.github.io/html/Vibe/MasterMind/  
+MasterMind - https://boolkin.github.io/html/Vibe/MasterMind/  
+Рулетка пиксельная - https://boolkin.github.io/html/Vibe/pixRul.html  
+Прочее  
+https://boolkin.github.io/html/Vibe/JSON-blocks.html  
+https://boolkin.github.io/html/Vibe/tension.html  
