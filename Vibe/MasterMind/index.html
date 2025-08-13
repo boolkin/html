@@ -1143,7 +1143,7 @@
                     this.stats = {
                         totalGames: 0,
                         totalWins: 0,
-                        totalAttempts: 0,
+                        totalWinAttempts: 0, // Сумма попыток только для побед
                         totalTime: 0,
                         difficulty: {
                             1: { games: 0, wins: 0 },
@@ -1160,12 +1160,13 @@
             
             updateStats(isWin, attempts, gameTime) {
                 this.stats.totalGames++;
-                this.stats.totalAttempts += attempts;
-                this.stats.totalTime += gameTime;
                 
                 if (isWin) {
                     this.stats.totalWins++;
+                    this.stats.totalWinAttempts += attempts; // Учитываем только победные попытки
                 }
+                
+                this.stats.totalTime += gameTime;
                 
                 // Обновляем статистику по сложности
                 this.stats.difficulty[this.difficulty].games++;
@@ -1181,7 +1182,7 @@
                     this.stats = {
                         totalGames: 0,
                         totalWins: 0,
-                        totalAttempts: 0,
+                        totalWinAttempts: 0,
                         totalTime: 0,
                         difficulty: {
                             1: { games: 0, wins: 0 },
@@ -1202,8 +1203,9 @@
                     Math.round((this.stats.totalWins / this.stats.totalGames) * 100) : 0;
                 document.getElementById('winRate').textContent = `${winRate}%`;
                 
-                const avgAttempts = this.stats.totalGames > 0 ? 
-                    (this.stats.totalAttempts / this.stats.totalGames).toFixed(1) : 0;
+                // Среднее количество попыток считаем только по выигранным играм
+                const avgAttempts = this.stats.totalWins > 0 ? 
+                    (this.stats.totalWinAttempts / this.stats.totalWins).toFixed(1) : 0;
                 document.getElementById('avgAttempts').textContent = avgAttempts;
                 
                 // Статистика по сложности
