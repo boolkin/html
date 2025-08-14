@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Дифференциальный усилитель</title>
+  <title>Расчеты тензодатчика</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -165,15 +165,15 @@
         </form>
 
         <div class="result-section">
-          <h2>Результаты расчетов:</h2>
-          <div class="formula">Формула входного сопротивления: <span>Rin = (R1 + R2) || (R3 + R4)</span></div>
+          <h2>Основные результаты расчетов:</h2>
+          <div class="formula">Формула входного сопротивления: <span>Rin = R5 + R6 + ((R1 + R3) || (R2 + R4))</span></div>
           <div class="result" id="RinResult">Входное сопротивление: <span id="RinValue">-</span> Ом</div>
 
-          <div class="formula">Формула выходного сопротивления: <span>Rout = R5 + R6 + ((R1 + R3) || (R2 + R4))</span></div>
+          <div class="formula">Формула выходного сопротивления: <span>Rout = (R1 + R2) || (R3 + R4)</span></div>
           <div class="result" id="RoutResult">Выходное сопротивление: <span id="RoutValue">-</span> Ом</div>
 
-          <div class="formula">Формула выходного напряжения: <span>Vout = Vcc * (R4 / (R4 + R2) - R3 / (R3 + R1))</span></div>
-          <div class="result" id="VoutResult">Выходное напряжение: <span id="VoutValue">-</span> В</div>
+          <div class="formula">Формула выходного напряжения: <span>Vout = V_bridge * (R4 / (R4 + R2) - R3 / (R3 + R1))</span></div>
+          <div class="result" id="VoutResult">Выходное напряжение: <span id="VoutValue">-</span> мВ</div>
         </div>
 
         <div class="result-section">
@@ -189,6 +189,27 @@
 
           <div class="formula">Формула сопротивления между In- и Out+: <span>R_in-_out+ = R6 + ((R1 + R2 + R3) || R4)</span></div>
           <div class="result" id="RinMinusOutPlusResult">Сопротивление между In- и Out+: <span id="RinMinusOutPlusValue">-</span> Ом</div>
+        </div>
+
+        <div class="result-section">
+          <h2>Промежуточные расчеты:</h2>
+          <div class="formula">Формула тока в цепи: <span>I = Vcc / Rin</span></div>
+          <div class="result" id="CurrentResult">Ток в цепи: <span id="CurrentValue">-</span> мА</div>
+
+          <div class="formula">Формула напряжения на мосту: <span>V_bridge = I * Rout</span></div>
+          <div class="result" id="BridgeVoltageResult">Напряжение на мосту: <span id="BridgeVoltageValue">-</span> В</div>
+
+          <div class="formula">Формула баланса моста Rb+: <span>Rb+ = R5 + (R1 || R2)</span></div>
+          <div class="result" id="RbPlusResult">Баланс моста Rb+: <span id="RbPlusValue">-</span> Ом</div>
+
+          <div class="formula">Формула баланса моста Rb-: <span>Rb- = R6 + (R3 || R4)</span></div>
+          <div class="result" id="RbMinusResult">Баланс моста Rb-: <span id="RbMinusValue">-</span> Ом</div>
+
+          <div class="formula">Формула напряжения на R5: <span>V_R5 = I * R5</span></div>
+          <div class="result" id="VR5Result">Напряжение на R5: <span id="VR5Value">-</span> В</div>
+
+          <div class="formula">Формула напряжения на R6: <span>V_R6 = I * R6</span></div>
+          <div class="result" id="VR6Result">Напряжение на R6: <span id="VR6Value">-</span> В</div>
         </div>
       </div>
     </div>
@@ -207,14 +228,32 @@
       // Calculate parallel resistance
       const parallel = (a, b) => a * b / (a + b);
 
-      // Input resistance calculation: Rin = (R1 + R2) || (R3 + R4)
-      const Rin = parallel(R1 + R2, R3 + R4);
+      // Исправленные формулы
+      // Input resistance calculation: Rin = R5 + R6 + ((R1 + R3) || (R2 + R4))
+      const Rin = R5 + R6 + parallel(R1 + R3, R2 + R4);
 
-      // Output resistance calculation: Rout = R5 + R6 + ((R1 + R3) || (R2 + R4))
-      const Rout = R5 + R6 + parallel(R1 + R3, R2 + R4);
+      // Output resistance calculation: Rout = (R1 + R2) || (R3 + R4)
+      const Rout = parallel(R1 + R2, R3 + R4);
 
-      // Output voltage calculation: Vout = Vcc * (R4 / (R4 + R2) - R3 / (R3 + R1))
-      const Vout = Vcc * (R4 / (R4 + R2) - R3 / (R3 + R1));
+      // Промежуточные расчеты
+      // Ток в цепи: I = Vcc / Rin (в миллиамперах)
+      const Current = (Vcc / Rin) * 1000;
+      
+      // Напряжение на мосту: V_bridge = I * Rout (в вольтах)
+      const BridgeVoltage = (Current / 1000) * Rout;
+      
+      // Баланс моста
+      const RbPlus = R5 + parallel(R1, R2);    // Rb+ = R5 + (R1 || R2)
+      const RbMinus = R6 + parallel(R3, R4);   // Rb- = R6 + (R3 || R4)
+      
+      // Напряжение на R5: V_R5 = I * R5
+      const VR5 = (Current / 1000) * R5;
+      
+      // Напряжение на R6: V_R6 = I * R6
+      const VR6 = (Current / 1000) * R6;
+
+      // Output voltage calculation: Vout = V_bridge * (R4 / (R4 + R2) - R3 / (R3 + R1)) (в милливольтах)
+      const Vout = BridgeVoltage * (R4 / (R4 + R2) - R3 / (R3 + R1)) * 1000;
 
       // Additional resistance measurements
       const RinOutPlus = R5 + parallel(R1 + R3 + R4, R2);       // In+ to Out+
@@ -222,15 +261,23 @@
       const RinMinusOutMinus = R6 + parallel(R1 + R2 + R4, R3); // In- to Out-
       const RinMinusOutPlus = R6 + parallel(R1 + R2 + R3, R4);  // In- to Out+
 
-      // Display results
+      // Display main results
       document.getElementById('RinValue').textContent = Rin.toFixed(2);
       document.getElementById('RoutValue').textContent = Rout.toFixed(2);
-      document.getElementById('VoutValue').textContent = Vout.toFixed(2);
+      document.getElementById('VoutValue').textContent = Vout.toFixed(3);
       
       document.getElementById('RinOutPlusValue').textContent = RinOutPlus.toFixed(2);
       document.getElementById('RinPlusOutMinusValue').textContent = RinPlusOutMinus.toFixed(2);
       document.getElementById('RinMinusOutMinusValue').textContent = RinMinusOutMinus.toFixed(2);
       document.getElementById('RinMinusOutPlusValue').textContent = RinMinusOutPlus.toFixed(2);
+
+      // Display intermediate results
+      document.getElementById('CurrentValue').textContent = Current.toFixed(3);
+      document.getElementById('BridgeVoltageValue').textContent = BridgeVoltage.toFixed(3);
+      document.getElementById('RbPlusValue').textContent = RbPlus.toFixed(2);
+      document.getElementById('RbMinusValue').textContent = RbMinus.toFixed(2);
+      document.getElementById('VR5Value').textContent = VR5.toFixed(3);
+      document.getElementById('VR6Value').textContent = VR6.toFixed(3);
     }
 
     // Initial calculation on page load
