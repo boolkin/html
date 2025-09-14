@@ -61,3 +61,4 @@ MasterMind - https://boolkin.github.io/html/Vibe/MasterMind/
 Прочее  
 https://boolkin.github.io/html/Vibe/JSON-blocks.html  
 https://boolkin.github.io/html/Vibe/tension.html  
+Сайт Втемиртау.КЗ  - https://boolkin.github.io/html/Vibe/vtemirtau  
