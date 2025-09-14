@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vtemirtau.kz</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f7f9fc;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #4a6fa5;
+      color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+
+    header h1:hover {
+      opacity: 0.9;
+      text-decoration: underline;
+    }
+
+    .controls-row {
+      max-width: 800px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .filter-select {
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #bdc3c7;
+      font-size: 0.95rem;
+      min-width: 180px;
+    }
+
+    .search-input {
+      flex: 1;
+      max-width: 300px;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .tags-toggle button {
+      background: #4a6fa5;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .tags-toggle button:hover {
+      background: #3a5a80;
+    }
+
+    .tags-filter {
+      max-width: 800px;
+      margin: 1rem auto 2rem;
+      padding: 0 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      background: #f0f4f8;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    }
+
+    .tag {
+      background-color: #e0ebff;
+      color: #4a6fa5;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid #b8d3ff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .tag:hover {
+      background-color: #d0e0ff;
+    }
+
+    .tag.active {
+      background-color: #4a6fa5;
+      color: white;
+      border-color: #4a6fa5;
+    }
+
+    .tag.all {
+      background-color: #95a5a6;
+      color: white;
+      border-color: #7f8c8d;
+    }
+
+    .tag.all.active {
+      background-color: #7f8c8d;
+    }
+
+    #posts-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .post {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease;
+    }
+
+    .post:hover {
+      transform: translateY(-2px);
+    }
+
+    .post h2 {
+      margin-top: 0;
+      color: #2c3e50;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    .post h2:hover {
+      color: #4a6fa5;
+      text-decoration: underline;
+    }
+
+    .post-meta {
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .post-content {
+      margin: 0.8rem 0;
+      color: #555;
+      font-size: 1rem;
+    }
+
+    .read-more-btn {
+      display: inline-block;
+      margin-top: 0.8rem;
+      color: #4a6fa5;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .read-more-btn:hover {
+      text-decoration: underline;
+    }
+
+    .post-tags {
+      margin-top: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .post-tags .tag {
+      background-color: #e8f4fd;
+      color: #1a73e8;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      border: 1px solid #bbdefb;
+      cursor: pointer;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 2rem 0;
+      padding: 0 1rem;
+      font-size: 1rem;
+    }
+
+    .pagination a, .pagination span {
+      padding: 0.5rem 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #4a6fa5;
+    }
+
+    .pagination a:hover {
+      background-color: #f0f4f8;
+    }
+
+    .pagination .current {
+      background-color: #4a6fa5;
+      color: white;
+      border-color: #4a6fa5;
+    }
+
+    .pagination .disabled {
+      color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .loader {
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.2rem;
+      color: #4a6fa5;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .post img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 1rem 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .post blockquote {
+      border-left: 4px solid #4a6fa5;
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      background-color: #f0f4f8;
+      font-style: italic;
+      color: #444;
+    }
+
+    /* Модальное окно */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .share-buttons {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .share-btn {
+      background: #4a6fa5;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .share-btn:hover {
+      background: #3a5a80;
+    }
+  </style>
+</head>
+<body>
+
+  <header onclick="resetFilters()">
+    <h1>Vtemirtau.kz</h1>
+  </header>
+
+  <!-- Панель управления -->
+  <div class="controls-row">
+    <select class="filter-select" id="type-filter" onchange="filterByType(this.value)">
+      <option value="">Все типы</option>
+    </select>
+    <input type="text" class="search-input" id="search-input" placeholder="Поиск по тексту, автору, дате..." oninput="performSearch()">
+    <div class="tags-toggle">
+      <button onclick="toggleTagsFilter()">🔖 Топ-15 тегов</button>
+    </div>
+  </div>
+
+  <div class="tags-filter" id="tags-filter" style="display: none;">
+    <div class="tag all active" onclick="filterByTag(null); setTimeout(toggleTagsFilter, 300)">Все теги</div>
+  </div>
+
+  <main id="posts-container">
+    <!-- Посты будут добавлены здесь -->
+  </main>
+
+  <div id="loader" class="loader">Загрузка постов...</div>
+
+  <nav class="pagination" id="pagination"></nav>
+
+  <!-- Модальное окно -->
+  <div class="modal" id="post-modal">
+    <div class="modal-content">
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+      <div id="modal-post-content"></div>
+      <div class="share-buttons">
+        <a href="#" class="share-btn" id="share-link">Скопировать ссылку</a>
+        <a href="#" class="share-btn" id="share-tg">Поделиться в Telegram</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CSV_URL = 'https://raw.githubusercontent.com/boolkin/html/refs/heads/master/StaticFromCSV/vtemirtau.csv';
+    const POSTS_PER_PAGE = 5;
+    const TOP_TAGS_COUNT = 15;
+
+    let posts = [];
+    let filteredPosts = [];
+    let currentPage = 1;
+    let currentFilterTag = null;
+    let currentFilterType = '';
+    let searchQuery = '';
+
+    const container = document.getElementById('posts-container');
+    const paginationEl = document.getElementById('pagination');
+    const tagsFilterEl = document.getElementById('tags-filter');
+    const typeFilterEl = document.getElementById('type-filter');
+    const searchInput = document.getElementById('search-input');
+    const loader = document.getElementById('loader');
+    const modal = document.getElementById('post-modal');
+
+    // === Получить параметр из URL ===
+    function getParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    // === Установить параметр в URL ===
+    function setParam(name, value) {
+      const params = new URLSearchParams(window.location.search);
+      if (value) params.set(name, value);
+      else params.delete(name);
+      const newURL = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', newURL);
+    }
+
+    // === Сброс фильтров ===
+    function resetFilters() {
+      filterByTag(null);
+      filterByType('');
+      searchInput.value = '';
+      searchQuery = '';
+      typeFilterEl.value = '';
+      history.replaceState({}, '', window.location.pathname);
+    }
+
+    // === Модальное окно ===
+    function openModal(postId) {
+      const post = posts.find(p => p.id == postId);
+      if (!post) {
+        alert("Пост не найден");
+        return;
+      }
+
+      const modalContent = document.getElementById('modal-post-content');
+      modalContent.innerHTML = '';
+
+      const titleEl = document.createElement('h2');
+      titleEl.textContent = post.title || 'Без заголовка';
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'post-meta';
+      metaEl.innerHTML = `
+        <time>${formatDate(post.date)}</time> • 
+        Автор: <strong>${escapeHtml(post.author || '—')}</strong> • 
+        Тип: <em>${escapeHtml(post.topic_type || '—')}</em>
+      `;
+
+      const contentEl = document.createElement('div');
+      try {
+        contentEl.innerHTML = post.content || '<p>Контент отсутствует.</p>';
+      } catch (e) {
+        contentEl.textContent = 'Не удалось отобразить контент.';
+      }
+
+      modalContent.appendChild(titleEl);
+      modalContent.appendChild(metaEl);
+      modalContent.appendChild(contentEl);
+
+      const postURL = `${window.location.origin}${window.location.pathname}?id=${post.id}`;
+      document.getElementById('share-link').onclick = (e) => {
+        e.preventDefault();
+        navigator.clipboard.writeText(postURL).then(() => alert('Ссылка скопирована!'));
+      };
+      document.getElementById('share-tg').href = `https://t.me/share/url?url=${encodeURIComponent(postURL)}&text=${encodeURIComponent(post.title)}`;
+
+      modal.style.display = 'flex';
+      setParam('id', post.id);
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      const id = getParam('id');
+      if (id) setParam('id', null);
+    }
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
+    });
+
+    // === Вспомогательные функции ===
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return isNaN(date) ? dateStr : date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function generatePreview(htmlContent) {
+      const plainText = (htmlContent || '').replace(/<[^>]+>/g, ' ');
+      const words = plainText.split(/\s+/).filter(Boolean);
+      const previewWords = words.slice(0, 50);
+      return previewWords.join(' ') + (words.length > 50 ? '…' : '');
+    }
+
+    // === Поиск ===
+    function performSearch() {
+      searchQuery = searchInput.value.trim().toLowerCase();
+      applyFilters();
+    }
+
+    function matchesSearch(post) {
+      if (!searchQuery) return true;
+
+      const searchableText = `
+        ${post.title} ${post.content} ${post.author} ${formatDate(post.date)}
+      `.toLowerCase();
+
+      return searchableText.includes(searchQuery);
+    }
+
+    // === Фильтрация ===
+    function filterByTag(tag) {
+      currentFilterTag = tag;
+      applyFilters();
+      updateActiveTags();
+      setParam('tag', tag);
+    }
+
+    function filterByType(type) {
+      currentFilterType = type;
+      applyFilters();
+      setParam('type', type);
+    }
+
+    function applyFilters() {
+      currentPage = 1;
+      filteredPosts = posts.filter(post => {
+        const matchTag = !currentFilterTag || (post.topic_tags && post.topic_tags.split(',').map(t => t.trim()).includes(currentFilterTag));
+        const matchType = !currentFilterType || post.topic_type === currentFilterType;
+        const matchSearch = matchesSearch(post);
+        return matchTag && matchType && matchSearch;
+      });
+      renderCurrentPage();
+    }
+
+    function updateActiveTags() {
+      document.querySelectorAll('#tags-filter .tag').forEach(el => el.classList.remove('active'));
+      if (!currentFilterTag) {
+        document.querySelector('#tags-filter .tag.all')?.classList.add('active');
+      } else {
+        Array.from(document.querySelectorAll('#tags-filter .tag')).find(el => el.textContent.startsWith(currentFilterTag))?.classList.add('active');
+      }
+    }
+
+    function toggleTagsFilter() {
+      const btn = document.querySelector('.tags-toggle button');
+      if (tagsFilterEl.style.display === 'none') {
+        tagsFilterEl.style.display = 'flex';
+        btn.textContent = '❌ Скрыть теги';
+      } else {
+        tagsFilterEl.style.display = 'none';
+        btn.textContent = '🔖 Топ-15 тегов';
+      }
+    }
+
+    // === Рендеринг ===
+    function renderCurrentPage() {
+      container.innerHTML = '';
+      const start = (currentPage - 1) * POSTS_PER_PAGE;
+      const end = start + POSTS_PER_PAGE;
+      const pagePosts = filteredPosts.slice(start, end);
+
+      if (pagePosts.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#7f8c8d;">Нет постов по заданному фильтру.</p>';
+        return;
+      }
+
+      pagePosts.forEach(post => {
+        const postEl = document.createElement('article');
+        postEl.className = 'post';
+        postEl.dataset.id = post.id;
+
+        const previewText = generatePreview(post.content);
+        const tagsHTML = renderPostTags(post.topic_tags);
+
+        const structure = `
+          <h2 onclick="openModal(${post.id})">${escapeHtml(post.title)}</h2>
+          <div class="post-meta">
+            <time>${formatDate(post.date)}</time>
+            ${post.author ? ' • Автор: <strong>' + escapeHtml(post.author) + '</strong>' : ''}
+          </div>
+          <div class="post-content">
+            <div class="post-preview">${previewText}</div>
+            <div class="post-full-content" style="display:none"></div>
+          </div>
+          ${tagsHTML}
+        `;
+        postEl.innerHTML = structure;
+
+        const btn = document.createElement('a');
+        btn.href = '#';
+        btn.className = 'read-more-btn';
+        btn.textContent = 'Читать далее →';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const preview = postEl.querySelector('.post-preview');
+          const full = postEl.querySelector('.post-full-content');
+          if (postEl.classList.contains('expanded')) {
+            preview.style.display = 'block';
+            full.style.display = 'none';
+            btn.textContent = 'Читать далее →';
+          } else {
+            preview.style.display = 'none';
+            full.style.display = 'block';
+            full.innerHTML = post.content;
+          }
+          postEl.classList.toggle('expanded');
+        };
+
+        postEl.appendChild(btn);
+        container.appendChild(postEl);
+      });
+
+      renderPagination();
+    }
+
+    function renderPostTags(tagsString) {
+      if (!tagsString || !tagsString.trim()) return '';
+      const tags = tagsString.split(',').map(t => t.trim()).filter(t => t);
+      return `
+        <div class="post-tags">
+          ${tags.map(t => `<span class="tag" onclick="filterByTag('${escapeJsString(t)}')">${escapeHtml(t)}</span>`).join('')}
+        </div>
+      `;
+    }
+
+    function escapeJsString(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function renderPagination() {
+      paginationEl.innerHTML = '';
+      const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+      if (totalPages <= 1) return;
+
+      const prevPage = currentPage > 1 ? currentPage - 1 : null;
+      const nextPage = currentPage < totalPages ? currentPage + 1 : null;
+
+      if (prevPage) {
+        const a = document.createElement('a');
+        a.href = '#'; a.textContent = '← Назад';
+        a.onclick = () => goToPage(prevPage);
+        paginationEl.appendChild(a);
+      } else {
+        const s = document.createElement('span');
+        s.classList.add('disabled'); s.textContent = '← Назад';
+        paginationEl.appendChild(s);
+      }
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+          const a = document.createElement('a');
+          a.href = '#'; a.textContent = i;
+          if (i === currentPage) a.classList.add('current');
+          else a.onclick = () => goToPage(i);
+          paginationEl.appendChild(a);
+        }
+      }
+
+      if (nextPage) {
+        const a = document.createElement('a');
+        a.href = '#'; a.textContent = 'Вперёд →';
+        a.onclick = () => goToPage(nextPage);
+        paginationEl.appendChild(a);
+      } else {
+        const s = document.createElement('span');
+        s.classList.add('disabled'); s.textContent = 'Вперёд →';
+        paginationEl.appendChild(s);
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderCurrentPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // === Загрузка данных ===
+    Papa.parse(CSV_URL, {
+      download: true,
+      delimiter: ';',
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        console.log("Данные загружены:", results.data);
+
+        posts = results.data
+          .filter(row => row.title && row.title.trim())
+          .map(row => ({
+            id: row.id || '',
+            title: row.title || 'Без заголовка',
+            author: row.author || '',
+            content: row.text || '',
+            date: row.date || '',
+            topic_tags: row.topic_tags || '',
+            topic_type: row.topic_type || ''
+          }))
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Заполняем выпадающий список типов
+        const types = [...new Set(posts.map(p => p.topic_type).filter(Boolean))];
+        types.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type;
+          option.textContent = type;
+          typeFilterEl.appendChild(option);
+        });
+
+        // Применяем фильтры из URL
+        const savedType = getParam('type');
+        if (savedType) {
+          typeFilterEl.value = savedType;
+          currentFilterType = savedType;
+        }
+
+        const savedTag = getParam('tag');
+        if (savedTag) filterByTag(savedTag);
+        else filterByTag(null);
+
+        // Открываем пост по id
+        const postId = getParam('id');
+        if (postId) {
+          const postExists = posts.some(p => p.id == postId);
+          if (postExists) {
+            setTimeout(() => openModal(postId), 500);
+          }
+        }
+
+        // Рендерим всё
+        renderTagsFilter();
+        applyFilters();
+        loader.classList.add('hidden');
+      },
+      error: err => {
+        console.error("Ошибка загрузки CSV:", err);
+        loader.textContent = "Ошибка загрузки данных.";
+      }
+    });
+
+    // === Рендер облака тегов с количеством ===
+    function renderTagsFilter() {
+      const tagCount = {};
+      posts.forEach(p => {
+        if (!p.topic_tags) return;
+        p.topic_tags.split(',')
+          .map(t => t.trim())
+          .filter(t => t)
+          .forEach(t => {
+            tagCount[t] = (tagCount[t] || 0) + 1;
+          });
+      });
+
+      const sortedTags = Object.keys(tagCount)
+        .sort((a, b) => tagCount[b] - tagCount[a])
+        .slice(0, TOP_TAGS_COUNT);
+
+      tagsFilterEl.innerHTML = '';
+
+      const allTag = document.createElement('div');
+      allTag.className = `tag all ${!currentFilterTag ? 'active' : ''}`;
+      allTag.textContent = 'Все теги';
+      allTag.onclick = () => {
+        filterByTag(null);
+        setTimeout(toggleTagsFilter, 300);
+      };
+      tagsFilterEl.appendChild(allTag);
+
+      sortedTags.forEach(tag => {
+        const count = tagCount[tag];
+        const activeClass = currentFilterTag === tag ? 'active' : '';
+        const tagEl = document.createElement('div');
+        tagEl.className = `tag ${activeClass}`;
+        tagEl.innerHTML = `${escapeHtml(tag)} <span style="color:#7f8c8d; font-size:0.85em;">(${count})</span>`;
+        tagEl.title = `Найдено: ${count} постов`;
+        tagEl.onclick = () => {
+          filterByTag(tag);
+          setTimeout(toggleTagsFilter, 300);
+        };
+        tagsFilterEl.appendChild(tagEl);
+      });
+    }
+  </script>
+</body>
+</html>
