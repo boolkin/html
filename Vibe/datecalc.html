@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор дат и времени</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #4facfe;
+            color: #4facfe;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            padding: 30px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-group > div {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .date-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .time-input {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            font-size: 0.9em;
+            padding: 10px 20px;
+            width: auto;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .result-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #4facfe;
+            margin: 10px 0;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .detail-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #764ba2;
+        }
+
+        .detail-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #c62828;
+        }
+
+        .countdown-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .countdown-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #4facfe;
+            margin: 10px 0;
+        }
+
+        .countdown-label {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .countdown-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .countdown-box {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .countdown-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .countdown-text {
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .date-inputs, .input-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .date-input, .time-input {
+                min-width: auto;
+            }
+
+            .result-details {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .countdown-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .countdown-box {
+                width: 100%;
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Калькулятор дат и времени</h1>
+            <p>Рассчитывайте разницу между датами и преобразуйте время</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="difference">Разница между датами</div>
+            <div class="tab" data-tab="addition">Добавить время</div>
+            <div class="tab" data-tab="subtraction">Вычесть время</div>
+            <div class="tab" data-tab="countdown">Обратный отсчет</div>
+        </div>
+
+        <!-- Разница между датами -->
+        <div class="tab-content active" id="difference-content">
+            <div class="form-group">
+                <label>Начальная дата и время</label>
+                <div class="date-inputs">
+                    <div class="date-input">
+                        <input type="date" id="start-date">
+                        <div class="time-inputs">
+                            <div class="time-input">
+                                <label>Часы</label>
+                                <input type="number" id="start-hour" min="0" max="23" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Минуты</label>
+                                <input type="number" id="start-minute" min="0" max="59" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Секунды</label>
+                                <input type="number" id="start-second" min="0" max="59" value="0">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="setToday('start')">Сегодня</button>
+                    </div>
+                    <div class="date-input">
+                        <input type="date" id="end-date">
+                        <div class="time-inputs">
+                            <div class="time-input">
+                                <label>Часы</label>
+                                <input type="number" id="end-hour" min="0" max="23" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Минуты</label>
+                                <input type="number" id="end-minute" min="0" max="59" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Секунды</label>
+                                <input type="number" id="end-second" min="0" max="59" value="0">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="setToday('end')">Сегодня</button>
+                    </div>
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="include-start-day" onchange="calculateDifference()">
+                <label for="include-start-day">Учитывать начальный день</label>
+            </div>
+            <button class="btn" onclick="calculateDifference()">Рассчитать разницу</button>
+            <div id="difference-result"></div>
+        </div>
+
+        <!-- Добавить время -->
+        <div class="tab-content" id="addition-content">
+            <div class="form-group">
+                <label>Начальная дата и время</label>
+                <div class="date-inputs">
+                    <div class="date-input">
+                        <input type="date" id="add-start-date">
+                        <div class="time-inputs">
+                            <div class="time-input">
+                                <label>Часы</label>
+                                <input type="number" id="add-start-hour" min="0" max="23" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Минуты</label>
+                                <input type="number" id="add-start-minute" min="0" max="59" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Секунды</label>
+                                <input type="number" id="add-start-second" min="0" max="59" value="0">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="setToday('add-start')">Сегодня</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Добавить время</label>
+                <div class="input-group">
+                    <div>
+                        <label>Лет</label>
+                        <input type="number" id="add-years" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Месяцев</label>
+                        <input type="number" id="add-months" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Дней</label>
+                        <input type="number" id="add-days" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Часов</label>
+                        <input type="number" id="add-hours" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Минут</label>
+                        <input type="number" id="add-minutes" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Секунд</label>
+                        <input type="number" id="add-seconds" min="0" value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="add-include-start-day" onchange="calculateAddition()">
+                <label for="add-include-start-day">Учитывать начальный день</label>
+            </div>
+            <button class="btn" onclick="calculateAddition()">Добавить время</button>
+            <div id="addition-result"></div>
+        </div>
+
+        <!-- Вычесть время -->
+        <div class="tab-content" id="subtraction-content">
+            <div class="form-group">
+                <label>Начальная дата и время</label>
+                <div class="date-inputs">
+                    <div class="date-input">
+                        <input type="date" id="sub-start-date">
+                        <div class="time-inputs">
+                            <div class="time-input">
+                                <label>Часы</label>
+                                <input type="number" id="sub-start-hour" min="0" max="23" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Минуты</label>
+                                <input type="number" id="sub-start-minute" min="0" max="59" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Секунды</label>
+                                <input type="number" id="sub-start-second" min="0" max="59" value="0">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="setToday('sub-start')">Сегодня</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Вычесть время</label>
+                <div class="input-group">
+                    <div>
+                        <label>Лет</label>
+                        <input type="number" id="sub-years" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Месяцев</label>
+                        <input type="number" id="sub-months" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Дней</label>
+                        <input type="number" id="sub-days" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Часов</label>
+                        <input type="number" id="sub-hours" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Минут</label>
+                        <input type="number" id="sub-minutes" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Секунд</label>
+                        <input type="number" id="sub-seconds" min="0" value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="sub-include-start-day" onchange="calculateSubtraction()">
+                <label for="sub-include-start-day">Учитывать начальный день</label>
+            </div>
+            <button class="btn" onclick="calculateSubtraction()">Вычесть время</button>
+            <div id="subtraction-result"></div>
+        </div>
+
+        <!-- Обратный отсчет -->
+        <div class="tab-content" id="countdown-content">
+            <div class="form-group">
+                <label>Дата и время события</label>
+                <div class="date-inputs">
+                    <div class="date-input">
+                        <input type="date" id="countdown-date">
+                        <div class="time-inputs">
+                            <div class="time-input">
+                                <label>Часы</label>
+                                <input type="number" id="countdown-hour" min="0" max="23" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Минуты</label>
+                                <input type="number" id="countdown-minute" min="0" max="59" value="0">
+                            </div>
+                            <div class="time-input">
+                                <label>Секунды</label>
+                                <input type="number" id="countdown-second" min="0" max="59" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn" onclick="startCountdown()">Запустить обратный отсчет</button>
+            <div id="countdown-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let countdownInterval = null;
+
+        // Установка текущей даты по умолчанию
+        document.addEventListener('DOMContentLoaded', function() {
+            setAllDefaultDates();
+            
+            // Табы
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Убрать активный класс у всех табов и контентов
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Добавить активный класс текущему табу и контенту
+                    this.classList.add('active');
+                    document.getElementById(tabName + '-content').classList.add('active');
+                    
+                    // Остановить таймер при переключении вкладок
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
+                });
+            });
+        });
+
+        function setAllDefaultDates() {
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            
+            // Устанавливаем даты, но время 00:00:00 по умолчанию
+            document.getElementById('start-date').value = dateString;
+            document.getElementById('end-date').value = dateString;
+            document.getElementById('add-start-date').value = dateString;
+            document.getElementById('sub-start-date').value = dateString;
+            document.getElementById('countdown-date').value = dateString;
+            
+            // Время по умолчанию 00:00:00
+            setDefaultTime('start');
+            setDefaultTime('end');
+            setDefaultTime('add-start');
+            setDefaultTime('sub-start');
+            setDefaultTime('countdown');
+        }
+
+        function setDefaultTime(prefix) {
+            if (prefix === 'start') {
+                document.getElementById('start-hour').value = 0;
+                document.getElementById('start-minute').value = 0;
+                document.getElementById('start-second').value = 0;
+            } else if (prefix === 'end') {
+                document.getElementById('end-hour').value = 0;
+                document.getElementById('end-minute').value = 0;
+                document.getElementById('end-second').value = 0;
+            } else if (prefix === 'add-start') {
+                document.getElementById('add-start-hour').value = 0;
+                document.getElementById('add-start-minute').value = 0;
+                document.getElementById('add-start-second').value = 0;
+            } else if (prefix === 'sub-start') {
+                document.getElementById('sub-start-hour').value = 0;
+                document.getElementById('sub-start-minute').value = 0;
+                document.getElementById('sub-start-second').value = 0;
+            } else if (prefix === 'countdown') {
+                document.getElementById('countdown-hour').value = 0;
+                document.getElementById('countdown-minute').value = 0;
+                document.getElementById('countdown-second').value = 0;
+            }
+        }
+
+        function setToday(prefix) {
+            const now = new Date();
+            const dateString = now.toISOString().split('T')[0];
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            if (prefix === 'start') {
+                document.getElementById('start-date').value = dateString;
+                document.getElementById('start-hour').value = hours;
+                document.getElementById('start-minute').value = minutes;
+                document.getElementById('start-second').value = seconds;
+            } else if (prefix === 'end') {
+                document.getElementById('end-date').value = dateString;
+                document.getElementById('end-hour').value = hours;
+                document.getElementById('end-minute').value = minutes;
+                document.getElementById('end-second').value = seconds;
+            } else if (prefix === 'add-start') {
+                document.getElementById('add-start-date').value = dateString;
+                document.getElementById('add-start-hour').value = hours;
+                document.getElementById('add-start-minute').value = minutes;
+                document.getElementById('add-start-second').value = seconds;
+            } else if (prefix === 'sub-start') {
+                document.getElementById('sub-start-date').value = dateString;
+                document.getElementById('sub-start-hour').value = hours;
+                document.getElementById('sub-start-minute').value = minutes;
+                document.getElementById('sub-start-second').value = seconds;
+            }
+        }
+
+        function showError(container, message) {
+            container.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function formatDateTime(date) {
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            return date.toLocaleDateString('ru-RU', options);
+        }
+
+        // Функция для согласования числительных
+        function getPluralForm(number, forms) {
+            const cases = [2, 0, 1, 1, 1, 2];
+            const remainder100 = Math.abs(number) % 100;
+            const remainder10 = remainder100 % 10;
+            
+            if (remainder100 > 10 && remainder100 < 20) {
+                return forms[2];
+            }
+            if (remainder10 > 1 && remainder10 < 5) {
+                return forms[1];
+            }
+            if (remainder10 === 1) {
+                return forms[0];
+            }
+            return forms[2];
+        }
+
+        function formatTimeDifference(years, months, days, hours, minutes, seconds) {
+            const yearsText = years > 0 ? `${years} ${getPluralForm(years, ['год', 'года', 'лет'])}` : '';
+            const monthsText = months > 0 ? `${months} ${getPluralForm(months, ['месяц', 'месяца', 'месяцев'])}` : '';
+            const daysText = days > 0 ? `${days} ${getPluralForm(days, ['день', 'дня', 'дней'])}` : '';
+            const hoursText = hours > 0 ? `${hours} ${getPluralForm(hours, ['час', 'часа', 'часов'])}` : '';
+            const minutesText = minutes > 0 ? `${minutes} ${getPluralForm(minutes, ['минута', 'минуты', 'минут'])}` : '';
+            const secondsText = seconds > 0 ? `${seconds} ${getPluralForm(seconds, ['секунда', 'секунды', 'секунд'])}` : '';
+
+            const parts = [yearsText, monthsText, daysText, hoursText, minutesText, secondsText].filter(part => part !== '');
+            
+            if (parts.length === 0) {
+                return '0 секунд';
+            }
+            
+            return parts.join(', ');
+        }
+
+        function calculateDifference() {
+            const resultContainer = document.getElementById('difference-result');
+            
+            try {
+                // Получаем даты и время
+                const startDate = document.getElementById('start-date').value;
+                const startHour = parseInt(document.getElementById('start-hour').value) || 0;
+                const startMinute = parseInt(document.getElementById('start-minute').value) || 0;
+                const startSecond = parseInt(document.getElementById('start-second').value) || 0;
+
+                const endDate = document.getElementById('end-date').value;
+                const endHour = parseInt(document.getElementById('end-hour').value) || 0;
+                const endMinute = parseInt(document.getElementById('end-minute').value) || 0;
+                const endSecond = parseInt(document.getElementById('end-second').value) || 0;
+
+                const includeStartDay = document.getElementById('include-start-day').checked;
+
+                if (!startDate || !endDate) {
+                    showError(resultContainer, 'Пожалуйста, заполните все поля дат');
+                    return;
+                }
+
+                // Создаем объекты Date
+                const startDateTime = new Date(startDate);
+                startDateTime.setHours(startHour, startMinute, startSecond);
+
+                const endDateTime = new Date(endDate);
+                endDateTime.setHours(endHour, endMinute, endSecond);
+
+                // Рассчитываем разницу в миллисекундах
+                const diffMs = endDateTime - startDateTime;
+                
+                // Для точного расчета дней используем математический подход
+                // Преобразуем даты в начало суток для расчета календарных дней
+                const startDateOnly = new Date(startDateTime);
+                startDateOnly.setHours(0, 0, 0, 0);
+                
+                const endDateOnly = new Date(endDateTime);
+                endDateOnly.setHours(0, 0, 0, 0);
+                
+                // Стандартный расчет разницы в днях
+                let totalDays = Math.floor(Math.abs(endDateOnly - startDateOnly) / (1000 * 60 * 60 * 24));
+                
+                // Если включаем начальный день
+                if (includeStartDay) {
+                    totalDays += 1;
+                }
+                
+                // Более точный расчет разницы
+                let years = 0;
+                let months = 0;
+                let days = 0;
+                let hours = 0;
+                let minutes = 0;
+                let seconds = 0;
+
+                // Создаем копии для расчета
+                let tempStart = new Date(startDateTime);
+                const tempEnd = new Date(endDateTime);
+
+                // Рассчитываем годы
+                while (true) {
+                    const testDate = new Date(tempStart);
+                    testDate.setFullYear(testDate.getFullYear() + 1);
+                    if (testDate <= tempEnd) {
+                        years++;
+                        tempStart.setFullYear(tempStart.getFullYear() + 1);
+                    } else {
+                        break;
+                    }
+                }
+
+                // Рассчитываем месяцы
+                while (true) {
+                    const testDate = new Date(tempStart);
+                    testDate.setMonth(testDate.getMonth() + 1);
+                    if (testDate <= tempEnd) {
+                        months++;
+                        tempStart.setMonth(tempStart.getMonth() + 1);
+                    } else {
+                        break;
+                    }
+                }
+
+                // Рассчитываем дни
+                while (true) {
+                    const testDate = new Date(tempStart);
+                    testDate.setDate(testDate.getDate() + 1);
+                    if (testDate <= tempEnd) {
+                        days++;
+                        tempStart.setDate(tempStart.getDate() + 1);
+                    } else {
+                        break;
+                    }
+                }
+
+                // Рассчитываем оставшееся время
+                const remainingMs = tempEnd - tempStart;
+                seconds = Math.floor(remainingMs / 1000) % 60;
+                minutes = Math.floor(remainingMs / (1000 * 60)) % 60;
+                hours = Math.floor(remainingMs / (1000 * 60 * 60)) % 24;
+
+                // Общие значения для отображения
+                const totalHours = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60));
+                const totalMinutes = Math.floor(Math.abs(diffMs) / (1000 * 60));
+                const totalSeconds = Math.floor(Math.abs(diffMs) / 1000);
+
+                const formattedDifference = formatTimeDifference(
+                    Math.abs(years), 
+                    Math.abs(months), 
+                    Math.abs(days), 
+                    Math.abs(hours), 
+                    Math.abs(minutes), 
+                    Math.abs(seconds)
+                );
+
+                const includeStartText = includeStartDay ? ' (включая начальную дату)' : '';
+
+                resultContainer.innerHTML = `
+                    <div class="result">
+                        <h3>Разница между датами${includeStartText}</h3>
+                        <div class="result-value">${formattedDifference}</div>
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <div class="detail-value">${totalDays}</div>
+                                <div class="detail-label">Дней</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-value">${Math.abs(totalHours)}</div>
+                                <div class="detail-label">Часов</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-value">${Math.abs(totalMinutes)}</div>
+                                <div class="detail-label">Минут</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-value">${Math.abs(totalSeconds)}</div>
+                                <div class="detail-label">Секунд</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; font-size: 1.1em;">
+                            <div>Начало: ${formatDateTime(startDateTime)}</div>
+                            <div>Конец: ${formatDateTime(endDateTime)}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                showError(resultContainer, 'Ошибка при расчете разницы дат: ' + error.message);
+            }
+        }
+
+        function calculateAddition() {
+            const resultContainer = document.getElementById('addition-result');
+            
+            try {
+                const startDate = document.getElementById('add-start-date').value;
+                const startHour = parseInt(document.getElementById('add-start-hour').value) || 0;
+                const startMinute = parseInt(document.getElementById('add-start-minute').value) || 0;
+                const startSecond = parseInt(document.getElementById('add-start-second').value) || 0;
+
+                const addYears = parseInt(document.getElementById('add-years').value) || 0;
+                const addMonths = parseInt(document.getElementById('add-months').value) || 0;
+                const addDays = parseInt(document.getElementById('add-days').value) || 0;
+                const addHours = parseInt(document.getElementById('add-hours').value) || 0;
+                const addMinutes = parseInt(document.getElementById('add-minutes').value) || 0;
+                const addSeconds = parseInt(document.getElementById('add-seconds').value) || 0;
+
+                const includeStartDay = document.getElementById('add-include-start-day').checked;
+
+                if (!startDate) {
+                    showError(resultContainer, 'Пожалуйста, заполните начальную дату');
+                    return;
+                }
+
+                const startDateTime = new Date(startDate);
+                startDateTime.setHours(startHour, startMinute, startSecond);
+
+                // Добавляем время пошагово
+                const resultDate = new Date(startDateTime);
+                resultDate.setFullYear(resultDate.getFullYear() + addYears);
+                resultDate.setMonth(resultDate.getMonth() + addMonths);
+                resultDate.setDate(resultDate.getDate() + addDays);
+                resultDate.setHours(resultDate.getHours() + addHours);
+                resultDate.setMinutes(resultDate.getMinutes() + addMinutes);
+                resultDate.setSeconds(resultDate.getSeconds() + addSeconds);
+
+                // Если учитываем начальный день, корректируем результат
+                let displayDate = new Date(resultDate);
+                if (includeStartDay) {
+                    displayDate.setDate(displayDate.getDate() - 1);
+                }
+
+                const formattedAddition = formatTimeDifference(addYears, addMonths, addDays, addHours, addMinutes, addSeconds);
+
+                const includeStartText = includeStartDay ? ' (включая начальную дату)' : '';
+
+                resultContainer.innerHTML = `
+                    <div class="result">
+                        <h3>Результат добавления времени${includeStartText}</h3>
+                        <div class="result-value">${formatDateTime(displayDate)}</div>
+                        <div style="margin-top: 20px; font-size: 1.1em;">
+                            <div>Начальная дата: ${formatDateTime(startDateTime)}</div>
+                            <div>Добавлено: ${formattedAddition}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                showError(resultContainer, 'Ошибка при добавлении времени: ' + error.message);
+            }
+        }
+
+        function calculateSubtraction() {
+            const resultContainer = document.getElementById('subtraction-result');
+            
+            try {
+                const startDate = document.getElementById('sub-start-date').value;
+                const startHour = parseInt(document.getElementById('sub-start-hour').value) || 0;
+                const startMinute = parseInt(document.getElementById('sub-start-minute').value) || 0;
+                const startSecond = parseInt(document.getElementById('sub-start-second').value) || 0;
+
+                const subYears = parseInt(document.getElementById('sub-years').value) || 0;
+                const subMonths = parseInt(document.getElementById('sub-months').value) || 0;
+                const subDays = parseInt(document.getElementById('sub-days').value) || 0;
+                const subHours = parseInt(document.getElementById('sub-hours').value) || 0;
+                const subMinutes = parseInt(document.getElementById('sub-minutes').value) || 0;
+                const subSeconds = parseInt(document.getElementById('sub-seconds').value) || 0;
+
+                const includeStartDay = document.getElementById('sub-include-start-day').checked;
+
+                if (!startDate) {
+                    showError(resultContainer, 'Пожалуйста, заполните начальную дату');
+                    return;
+                }
+
+                const startDateTime = new Date(startDate);
+                startDateTime.setHours(startHour, startMinute, startSecond);
+
+                // Вычитаем время пошагово
+                const resultDate = new Date(startDateTime);
+                resultDate.setFullYear(resultDate.getFullYear() - subYears);
+                resultDate.setMonth(resultDate.getMonth() - subMonths);
+                resultDate.setDate(resultDate.getDate() - subDays);
+                resultDate.setHours(resultDate.getHours() - subHours);
+                resultDate.setMinutes(resultDate.getMinutes() - subMinutes);
+                resultDate.setSeconds(resultDate.getSeconds() - subSeconds);
+
+                // Если учитываем начальный день, корректируем результат
+                let displayDate = new Date(resultDate);
+                if (includeStartDay) {
+                    displayDate.setDate(displayDate.getDate() + 1);
+                }
+
+                const formattedSubtraction = formatTimeDifference(subYears, subMonths, subDays, subHours, subMinutes, subSeconds);
+
+                const includeStartText = includeStartDay ? ' (включая начальную дату)' : '';
+
+                resultContainer.innerHTML = `
+                    <div class="result">
+                        <h3>Результат вычитания времени${includeStartText}</h3>
+                        <div class="result-value">${formatDateTime(displayDate)}</div>
+                        <div style="margin-top: 20px; font-size: 1.1em;">
+                            <div>Начальная дата: ${formatDateTime(startDateTime)}</div>
+                            <div>Вычтено: ${formattedSubtraction}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                showError(resultContainer, 'Ошибка при вычитании времени: ' + error.message);
+            }
+        }
+
+        function startCountdown() {
+            const resultContainer = document.getElementById('countdown-result');
+            
+            try {
+                const countdownDate = document.getElementById('countdown-date').value;
+                const countdownHour = parseInt(document.getElementById('countdown-hour').value) || 0;
+                const countdownMinute = parseInt(document.getElementById('countdown-minute').value) || 0;
+                const countdownSecond = parseInt(document.getElementById('countdown-second').value) || 0;
+
+                if (!countdownDate) {
+                    showError(resultContainer, 'Пожалуйста, заполните дату события');
+                    return;
+                }
+
+                const targetDate = new Date(countdownDate);
+                targetDate.setHours(countdownHour, countdownMinute, countdownSecond);
+
+                // Останавливаем предыдущий таймер
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+
+                // Функция обновления таймера
+                function updateCountdown() {
+                    const now = new Date();
+                    const diffMs = targetDate - now;
+                    
+                    if (diffMs <= 0) {
+                        resultContainer.innerHTML = `
+                            <div class="countdown-item">
+                                <h3>До ожидаемого события осталось</h3>
+                                <div class="result-value">Событие наступило!</div>
+                                <div style="font-size: 1.2em; margin-top: 10px;">
+                                    ${formatDateTime(targetDate)}
+                                </div>
+                            </div>
+                        `;
+                        clearInterval(countdownInterval);
+                        return;
+                    }
+
+                    const totalSeconds = Math.floor(diffMs / 1000);
+                    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+                    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+                    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+                    const seconds = totalSeconds % 60;
+
+                    resultContainer.innerHTML = `
+                        <div class="countdown-item">
+                            <h3>До ожидаемого события осталось</h3>
+                            <div style="font-size: 1.2em; margin-bottom: 20px;">
+                                ${formatDateTime(targetDate)}
+                            </div>
+                            <div class="countdown-container">
+                                <div class="countdown-box">
+                                    <div class="countdown-number">${days}</div>
+                                    <div class="countdown-text">${getPluralForm(days, ['день', 'дня', 'дней'])}</div>
+                                </div>
+                                <div class="countdown-box">
+                                    <div class="countdown-number">${hours.toString().padStart(2, '0')}</div>
+                                    <div class="countdown-text">${getPluralForm(hours, ['час', 'часа', 'часов'])}</div>
+                                </div>
+                                <div class="countdown-box">
+                                    <div class="countdown-number">${minutes.toString().padStart(2, '0')}</div>
+                                    <div class="countdown-text">${getPluralForm(minutes, ['минута', 'минуты', 'минут'])}</div>
+                                </div>
+                                <div class="countdown-box">
+                                    <div class="countdown-number">${seconds.toString().padStart(2, '0')}</div>
+                                    <div class="countdown-text">${getPluralForm(seconds, ['секунда', 'секунды', 'секунд'])}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Запускаем таймер
+                updateCountdown();
+                countdownInterval = setInterval(updateCountdown, 1000);
+
+            } catch (error) {
+                showError(resultContainer, 'Ошибка при запуске обратного отсчета: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

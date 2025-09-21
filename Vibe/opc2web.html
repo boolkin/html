@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Визуализатор</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .panel-toggle {
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .panel-toggle.active {
+            background-color: #388E3C;
+        }
+
+        .panel {
+            position: absolute;
+            top: 50px;
+            width: 250px;
+            height: calc(100vh - 50px);
+            background-color: #fff;
+            border-right: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 90;
+        }
+
+        .tags-panel {
+            left: 0;
+            transform: translateX(-100%);
+        }
+
+        .tools-panel {
+            right: 0;
+            transform: translateX(100%);
+        }
+
+        .panel.visible {
+            transform: translateX(0);
+        }
+
+        .panel h3 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .tag-item {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .tag-item:hover {
+            background-color: #e0e0e0;
+        }
+
+        .tool-group {
+            margin-bottom: 15px;
+        }
+
+        .tool-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .tool-group input, .tool-group select, .tool-group button {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 5px;
+        }
+
+        .color-picker input[type="color"] {
+            width: 50px;
+            height: 30px;
+            padding: 0;
+        }
+
+        .opacity-slider {
+            width: 100%;
+        }
+
+        .workspace {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .draggable {
+            position: absolute;
+            min-width: 60px;
+            min-height: 30px;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: move;
+            user-select: none;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .draggable.edit-mode {
+            cursor: move;
+        }
+
+        .draggable.view-mode {
+            cursor: default;
+            border: none;
+            background: transparent;
+            padding: 0;
+            min-width: auto;
+            min-height: auto;
+        }
+
+        .block {
+            position: absolute;
+            background-color: rgba(100, 180, 255, 0.3);
+            border: 2px dashed #666;
+            border-radius: 6px;
+            z-index: 1;
+            cursor: move;
+        }
+
+        .block.selected {
+            z-index: 2;
+            border-color: #000;
+        }
+
+        .block.view-mode {
+            cursor: default;
+        }
+
+        .resizer {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #000;
+            border-radius: 50%;
+            right: -5px;
+            bottom: -5px;
+            cursor: se-resize;
+            z-index: 11;
+            display: block !important;
+        }
+
+        .boolean-value {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 5px;
+        }
+
+        .true-value {
+            background-color: green;
+        }
+
+        .false-value {
+            background-color: red;
+        }
+
+        .text-element {
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+
+        .context-menu {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            list-style: none;
+            padding: 5px 0;
+        }
+
+        .context-menu li {
+            padding: 8px 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .context-menu li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .edit-button {
+            background-color: #2196F3;
+        }
+
+        .view-button {
+            background-color: #FF9800;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button.primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        button.secondary {
+            background-color: #607D8B;
+            color: white;
+        }
+
+        button.danger {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 2000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button id="toggle-tags" class="panel-toggle">Теги</button>
+        <button id="toggle-tools" class="panel-toggle">Инструменты</button>
+        <button id="edit-mode" class="panel-toggle edit-button">Редактирование</button>
+        <button id="load-config" class="secondary">Загрузить конфиг</button>
+        <button id="save-config" class="primary">Сохранить конфиг</button>
+        <button id="reset-workspace" class="danger">Сброс</button>
+    </div>
+
+    <div id="tags-panel" class="panel tags-panel">
+        <h3>Доступные теги</h3>
+        <div id="tags-container"></div>
+        <div class="tool-group">
+            <label for="json-url">Адрес JSON:</label>
+            <input type="text" id="json-url" value="http://127.0.0.1:45455/">
+            <button id="fetch-data" class="primary">Получить данные</button>
+            <button id="toggle-polling" class="secondary">Включить опрос</button>
+        </div>
+    </div>
+
+    <div id="tools-panel" class="panel tools-panel">
+        <h3>Инструменты</h3>
+        
+        <div class="tool-group">
+            <label for="bg-url">Фон (URL):</label>
+            <input type="text" id="bg-url" placeholder="https://example.com/image.jpg">
+            <div class="file-input-wrapper">
+                <button class="secondary">Загрузить фон с ПК</button>
+                <input type="file" id="bg-upload" accept="image/*">
+            </div>
+            <button id="clear-bg" class="danger">Удалить фон</button>
+        </div>
+
+        <div class="tool-group">
+            <label>Добавить текстовую метку:</label>
+            <input type="text" id="text-label" placeholder="Введите текст">
+            <button id="add-text" class="primary">Добавить текст</button>
+        </div>
+
+        <div class="tool-group">
+            <label>Размер булевых значений:</label>
+            <input type="number" id="bool-size" value="20" min="10" max="50">
+        </div>
+
+        <div class="tool-group">
+            <label>Цвет блока:</label>
+            <div class="color-picker">
+                <input type="color" id="block-color" value="#64b4ff">
+                <button id="random-color">Случайный цвет</button>
+            </div>
+            <label>Прозрачность:</label>
+            <input type="range" id="opacity-slider" class="opacity-slider" min="0" max="100" value="30">
+        </div>
+
+        <button id="draw-rectangle" class="primary">Рисовать прямоугольник</button>
+    </div>
+
+    <div id="workspace" class="workspace"></div>
+    <div id="tooltip" class="tooltip"></div>
+
+    <ul id="context-menu" class="context-menu" style="display: none;">
+        <li id="delete-item">Удалить</li>
+        <li id="change-color">Изменить цвет</li>
+        <li id="toggle-bold">Жирный шрифт</li>
+    </ul>
+
+    <script>
+        // Глобальные переменные
+        const workspace = document.getElementById('workspace');
+        const tagsContainer = document.getElementById('tags-container');
+        const contextMenu = document.getElementById('context-menu');
+        const tooltip = document.getElementById('tooltip');
+        let elements = [];
+        let blocks = [];
+        let isEditing = true;
+        let isDrawing = false;
+        let drawingStart = null;
+        let selectedElement = null;
+        let selectedBlock = null;
+        let dragData = null;
+        let resizeData = null;
+        let currentData = {}; // Хранит текущие значения тегов
+        
+        // Конфигурация по умолчанию
+        let config = {
+            jsonUrl: 'http://127.0.0.1:45455/',
+            configUrl: '', // Здесь можно указать URL удаленного конфига
+            bgColor: '',
+            bgImage: '',
+            boolSize: 20,
+            blockColor: '#64b4ff',
+            opacity: 30,
+            autoPoll: false,
+            pollingInterval: null
+        };
+
+        // Загрузка настроек из localStorage
+        async function loadConfig() {
+            try {
+                // Сначала проверяем локальный конфиг
+                const savedConfig = localStorage.getItem('visualizerConfig');
+                if (savedConfig) {
+                    config = { ...config, ...JSON.parse(savedConfig) };
+                    
+                    // Применяем сохраненные значения
+                    if (document.getElementById('json-url')) document.getElementById('json-url').value = config.jsonUrl || 'http://127.0.0.1:45455/';
+                    if (document.getElementById('bg-url')) document.getElementById('bg-url').value = config.bgImage || '';
+                    if (document.getElementById('bool-size')) document.getElementById('bool-size').value = config.boolSize;
+                    if (document.getElementById('block-color')) document.getElementById('block-color').value = config.blockColor;
+                    if (document.getElementById('opacity-slider')) document.getElementById('opacity-slider').value = config.opacity;
+                    
+                    if (config.bgImage) {
+                        workspace.style.backgroundImage = `url(${config.bgImage})`;
+                    }
+                    
+                    // Загружаем элементы из localStorage
+                    const savedElements = localStorage.getItem('visualizerElements');
+                    if (savedElements) {
+                        const parsedElements = JSON.parse(savedElements);
+                        parsedElements.forEach(el => {
+                            if (el.type === 'tag') {
+                                createTagElement({ name: el.tag, value: el.value }, el.x, el.y, el.width, el.height);
+                            } else if (el.type === 'text') {
+                                createTextElement(el.text, el.x, el.y, el.width, el.height, el.fontWeight);
+                            }
+                        });
+                    }
+
+                    const savedBlocks = localStorage.getItem('visualizerBlocks');
+                    if (savedBlocks) {
+                        const parsedBlocks = JSON.parse(savedBlocks);
+                        parsedBlocks.forEach(block => createBlock(block));
+                    }
+                    
+                    return; // Успешно загрузили локальный конфиг
+                }
+                
+                // Если локального конфига нет и указан URL удаленного конфига, пытаемся загрузить его
+                if (config.configUrl && config.configUrl.trim() !== '') {
+                    await loadServerConfig();
+                }
+                
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
+
+        // Сохранение настроек в localStorage
+        function saveConfig() {
+            try {
+                if (document.getElementById('json-url')) config.jsonUrl = document.getElementById('json-url').value;
+                if (document.getElementById('bool-size')) config.boolSize = parseInt(document.getElementById('bool-size').value);
+                if (document.getElementById('block-color')) config.blockColor = document.getElementById('block-color').value;
+                if (document.getElementById('opacity-slider')) config.opacity = parseInt(document.getElementById('opacity-slider').value);
+                
+                localStorage.setItem('visualizerConfig', JSON.stringify(config));
+                
+                // Сохраняем элементы
+                const elementsToSave = elements.map(el => {
+                    if (el.type === 'tag') {
+                        return {
+                            type: 'tag',
+                            tag: el.tag,
+                            value: el.value,
+                            x: el.x,
+                            y: el.y,
+                            width: el.width,
+                            height: el.height
+                        };
+                    } else if (el.type === 'text') {
+                        return {
+                            type: 'text',
+                            text: el.text,
+                            x: el.x,
+                            y: el.y,
+                            width: el.width,
+                            height: el.height,
+                            fontWeight: el.fontWeight
+                        };
+                    }
+                    return el;
+                });
+                localStorage.setItem('visualizerElements', JSON.stringify(elementsToSave));
+                
+                localStorage.setItem('visualizerBlocks', JSON.stringify(blocks));
+            } catch (error) {
+                console.error('Error saving config:', error);
+            }
+        }
+
+        // Экспорт конфигурации
+        function exportConfig() {
+            try {
+                const configToExport = {
+                    jsonUrl: document.getElementById('json-url').value,
+                    configUrl: config.configUrl,
+                    bgImage: config.bgImage,
+                    boolSize: config.boolSize,
+                    blockColor: config.blockColor,
+                    opacity: config.opacity,
+                    elements: [...elements],
+                    blocks: [...blocks]
+                };
+                
+                const dataStr = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configToExport, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "visualizer-config.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                document.body.removeChild(downloadAnchorNode);
+            } catch (error) {
+                console.error('Error exporting config:', error);
+                alert('Ошибка при экспорте конфигурации');
+            }
+        }
+
+        // Создание элемента тега
+        function createTagElement(tagData, x = 100, y = 100, width = 120, height = 40) {
+            const element = document.createElement('div');
+            element.className = `draggable ${isEditing ? 'edit-mode' : 'view-mode'}`;
+            element.dataset.type = 'tag';
+            element.dataset.tag = tagData.name;
+            element.dataset.value = tagData.value;
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
+            element.style.width = `${width}px`;
+            element.style.height = `${height}px`;
+            
+            // Добавляем title для подсказки с названием тега
+            element.title = `${tagData.name}: ${tagData.value}`;
+
+            updateTagElementContent(element, tagData.name, tagData.value);
+
+            // Добавляем маркер изменения размера только в режиме редактирования
+            if (isEditing) {
+                addResizer(element);
+            }
+
+            workspace.appendChild(element);
+
+            const elementObj = {
+                id: Date.now() + Math.random(),
+                type: 'tag',
+                tag: tagData.name,
+                value: tagData.value,
+                x,
+                y,
+                width,
+                height
+            };
+            elements.push(elementObj);
+            return elementObj;
+        }
+
+        // Создание текстового элемента
+        function createTextElement(text, x = 100, y = 100, width = 150, height = 40, fontWeight = 'normal') {
+            const element = document.createElement('div');
+            element.className = `draggable text-element ${isEditing ? 'edit-mode' : 'view-mode'}`;
+            element.dataset.type = 'text';
+            element.dataset.text = text;
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
+            element.style.width = `${width}px`;
+            element.style.height = `${height}px`;
+            element.style.fontWeight = fontWeight;
+            element.textContent = text;
+
+            // Добавляем маркер изменения размера только в режиме редактирования
+            if (isEditing) {
+                addResizer(element);
+            }
+
+            workspace.appendChild(element);
+
+            const elementObj = {
+                id: Date.now() + Math.random(),
+                type: 'text',
+                text,
+                x,
+                y,
+                width,
+                height,
+                fontWeight: fontWeight
+            };
+            elements.push(elementObj);
+            
+            // Устанавливаем размер шрифта
+            updateTextElementContent(element);
+            return elementObj;
+        }
+
+        // Создание блока (прямоугольника)
+        function createBlock(blockData) {
+            const block = document.createElement('div');
+            block.className = `block ${isEditing ? 'edit-mode' : 'view-mode'}`;
+            block.dataset.id = blockData.id;
+            block.style.left = `${blockData.x}px`;
+            block.style.top = `${blockData.y}px`;
+            block.style.width = `${blockData.width}px`;
+            block.style.height = `${blockData.height}px`;
+            
+            const opacity = blockData.opacity / 100;
+            block.style.backgroundColor = hexToRgba(blockData.color, opacity);
+            block.style.borderColor = blockData.color;
+
+            // Добавляем маркер изменения размера только в режиме редактирования
+            if (isEditing) {
+                addResizer(block);
+            }
+
+            workspace.insertBefore(block, workspace.firstChild); // Помещаем под другими элементами
+
+            blocks.push(blockData);
+            return blockData;
+        }
+
+        // Добавление маркера изменения размера
+        function addResizer(element) {
+            // Удаляем существующий ресайзер, если есть
+            const existingResizer = element.querySelector('.resizer');
+            if (existingResizer) {
+                existingResizer.remove();
+            }
+            
+            // Создаем новый ресайзер
+            const resizer = document.createElement('div');
+            resizer.className = 'resizer';
+            element.appendChild(resizer);
+            
+            // Добавляем обработчик для изменения размера
+            resizer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                startResize(element, e);
+            });
+        }
+
+        // Обновление содержимого элемента тега
+        function updateTagElementContent(element, tagName, value) {
+            element.innerHTML = ''; // Очищаем содержимое
+            
+            // Автоматическое масштабирование шрифта
+            const width = parseFloat(element.style.width);
+            const height = parseFloat(element.style.height);
+            const fontSize = Math.min(width, height) * 0.4; // Шрифт занимает ~40% от меньшего размера
+            element.style.fontSize = `${fontSize}px`;
+            
+            if (value === 'true' || value === 'false') {
+                const boolValue = document.createElement('div');
+                boolValue.className = `boolean-value ${value === 'true' ? 'true-value' : 'false-value'}`;
+                boolValue.style.width = `${Math.min(width, height) * 0.6}px`;
+                boolValue.style.height = `${Math.min(width, height) * 0.6}px`;
+                element.appendChild(boolValue);
+            } else {
+                // ВСЕГДА показываем только значение тега, не зависимо от режима
+                element.textContent = value;
+            }
+            
+            // Добавляем ресайзер только в режиме редактирования
+            if (isEditing && !element.querySelector('.resizer')) {
+                addResizer(element);
+            }
+        }
+
+        // Обновление содержимого текстового элемента
+        function updateTextElementContent(element) {
+            // Автоматическое масштабирование шрифта
+            const width = parseFloat(element.style.width);
+            const height = parseFloat(element.style.height);
+            const fontSize = Math.min(width, height) * 0.4; // Шрифт занимает ~40% от меньшего размера
+            element.style.fontSize = `${fontSize}px`;
+            
+            // Добавляем ресайзер только в режиме редактирования
+            if (isEditing && !element.querySelector('.resizer')) {
+                addResizer(element);
+            }
+        }
+
+        // Преобразование HEX цвета в RGBA
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Генерация случайного цвета
+        function generateRandomColor() {
+            const colors = [
+                '#64b4ff', '#4CAF50', '#FF9800', '#F44336', 
+                '#9C27B0', '#3F51B5', '#00BCD4', '#8BC34A'
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Обработка начала перетаскивания
+        function handleMouseDown(e) {
+            if (!isEditing) return;
+            
+            // В режиме редактирования обрабатываем все элементы
+            const target = e.target;
+            const resizer = target.classList.contains('resizer') ? target : null;
+            const parent = resizer ? target.parentElement : target;
+            
+            if (!parent || (!parent.classList.contains('draggable') && !parent.classList.contains('block'))) return;
+            
+            // Проверяем, не кликнули ли мы по ресайзеру
+            if (resizer) {
+                e.preventDefault();
+                startResize(parent, e);
+                return;
+            }
+            
+            // Обработка перемещения
+            selectedElement = parent;
+            const rect = parent.getBoundingClientRect();
+            const workspaceRect = workspace.getBoundingClientRect();
+            
+            // Исправленный расчет offset - используем только позицию мыши относительно элемента
+            dragData = {
+                offsetX: e.clientX - rect.left,
+                offsetY: e.clientY - rect.top
+            };
+            
+            // Устанавливаем начальную позицию
+            parent.style.left = `${rect.left - workspaceRect.left}px`;
+            parent.style.top = `${rect.top - workspaceRect.top}px`;
+            
+            // Добавляем обработчики перемещения и отпускания
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            // Устанавливаем стиль при начале перетаскивания
+            parent.style.opacity = '0.8';
+            if (parent.classList.contains('block')) {
+                parent.style.zIndex = '2';
+            }
+            
+            // Снимаем выделение с других элементов
+            document.querySelectorAll('.block.selected, .draggable.selected').forEach(el => {
+                if (el !== parent) {
+                    el.classList.remove('selected');
+                    if (el.classList.contains('block')) {
+                        el.style.zIndex = '1';
+                    }
+                }
+            });
+            
+            // Выделяем текущий элемент
+            parent.classList.add('selected');
+        }
+
+        // Обработка перемещения мыши во время перетаскивания
+        function handleMouseMove(e) {
+            if (!selectedElement || !dragData) return;
+            
+            // Получаем позицию рабочей области
+            const workspaceRect = workspace.getBoundingClientRect();
+            
+            // Рассчитываем новую позицию относительно рабочей области
+            const newX = e.clientX - workspaceRect.left - dragData.offsetX;
+            const newY = e.clientY - workspaceRect.top - dragData.offsetY;
+            
+            // Ограничиваем перемещение внутри рабочей области
+            const finalX = Math.max(0, newX);
+            const finalY = Math.max(0, newY);
+            
+            selectedElement.style.left = `${finalX}px`;
+            selectedElement.style.top = `${finalY}px`;
+        }
+
+        // Обработка отпускания мыши после перетаскивания
+        function handleMouseUp(e) {
+            if (!selectedElement || !dragData) return;
+            
+            // Сбрасываем стили
+            selectedElement.style.opacity = '1';
+            if (selectedElement.classList.contains('block')) {
+                selectedElement.style.zIndex = selectedElement.classList.contains('selected') ? '2' : '1';
+            }
+            
+            // Обновляем координаты в данных
+            const newX = parseFloat(selectedElement.style.left);
+            const newY = parseFloat(selectedElement.style.top);
+
+            if (selectedElement.dataset.type === 'tag') {
+                const tag = selectedElement.dataset.tag;
+                const elementIndex = elements.findIndex(el => el.tag === tag && el.type === 'tag');
+                if (elementIndex >= 0) {
+                    elements[elementIndex].x = newX;
+                    elements[elementIndex].y = newY;
+                }
+            } else if (selectedElement.dataset.type === 'text') {
+                const text = selectedElement.dataset.text;
+                const elementIndex = elements.findIndex(el => el.text === text && el.type === 'text');
+                if (elementIndex >= 0) {
+                    elements[elementIndex].x = newX;
+                    elements[elementIndex].y = newY;
+                }
+            } else if (selectedElement.classList.contains('block')) {
+                const blockId = selectedElement.dataset.id;
+                const blockIndex = blocks.findIndex(b => b.id == blockId);
+                if (blockIndex >= 0) {
+                    blocks[blockIndex].x = newX;
+                    blocks[blockIndex].y = newY;
+                }
+            }
+            
+            // Сохраняем изменения
+            saveConfig();
+            
+            // Сбрасываем переменные
+            selectedElement = null;
+            dragData = null;
+            
+            // Удаляем обработчики
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
+
+        // Начало изменения размера
+        function startResize(element, e) {
+            // В режиме просмотра запрещаем изменение размера
+            if (!isEditing) return;
+            
+            e.preventDefault();
+            selectedElement = element;
+            const rect = element.getBoundingClientRect();
+            resizeData = {
+                startX: e.clientX,
+                startY: e.clientY,
+                startWidth: rect.width,
+                startHeight: rect.height,
+                elementRect: rect
+            };
+            
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', endResize);
+        }
+
+        // Изменение размера
+        function handleResize(e) {
+            if (!selectedElement || !resizeData || !isEditing) return;
+            
+            const dx = e.clientX - resizeData.startX;
+            const dy = e.clientY - resizeData.startY;
+            
+            const newWidth = Math.max(50, resizeData.startWidth + dx);
+            const newHeight = Math.max(30, resizeData.startHeight + dy);
+            
+            selectedElement.style.width = `${newWidth}px`;
+            selectedElement.style.height = `${newHeight}px`;
+            
+            // Обновляем размер шрифта для тегов и текстовых элементов
+            if (selectedElement.dataset.type === 'tag') {
+                const tagName = selectedElement.dataset.tag;
+                const value = selectedElement.dataset.value;
+                updateTagElementContent(selectedElement, tagName, value);
+            } else if (selectedElement.dataset.type === 'text') {
+                updateTextElementContent(selectedElement);
+            }
+        }
+
+        // Завершение изменения размера
+        function endResize(e) {
+            if (!selectedElement || !resizeData || !isEditing) return;
+            
+            const newWidth = parseFloat(selectedElement.style.width);
+            const newHeight = parseFloat(selectedElement.style.height);
+
+            if (selectedElement.dataset.type === 'tag') {
+                const tag = selectedElement.dataset.tag;
+                const elementIndex = elements.findIndex(el => el.tag === tag && el.type === 'tag');
+                if (elementIndex >= 0) {
+                    elements[elementIndex].width = newWidth;
+                    elements[elementIndex].height = newHeight;
+                }
+            } else if (selectedElement.dataset.type === 'text') {
+                const text = selectedElement.dataset.text;
+                const elementIndex = elements.findIndex(el => el.text === text && el.type === 'text');
+                if (elementIndex >= 0) {
+                    elements[elementIndex].width = newWidth;
+                    elements[elementIndex].height = newHeight;
+                }
+            } else if (selectedElement.classList.contains('block')) {
+                const blockId = selectedElement.dataset.id;
+                const blockIndex = blocks.findIndex(b => b.id == blockId);
+                if (blockIndex >= 0) {
+                    blocks[blockIndex].width = newWidth;
+                    blocks[blockIndex].height = newHeight;
+                }
+            }
+            
+            saveConfig();
+            
+            // Сбрасываем переменные
+            selectedElement = null;
+            resizeData = null;
+            
+            // Удаляем обработчики
+            document.removeEventListener('mousemove', handleResize);
+            document.removeEventListener('mouseup', endResize);
+        }
+
+        // Переключение режима редактирования/просмотра
+        function toggleEditMode() {
+            isEditing = !isEditing;
+            const editButton = document.getElementById('edit-mode');
+            if (editButton) {
+                editButton.textContent = isEditing ? 'Редактирование' : 'Просмотр';
+                editButton.classList.toggle('edit-button');
+                editButton.classList.toggle('view-button');
+            }
+
+            // Обновляем все элементы
+            document.querySelectorAll('.draggable, .block').forEach(el => {
+                el.classList.toggle('edit-mode', isEditing);
+                el.classList.toggle('view-mode', !isEditing);
+                
+                // В режиме просмотра убираем ресайзеры и контекстное меню
+                if (!isEditing) {
+                    const resizer = el.querySelector('.resizer');
+                    if (resizer) {
+                        resizer.remove();
+                    }
+                } else {
+                    // В режиме редактирования добавляем ресайзеры
+                    if (el.classList.contains('draggable') || el.classList.contains('block')) {
+                        addResizer(el);
+                    }
+                }
+            });
+
+            // Для тегов всегда показываем только значение
+            document.querySelectorAll('.draggable[data-type="tag"]').forEach(el => {
+                const tag = el.dataset.tag;
+                const value = el.dataset.value;
+                if (value !== undefined) {
+                    updateTagElementContent(el, tag, value);
+                }
+            });
+            
+            // Обновляем текстовые элементы
+            document.querySelectorAll('.draggable[data-type="text"]').forEach(el => {
+                updateTextElementContent(el);
+            });
+        }
+
+        // Открытие/закрытие панелей
+        function togglePanel(panelId, buttonId) {
+            const panel = document.getElementById(panelId);
+            const button = document.getElementById(buttonId);
+            if (panel && button) {
+                panel.classList.toggle('visible');
+                button.classList.toggle('active');
+            }
+        }
+
+        // Получение JSON данных
+        async function fetchData() {
+            const urlInput = document.getElementById('json-url');
+            if (!urlInput) return;
+            
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Введите адрес JSON');
+                return;
+            }
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                // Обновляем текущие данные
+                currentData = data;
+                
+                // Обновляем элементы на рабочей области
+                updateWorkspaceValues(data);
+                
+                // Обновляем панель тегов только при первом получении данных
+                if (!config.autoPoll) {
+                    updateTagsPanel(data);
+                }
+            } catch (error) {
+                console.error('Error fetching ', error);
+                alert('Ошибка получения данных. Проверьте адрес и доступность сервера.');
+                
+                // Для демонстрации используем mock данные
+                const mockData = {
+                    "tag0": "43.5",
+                    "tag1": "78",
+                    "tag2": "true",
+                    "tag3": "false",
+                    "tag4": "25.6"
+                };
+                
+                currentData = mockData;
+                updateWorkspaceValues(mockData);
+                if (!config.autoPoll) {
+                    updateTagsPanel(mockData);
+                }
+            }
+        }
+
+        // Обновление значений на рабочей области
+        function updateWorkspaceValues(data) {
+            Object.keys(data).forEach(tagName => {
+                const value = data[tagName];
+                
+                // Обновляем все элементы с этим тегом
+                document.querySelectorAll(`.draggable[data-tag="${tagName}"]`).forEach(el => {
+                    el.dataset.value = value;
+                    el.title = `${tagName}: ${value}`; // Обновляем подсказку
+                    updateTagElementContent(el, tagName, value);
+                });
+            });
+        }
+
+        // Обновление панели тегов
+        function updateTagsPanel(data) {
+            if (!tagsContainer) return;
+            tagsContainer.innerHTML = '';
+            Object.keys(data).forEach(key => {
+                const tagItem = document.createElement('div');
+                tagItem.className = 'tag-item';
+                tagItem.textContent = `${key}: ${data[key]}`;
+                tagItem.dataset.tag = key;
+                tagItem.dataset.value = data[key];
+                
+                tagItem.addEventListener('mousedown', function(e) {
+                    if (!isEditing) return;
+                    e.preventDefault();
+                    
+                    // Создаем временный элемент для перетаскивания
+                    const dragElement = document.createElement('div');
+                    dragElement.textContent = this.textContent;
+                    dragElement.style.position = 'absolute';
+                    dragElement.style.top = '-1000px';
+                    dragElement.style.left = '-1000px';
+                    dragElement.style.padding = '8px';
+                    dragElement.style.background = '#f5f5f5';
+                    dragElement.style.border = '1px solid #ddd';
+                    dragElement.style.borderRadius = '4px';
+                    dragElement.style.opacity = '0.8';
+                    document.body.appendChild(dragElement);
+                    
+                    let currentX = e.clientX;
+                    let currentY = e.clientY;
+                    
+                    const moveHandler = (e) => {
+                        currentX = e.clientX;
+                        currentY = e.clientY;
+                        dragElement.style.left = `${currentX + 10}px`;
+                        dragElement.style.top = `${currentY + 10}px`;
+                    };
+                    
+                    const upHandler = () => {
+                        document.body.removeChild(dragElement);
+                        document.removeEventListener('mousemove', moveHandler);
+                        document.removeEventListener('mouseup', upHandler);
+                        
+                        // Проверяем, попали ли мы на рабочую область
+                        const workspaceRect = workspace.getBoundingClientRect();
+                        if (currentX >= workspaceRect.left && 
+                            currentX <= workspaceRect.right && 
+                            currentY >= workspaceRect.top && 
+                            currentY <= workspaceRect.bottom) {
+                            
+                            const relativeX = currentX - workspaceRect.left;
+                            const relativeY = currentY - workspaceRect.top;
+                            createTagElement({
+                                name: this.dataset.tag,
+                                value: this.dataset.value
+                            }, relativeX - 60, relativeY - 20);
+                            saveConfig();
+                        }
+                    };
+                    
+                    document.addEventListener('mousemove', moveHandler);
+                    document.addEventListener('mouseup', upHandler);
+                });
+                
+                tagsContainer.appendChild(tagItem);
+            });
+        }
+
+        // Включение/отключение опроса
+        function togglePolling() {
+            const pollButton = document.getElementById('toggle-polling');
+            if (!pollButton) return;
+            
+            if (config.autoPoll) {
+                // Останавливаем опрос
+                if (config.pollingInterval) {
+                    clearInterval(config.pollingInterval);
+                    config.pollingInterval = null;
+                }
+                config.autoPoll = false;
+                pollButton.textContent = 'Включить опрос';
+            } else {
+                // Запускаем опрос
+                fetchData(); // Сразу получаем данные
+                config.pollingInterval = setInterval(fetchData, 2000);
+                config.autoPoll = true;
+                pollButton.textContent = 'Выключить опрос';
+            }
+            saveConfig();
+        }
+
+        // Рисование прямоугольника
+        function startDrawing(e) {
+            if (!isEditing) return;
+            
+            isDrawing = true;
+            const workspaceRect = workspace.getBoundingClientRect();
+            drawingStart = { 
+                x: e.clientX - workspaceRect.left, 
+                y: e.clientY - workspaceRect.top 
+            };
+            workspace.style.cursor = 'crosshair';
+        }
+
+        function drawRectangle(e) {
+            if (!isDrawing) return;
+            
+            const workspaceRect = workspace.getBoundingClientRect();
+            const currentX = e.clientX - workspaceRect.left;
+            const currentY = e.clientY - workspaceRect.top;
+            
+            let x = Math.min(drawingStart.x, currentX);
+            let y = Math.min(drawingStart.y, currentY);
+            let width = Math.abs(currentX - drawingStart.x);
+            let height = Math.abs(currentY - drawingStart.y);
+            
+            // Удаляем предыдущий временный блок
+            const existingPreview = workspace.querySelector('.block.preview');
+            if (existingPreview) {
+                existingPreview.remove();
+            }
+            
+            // Создаем временный элемент для визуализации
+            const tempBlock = document.createElement('div');
+            tempBlock.className = 'block preview';
+            tempBlock.style.position = 'absolute';
+            tempBlock.style.left = `${x}px`;
+            tempBlock.style.top = `${y}px`;
+            tempBlock.style.width = `${width}px`;
+            tempBlock.style.height = `${height}px`;
+            
+            const opacity = config.opacity / 100;
+            tempBlock.style.backgroundColor = hexToRgba(config.blockColor, opacity);
+            tempBlock.style.borderColor = config.blockColor;
+            
+            // Добавляем ресайзер
+            const resizer = document.createElement('div');
+            resizer.className = 'resizer';
+            tempBlock.appendChild(resizer);
+            
+            workspace.appendChild(tempBlock);
+        }
+
+        function endDrawing(e) {
+            if (!isDrawing) return;
+            
+            isDrawing = false;
+            workspace.style.cursor = 'default';
+            
+            const workspaceRect = workspace.getBoundingClientRect();
+            const currentX = e.clientX - workspaceRect.left;
+            const currentY = e.clientY - workspaceRect.top;
+            
+            let x = Math.min(drawingStart.x, currentX);
+            let y = Math.min(drawingStart.y, currentY);
+            let width = Math.abs(currentX - drawingStart.x);
+            let height = Math.abs(currentY - drawingStart.y);
+            
+            // Удаляем временный блок
+            const preview = workspace.querySelector('.block.preview');
+            if (preview) preview.remove();
+            
+            if (width > 5 && height > 5) { // Минимальный размер
+                const blockData = {
+                    id: Date.now() + Math.random(),
+                    x,
+                    y,
+                    width,
+                    height,
+                    color: config.blockColor,
+                    opacity: config.opacity
+                };
+                
+                createBlock(blockData);
+                saveConfig();
+                
+                // Случайный цвет для следующего блока
+                const colorPicker = document.getElementById('block-color');
+                if (colorPicker) {
+                    colorPicker.value = generateRandomColor();
+                }
+            }
+            
+            // Сбрасываем обработчики
+            workspace.removeEventListener('mousemove', drawRectangle);
+            document.removeEventListener('mouseup', endDrawing);
+            const drawButton = document.getElementById('draw-rectangle');
+            if (drawButton) {
+                drawButton.textContent = 'Рисовать прямоугольник';
+                drawButton.onclick = activateDrawingMode;
+            }
+        }
+
+        function activateDrawingMode() {
+            if (!isEditing) return;
+            
+            const drawButton = document.getElementById('draw-rectangle');
+            if (drawButton) {
+                drawButton.textContent = 'Нажмите для рисования...';
+                drawButton.onclick = null;
+            }
+            
+            workspace.addEventListener('mousedown', function mouseDown(e) {
+                // Проверяем, что клик был на рабочей области, а не на элементе
+                if (e.target === workspace || e.target.classList.contains('workspace')) {
+                    startDrawing(e);
+                    workspace.addEventListener('mousemove', drawRectangle);
+                    workspace.addEventListener('mouseup', function mouseUp(e) {
+                        endDrawing(e);
+                        workspace.removeEventListener('mousemove', drawRectangle);
+                        workspace.removeEventListener('mouseup', mouseUp);
+                    });
+                }
+                workspace.removeEventListener('mousedown', mouseDown);
+                
+                // Отмена через ESC
+                function escHandler(e) {
+                    if (e.key === 'Escape') {
+                        isDrawing = false;
+                        workspace.style.cursor = 'default';
+                        const preview = workspace.querySelector('.block.preview');
+                        if (preview) preview.remove();
+                        workspace.removeEventListener('mousemove', drawRectangle);
+                        document.removeEventListener('keydown', escHandler);
+                        const drawButton = document.getElementById('draw-rectangle');
+                        if (drawButton) {
+                            drawButton.textContent = 'Рисовать прямоугольник';
+                            drawButton.onclick = activateDrawingMode;
+                        }
+                    }
+                }
+                
+                document.addEventListener('keydown', escHandler);
+            });
+        }
+
+        // Контекстное меню
+        function showContextMenu(e) {
+            // Запрещаем контекстное меню в режиме просмотра
+            if (!isEditing) {
+                e.preventDefault();
+                return;
+            }
+            
+            e.preventDefault();
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = `${e.pageX}px`;
+            contextMenu.style.top = `${e.pageY}px`;
+            
+            const target = e.target.closest('.draggable, .block');
+            if (target) {
+                selectedElement = target;
+            } else {
+                selectedElement = null;
+                document.getElementById('change-color').style.display = 'none';
+                document.getElementById('toggle-bold').style.display = 'none';
+            }
+            
+            // Показываем/скрываем пункты контекстного меню
+            const changeColorItem = document.getElementById('change-color');
+            const toggleBoldItem = document.getElementById('toggle-bold');
+            
+            if (changeColorItem) {
+                changeColorItem.style.display = 
+                    target && target.classList.contains('block') ? 'block' : 'none';
+            }
+            
+            if (toggleBoldItem) {
+                toggleBoldItem.style.display = 
+                    target && target.dataset.type === 'text' ? 'block' : 'none';
+                
+                if (target && target.dataset.type === 'text') {
+                    toggleBoldItem.textContent = 
+                        target.style.fontWeight === 'bold' ? 'Обычный шрифт' : 'Жирный шрифт';
+                }
+            }
+        }
+
+        function hideContextMenu() {
+            contextMenu.style.display = 'none';
+            selectedElement = null;
+        }
+
+        // Обработчики событий контекстного меню
+        function deleteItem() {
+            if (!selectedElement || !isEditing) return;
+            
+            if (selectedElement.classList.contains('block')) {
+                const blockId = selectedElement.dataset.id;
+                blocks = blocks.filter(b => b.id != blockId);
+                selectedElement.remove();
+            } else {
+                const elementType = selectedElement.dataset.type;
+                if (elementType === 'tag') {
+                    const tag = selectedElement.dataset.tag;
+                    elements = elements.filter(el => !(el.tag === tag && el.type === 'tag'));
+                } else if (elementType === 'text') {
+                    const text = selectedElement.dataset.text;
+                    elements = elements.filter(el => !(el.text === text && el.type === 'text'));
+                }
+                selectedElement.remove();
+            }
+            
+            saveConfig();
+            hideContextMenu();
+        }
+
+        function changeColor() {
+            if (!selectedElement || !selectedElement.classList.contains('block') || !isEditing) return;
+            
+            const newColor = document.getElementById('block-color').value;
+            const opacity = config.opacity / 100;
+            
+            selectedElement.style.backgroundColor = hexToRgba(newColor, opacity);
+            selectedElement.style.borderColor = newColor;
+            
+            // Обновляем данные
+            const blockId = selectedElement.dataset.id;
+            const blockIndex = blocks.findIndex(b => b.id == blockId);
+            if (blockIndex >= 0) {
+                blocks[blockIndex].color = newColor;
+            }
+            
+            saveConfig();
+            hideContextMenu();
+        }
+
+        function toggleBold() {
+            if (!selectedElement || selectedElement.dataset.type !== 'text' || !isEditing) return;
+            
+            const isBold = selectedElement.style.fontWeight === 'bold';
+            selectedElement.style.fontWeight = isBold ? 'normal' : 'bold';
+            
+            // Обновляем данные
+            const text = selectedElement.dataset.text;
+            const elementIndex = elements.findIndex(el => el.text === text && el.type === 'text');
+            if (elementIndex >= 0) {
+                elements[elementIndex].fontWeight = isBold ? 'normal' : 'bold';
+            }
+            
+            saveConfig();
+            hideContextMenu();
+        }
+
+        // Загрузка конфигурации с сервера
+        async function loadServerConfig() {
+            if (!config.configUrl || config.configUrl.trim() === '') {
+                return;
+            }
+
+            try {
+                const response = await fetch(config.configUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const serverConfig = await response.json();
+                applyServerConfig(serverConfig);
+            } catch (error) {
+                console.error('Error loading server config:', error);
+                alert('Ошибка загрузки конфигурации с сервера');
+            }
+        }
+
+        // Применение конфигурации с сервера
+        function applyServerConfig(serverConfig) {
+            try {
+                // Очищаем текущее состояние
+                document.querySelectorAll('.draggable, .block').forEach(el => el.remove());
+                elements = [];
+                blocks = [];
+                
+                // Применяем новые настройки
+                const jsonUrlInput = document.getElementById('json-url');
+                const bgUrlInput = document.getElementById('bg-url');
+                const boolSizeInput = document.getElementById('bool-size');
+                const blockColorInput = document.getElementById('block-color');
+                const opacitySlider = document.getElementById('opacity-slider');
+                
+                if (jsonUrlInput && serverConfig.jsonUrl) jsonUrlInput.value = serverConfig.jsonUrl;
+                if (bgUrlInput && serverConfig.bgImage) {
+                    workspace.style.backgroundImage = `url(${serverConfig.bgImage})`;
+                    bgUrlInput.value = serverConfig.bgImage;
+                }
+                if (boolSizeInput && serverConfig.boolSize) boolSizeInput.value = serverConfig.boolSize;
+                if (blockColorInput && serverConfig.blockColor) blockColorInput.value = serverConfig.blockColor;
+                if (opacitySlider && serverConfig.opacity) opacitySlider.value = serverConfig.opacity;
+                
+                // Создаем элементы
+                if (serverConfig.elements) {
+                    serverConfig.elements.forEach(el => {
+                        if (el.type === 'tag') {
+                            createTagElement({ name: el.tag, value: el.value }, el.x, el.y, el.width, el.height);
+                        } else if (el.type === 'text') {
+                            createTextElement(el.text, el.x, el.y, el.width, el.height, el.fontWeight || 'normal');
+                        }
+                    });
+                }
+                
+                // Создаем блоки
+                if (serverConfig.blocks) {
+                    serverConfig.blocks.forEach(block => createBlock(block));
+                }
+                
+                // Сохраняем в localStorage
+                saveConfig();
+            } catch (error) {
+                console.error('Error applying server config:', error);
+            }
+        }
+
+        // Импорт конфигурации
+        function importConfig(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedConfig = JSON.parse(e.target.result);
+                    applyServerConfig(importedConfig);
+                } catch (error) {
+                    alert('Ошибка чтения файла конфигурации');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Загрузка фонового изображения
+        function uploadBackground(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                workspace.style.backgroundImage = `url(${imageData})`;
+                config.bgImage = imageData;
+                const bgUrlInput = document.getElementById('bg-url');
+                if (bgUrlInput) bgUrlInput.value = '';
+                saveConfig();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Удаление фона
+        function clearBackground() {
+            workspace.style.backgroundImage = '';
+            config.bgImage = '';
+            const bgUrlInput = document.getElementById('bg-url');
+            if (bgUrlInput) bgUrlInput.value = '';
+            saveConfig();
+        }
+
+        // Сброс рабочей области
+        function resetWorkspace() {
+            if (confirm('Вы действительно хотите очистить рабочую область?')) {
+                // Удаляем все элементы
+                document.querySelectorAll('.draggable, .block').forEach(el => {
+                    el.remove();
+                });
+                elements = [];
+                blocks = [];
+                saveConfig();
+            }
+        }
+
+        // Инициализация приложения
+        function init() {
+            try {
+                // Загружаем сохраненную конфигурацию
+                loadConfig();
+
+                // Добавляем обработчик кликов для перетаскивания
+                workspace.addEventListener('mousedown', handleMouseDown);
+
+                // Обработчики кнопок
+                const toggleTagsBtn = document.getElementById('toggle-tags');
+                const toggleToolsBtn = document.getElementById('toggle-tools');
+                const editModeBtn = document.getElementById('edit-mode');
+                const fetchDataBtn = document.getElementById('fetch-data');
+                const togglePollingBtn = document.getElementById('toggle-polling');
+                const drawRectangleBtn = document.getElementById('draw-rectangle');
+                const addTextBtn = document.getElementById('add-text');
+                const randomColorBtn = document.getElementById('random-color');
+                const bgUrlInput = document.getElementById('bg-url');
+                const bgUploadInput = document.getElementById('bg-upload');
+                const clearBgBtn = document.getElementById('clear-bg');
+                const saveConfigBtn = document.getElementById('save-config');
+                const loadConfigBtn = document.getElementById('load-config');
+
+                if (toggleTagsBtn) {
+                    toggleTagsBtn.addEventListener('click', () => 
+                        togglePanel('tags-panel', 'toggle-tags')
+                    );
+                }
+                
+                if (toggleToolsBtn) {
+                    toggleToolsBtn.addEventListener('click', () => 
+                        togglePanel('tools-panel', 'toggle-tools')
+                    );
+                }
+                
+                if (editModeBtn) {
+                    editModeBtn.addEventListener('click', toggleEditMode);
+                }
+                
+                if (fetchDataBtn) {
+                    fetchDataBtn.addEventListener('click', fetchData);
+                }
+                
+                if (togglePollingBtn) {
+                    togglePollingBtn.addEventListener('click', togglePolling);
+                }
+                
+                if (drawRectangleBtn) {
+                    drawRectangleBtn.addEventListener('click', activateDrawingMode);
+                }
+                
+                if (addTextBtn) {
+                    addTextBtn.addEventListener('click', () => {
+                        const textInput = document.getElementById('text-label');
+                        if (textInput) {
+                            const text = textInput.value.trim();
+                            if (text) {
+                                createTextElement(text);
+                                saveConfig();
+                                textInput.value = '';
+                            }
+                        }
+                    });
+                }
+                
+                if (randomColorBtn) {
+                    randomColorBtn.addEventListener('click', () => {
+                        const colorPicker = document.getElementById('block-color');
+                        if (colorPicker) {
+                            colorPicker.value = generateRandomColor();
+                        }
+                    });
+                }
+                
+                if (bgUrlInput) {
+                    bgUrlInput.addEventListener('change', () => {
+                        const url = bgUrlInput.value.trim();
+                        if (url) {
+                            workspace.style.backgroundImage = `url(${url})`;
+                            config.bgImage = url;
+                            saveConfig();
+                        }
+                    });
+                }
+                
+                if (bgUploadInput) {
+                    bgUploadInput.addEventListener('change', uploadBackground);
+                }
+                
+                if (clearBgBtn) {
+                    clearBgBtn.addEventListener('click', clearBackground);
+                }
+                
+                if (saveConfigBtn) {
+                    saveConfigBtn.addEventListener('click', exportConfig);
+                }
+                
+                if (loadConfigBtn) {
+                    loadConfigBtn.addEventListener('click', () => {
+                        const uploadInput = document.getElementById('config-upload');
+                        if (uploadInput) {
+                            uploadInput.click();
+                        }
+                    });
+                }
+
+                // Добавляем скрытый input для загрузки конфига
+                const configUpload = document.createElement('input');
+                configUpload.type = 'file';
+                configUpload.id = 'config-upload';
+                configUpload.accept = '.json';
+                configUpload.style.display = 'none';
+                configUpload.addEventListener('change', importConfig);
+                document.body.appendChild(configUpload);
+
+                // Обработчик контекстного меню
+                workspace.addEventListener('contextmenu', showContextMenu);
+                document.addEventListener('click', hideContextMenu);
+                
+                // Обработчики контекстного меню
+                const deleteItemBtn = document.getElementById('delete-item');
+                const changeColorBtn = document.getElementById('change-color');
+                const toggleBoldBtn = document.getElementById('toggle-bold');
+                
+                if (deleteItemBtn) {
+                    deleteItemBtn.addEventListener('click', deleteItem);
+                }
+                
+                if (changeColorBtn) {
+                    changeColorBtn.addEventListener('click', changeColor);
+                }
+                
+                if (toggleBoldBtn) {
+                    toggleBoldBtn.addEventListener('click', toggleBold);
+                }
+
+                // Загружаем начальные данные
+                updateTagsPanel({});
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        }
+
+        // Запуск приложения
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
