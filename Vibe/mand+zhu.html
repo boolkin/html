@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Множество Мандельброта / Жюлиа</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 15px;
+      background: #111;
+      color: white;
+    }
+    canvas {
+      border: 1px solid #444;
+      cursor: move;
+      display: block;
+      margin-top: 8px;
+    }
+    .row {
+      margin-bottom: 6px;
+    }
+    label {
+      display: inline-block;
+      width: 90px;
+      font-weight: bold;
+    }
+    input[type=number], select {
+      width: 80px;
+      margin-right: 8px;
+    }
+    button, input[type=checkbox] {
+      margin-right: 10px;
+      padding: 4px 8px;
+    }
+    #masterpiecesList, #paletteList {
+      position: absolute;
+      background: #222;
+      border: 1px solid #555;
+      color: white;
+      z-index: 10;
+      display: none;
+    }
+    #masterpiecesList div, #paletteList div {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    #masterpiecesList div:hover, #paletteList div:hover {
+      background: #333;
+    }
+  </style>
+</head>
+<body>
+
+<div class="row">
+  <label>Тип:</label>
+  <select id="fractalType" onchange="onParamChange()">
+    <option value="mandelbrot">Мандельброт</option>
+    <option value="julia">Жюлиа</option>
+  </select>
+  <button id="randomJuliaBtn" onclick="setRandomJulia()" style="display:none;">Случайный Жюлиа</button>
+  <button id="masterpiecesBtn" onclick="toggleMasterpieces()" style="display:none;">Шедевры</button>
+  <div id="masterpiecesList"></div>
+</div>
+
+<div class="row">
+  <label>Ширина:</label>
+  <input type="number" id="width" value="600" min="200" max="1200" oninput="onParamChange()">
+  <label>Высота:</label>
+  <input type="number" id="height" value="400" min="150" max="800" oninput="onParamChange()">
+</div>
+
+<div class="row">
+  <label>Zoom:</label>
+  <input type="number" id="zoom" value="1" step="0.1" min="0.01" max="1e6" oninput="onParamChange()">
+  <label>Move X:</label>
+  <input type="number" id="moveX" value="-0.5" step="0.001" oninput="onParamChange()">
+  <label>Move Y:</label>
+  <input type="number" id="moveY" value="0" step="0.001" oninput="onParamChange()">
+</div>
+
+<div class="row" id="juliaParams" style="display:none;">
+  <label>cRe:</label>
+  <input type="number" id="cRe" value="-0.7" step="0.001" oninput="onParamChange()">
+  <label>cIm:</label>
+  <input type="number" id="cIm" value="0.27015" step="0.001" oninput="onParamChange()">
+</div>
+
+<div class="row">
+  <label>Итерации:</label>
+  <input type="number" id="maxIter" value="100" min="10" max="1000" oninput="onParamChange()">
+  <label>
+    <input type="checkbox" id="twoColorMode" onchange="onParamChange()"> Два цвета
+  </label>
+  <button id="paletteBtn" onclick="togglePalette()">Палитра</button>
+  <div id="paletteList"></div>
+</div>
+
+<canvas id="fractal"></canvas>
+
+<script>
+// === Шедевры Жюлиа ===
+const masterpieces = [
+  { name: "Классический Жюлиа", cRe: -0.7, cIm: 0.27015 },
+  { name: "Дракон", cRe: -0.8, cIm: 0.156 },
+  { name: "Пламя", cRe: -0.835, cIm: -0.2321 },
+  { name: "Снежинка", cRe: -0.4, cIm: 0.6 },
+  { name: "Галактика", cRe: -0.75, cIm: 0.11 },
+  { name: "Кораллы", cRe: 0.32, cIm: 0.043 },
+  { name: "Молния", cRe: -0.12, cIm: 0.74 },
+  { name: "Бабочка", cRe: -0.52, cIm: 0.57 }
+];
+
+// === Палитры ===
+const palettes = [
+  { name: "HSV (радуга)", id: "hsv" },
+  { name: "Синяя волна", id: "blue" },
+  { name: "Огненная", id: "fire" },
+  { name: "Ч/б градация", id: "grayscale" },
+  { name: "Случайная", id: "random" }
+];
+let currentPalette = "hsv";
+let randomPaletteSeed = [255, 255, 255]; // будет обновляться для 'random'
+
+function getColor(iter, maxIter, paletteId) {
+  if (iter >= maxIter) return '#000';
+
+  const t = iter / maxIter;
+
+  if (paletteId === "hsv") {
+    const hue = t * 360;
+    return `hsl(${hue}, 100%, 50%)`;
+  }
+
+  if (paletteId === "blue") {
+    // тёмно-синий → голубой → белый
+    const r = Math.floor(0 + t * 255);
+    const g = Math.floor(50 + t * 205);
+    const b = Math.floor(150 + t * 105);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  if (paletteId === "fire") {
+    // чёрный → красный → жёлтый → белый
+    const r = Math.min(255, Math.floor(t * 510));
+    const g = Math.min(255, Math.floor(t * 510 - 255));
+    const b = Math.min(255, Math.floor(t * 510 - 510));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  if (paletteId === "grayscale") {
+    const gray = Math.floor(t * 255);
+    return `rgb(${gray},${gray},${gray})`;
+  }
+
+  if (paletteId === "random") {
+    // Фиксируем случайную палитру на время рендера
+    const r = Math.floor(t * randomPaletteSeed[0]);
+    const g = Math.floor(t * randomPaletteSeed[1]);
+    const b = Math.floor(t * randomPaletteSeed[2]);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  return '#fff';
+}
+
+// === Управление палитрой ===
+function togglePalette() {
+  const list = document.getElementById('paletteList');
+  if (list.style.display === 'block') {
+    list.style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = '';
+  palettes.forEach(p => {
+    const div = document.createElement('div');
+    div.textContent = p.name;
+    div.onclick = () => {
+      currentPalette = p.id;
+      if (p.id === "random") {
+        // Генерируем новую случайную палитру
+        randomPaletteSeed = [
+          Math.floor(Math.random() * 256),
+          Math.floor(Math.random() * 256),
+          Math.floor(Math.random() * 256)
+        ];
+      }
+      list.style.display = 'none';
+      onParamChange();
+    };
+    list.appendChild(div);
+  });
+
+  const btnRect = document.getElementById('paletteBtn').getBoundingClientRect();
+  list.style.left = btnRect.left + 'px';
+  list.style.top = (btnRect.bottom + 5) + 'px';
+  list.style.display = 'block';
+}
+
+// === Остальной код без изменений, кроме drawFractal ===
+
+let isDragging = false;
+let dragStartX, dragStartY;
+
+function onParamChange() {
+  const type = document.getElementById('fractalType').value;
+  const isJulia = type === 'julia';
+  document.getElementById('juliaParams').style.display = isJulia ? 'block' : 'none';
+  document.getElementById('randomJuliaBtn').style.display = isJulia ? 'inline-block' : 'none';
+  document.getElementById('masterpiecesBtn').style.display = isJulia ? 'inline-block' : 'none';
+  drawFractal();
+}
+
+function setRandomJulia() {
+  const cRe = -1.2 + Math.random() * 1.8;
+  const cIm = -0.8 + Math.random() * 1.6;
+  document.getElementById('cRe').value = cRe.toFixed(5);
+  document.getElementById('cIm').value = cIm.toFixed(5);
+  onParamChange();
+}
+
+function applyMasterpiece(cRe, cIm) {
+  document.getElementById('cRe').value = cRe.toFixed(5);
+  document.getElementById('cIm').value = cIm.toFixed(5);
+  document.getElementById('masterpiecesList').style.display = 'none';
+  onParamChange();
+}
+
+function toggleMasterpieces() {
+  const list = document.getElementById('masterpiecesList');
+  if (list.style.display === 'block') {
+    list.style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = '';
+  masterpieces.forEach(item => {
+    const div = document.createElement('div');
+    div.textContent = item.name;
+    div.onclick = () => applyMasterpiece(item.cRe, item.cIm);
+    list.appendChild(div);
+  });
+
+  const btnRect = document.getElementById('masterpiecesBtn').getBoundingClientRect();
+  list.style.left = btnRect.left + 'px';
+  list.style.top = (btnRect.bottom + 5) + 'px';
+  list.style.display = 'block';
+}
+
+document.addEventListener('click', (e) => {
+  const lists = ['masterpiecesList', 'paletteList'];
+  for (const id of lists) {
+    const el = document.getElementById(id);
+    const btn = document.getElementById(id.replace('List', 'Btn'));
+    if (el.style.display === 'block' && !el.contains(e.target) && e.target !== btn) {
+      el.style.display = 'none';
+    }
+  }
+});
+
+// === Отрисовка с поддержкой палитр ===
+function drawFractal() {
+  const w = parseInt(document.getElementById('width').value) || 600;
+  const h = parseInt(document.getElementById('height').value) || 400;
+  const zoom = parseFloat(document.getElementById('zoom').value) || 1;
+  const moveX = parseFloat(document.getElementById('moveX').value) || 0;
+  const moveY = parseFloat(document.getElementById('moveY').value) || 0;
+  const maxIterations = parseInt(document.getElementById('maxIter').value) || 100;
+  const twoColor = document.getElementById('twoColorMode').checked;
+  const type = document.getElementById('fractalType').value;
+  let cRe = 0, cIm = 0;
+  if (type === 'julia') {
+    cRe = parseFloat(document.getElementById('cRe').value) || 0;
+    cIm = parseFloat(document.getElementById('cIm').value) || 0;
+  }
+
+  const canvas = document.getElementById('fractal');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  // Если выбрана случайная палитра — зафиксируем seed на этот рендер
+  if (currentPalette === "random" && !twoColor) {
+    randomPaletteSeed = [
+      Math.floor(Math.random() * 256),
+      Math.floor(Math.random() * 256),
+      Math.floor(Math.random() * 256)
+    ];
+  }
+
+  for (let x = 0; x < w; x++) {
+    for (let y = 0; y < h; y++) {
+      const pr = 1.5 * (x - w / 2) / (0.5 * zoom * w) + moveX;
+      const pi = (y - h / 2) / (0.5 * zoom * h) + moveY;
+
+      let zr, zi;
+      let cr, ci;
+
+      if (type === 'mandelbrot') {
+        zr = 0; zi = 0;
+        cr = pr; ci = pi;
+      } else {
+        zr = pr; zi = pi;
+        cr = cRe; ci = cIm;
+      }
+
+      let iter = 0;
+      while (iter < maxIterations && zr * zr + zi * zi <= 4) {
+        const newZr = zr * zr - zi * zi + cr;
+        const newZi = 2 * zr * zi + ci;
+        zr = newZr;
+        zi = newZi;
+        iter++;
+      }
+
+      if (iter === maxIterations) {
+        ctx.fillStyle = '#000';
+      } else {
+        if (twoColor) {
+          ctx.fillStyle = '#fff';
+        } else {
+          ctx.fillStyle = getColor(iter, maxIterations, currentPalette);
+        }
+      }
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+}
+
+// === Управление мышью (без изменений) ===
+const canvas = document.getElementById('fractal');
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const zoomBefore = parseFloat(document.getElementById('zoom').value) || 1;
+  const moveXBefore = parseFloat(document.getElementById('moveX').value) || 0;
+  const moveYBefore = parseFloat(document.getElementById('moveY').value) || 0;
+
+  const prBefore = 1.5 * (mouseX - w / 2) / (0.5 * zoomBefore * w) + moveXBefore;
+  const piBefore = (mouseY - h / 2) / (0.5 * zoomBefore * h) + moveYBefore;
+
+  const zoomFactor = e.deltaY > 0 ? 0.85 : 1.15;
+  const newZoom = Math.max(0.01, zoomBefore * zoomFactor);
+
+  const newMoveX = prBefore - 1.5 * (mouseX - w / 2) / (0.5 * newZoom * w);
+  const newMoveY = piBefore - (mouseY - h / 2) / (0.5 * newZoom * h);
+
+  document.getElementById('zoom').value = newZoom.toFixed(4);
+  document.getElementById('moveX').value = newMoveX.toFixed(6);
+  document.getElementById('moveY').value = newMoveY.toFixed(6);
+
+  onParamChange();
+});
+
+canvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  const dy = e.clientY - dragStartY;
+  const zoom = parseFloat(document.getElementById('zoom').value) || 1;
+  const sensitivity = 0.002 / zoom;
+
+  const moveX = parseFloat(document.getElementById('moveX').value) || 0;
+  const moveY = parseFloat(document.getElementById('moveY').value) || 0;
+
+  document.getElementById('moveX').value = (moveX - dx * sensitivity).toFixed(6);
+  document.getElementById('moveY').value = (moveY + dy * sensitivity).toFixed(6);
+
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  onParamChange();
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+
+canvas.addEventListener('dragstart', (e) => e.preventDefault());
+
+window.onload = () => {
+  onParamChange();
+};
+</script>
+
+</body>
+</html>

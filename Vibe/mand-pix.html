@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Мандельброт: кликни на пиксель</title>
+  <style>
+    body {
+      font-family: monospace;
+      margin: 15px;
+      background: #111;
+      color: #eee;
+      line-height: 1.4;
+    }
+    .spoiler-btn {
+      background: #333;
+      color: #ffcc00;
+      border: 1px solid #555;
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    .explanation {
+      display: none;
+      background: #222;
+      padding: 16px;
+      border: 1px solid #444;
+      margin-bottom: 15px;
+      font-size: 14px;
+      max-width: 900px;
+    }
+    abbr {
+      border-bottom: 1px dashed #888;
+      cursor: help;
+    }
+    .colorWheel {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        red 0deg, yellow 60deg, lime 120deg, cyan 180deg,
+        blue 240deg, magenta 300deg, red 360deg
+      );
+      margin: 10px 0;
+      border: 1px solid #666;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    canvas {
+      border: 1px solid #444;
+      cursor: pointer;
+    }
+    #logPanel {
+      width: 320px;
+      background: #222;
+      padding: 12px;
+      border: 1px solid #444;
+      font-size: 13px;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+    button {
+      margin-top: 8px;
+      padding: 4px 10px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<button class="spoiler-btn" onclick="toggleExplanation()">Показать пояснение</button>
+<div class="explanation" id="explanation">
+  <h3>Множество Мандельброта — кратко</h3>
+  <p>
+    Множество Мандельброта — это набор комплексных чисел <code>c</code>, для которых последовательность,
+    заданная формулой <code>zₙ₊₁ = zₙ² + c</code> при <code>z₀ = 0</code>, не уходит в бесконечность.
+    На практике мы проверяем, не превысит ли модуль <code>|zₙ|</code> значение 2 за фиксированное число шагов.
+  </p>
+
+  <h3>Как строится изображение</h3>
+  <p>
+    Для каждого пикселя с целочисленными координатами 
+    <code>(x, y)</code>, где 
+    <code>0 ≤ x &lt; <abbr title="Ширина сетки в пикселях (в нашем случае W = 20)">W</abbr></code> и 
+    <code>0 ≤ y &lt; <abbr title="Высота сетки в пикселях (в нашем случае H = 15)">H</abbr></code>,
+    вычисляется комплексное число:
+  </p>
+
+  <p><strong>c = c<sub>re</sub> + c<sub>im</sub>·i</strong></p>
+
+  <p>где:</p>
+  <ul>
+    <li><strong>Вещественная часть</strong>:
+      <br><code>c<sub>re</sub> = 1.5 · (x − W/2) / (0.5 · <abbr title="Коэффициент масштабирования (в нашем случае zoom = 1)">zoom</abbr> · W) + <abbr title="Смещение по вещественной оси (в нашем случае moveX = -0.5)">moveX</abbr></code>
+    </li>
+    <li><strong>Мнимая часть</strong>:
+      <br><code>c<sub>im</sub> = (y − H/2) / (0.5 · <abbr title="Коэффициент масштабирования (в нашем случае zoom = 1)">zoom</abbr> · H) + <abbr title="Смещение по мнимой оси (в нашем случае moveY = 0)">moveY</abbr></code>
+    </li>
+  </ul>
+
+  <p>
+    Затем выполняется итерационный процесс:<br>
+    <code>z₀ = 0 + 0·i</code><br>
+    <code>zₙ₊₁ = zₙ² + c</code>
+  </p>
+
+  <p>
+    Итерации продолжаются, пока не выполнится одно из условий:
+    <ul>
+      <li>Модуль <code>zₙ</code> превысит 2;</li>
+      <li>Достигнуто максимальное число итераций <code><abbr title="Максимальное число итераций (в нашем случае MAX_ITER = 100)">MAX_ITER</abbr></code>.</li>
+    </ul>
+  </p>
+
+  <p>
+    <strong>Модуль комплексного числа</strong> <code>z = a + b·i</code> вычисляется как:<br>
+    <code>|z| = √(a² + b²)</code><br>
+    Пример: для <code>z = -2 − i</code> → <code>|z| = √(4 + 1) = √5 ≈ 2.236</code>.
+  </p>
+
+  <p>
+    Цвет определяется числом итераций <code>n</code>:<br>
+    <code>hue = (n % 256) × 360 / 256</code> → используется в <code>hsl(hue, 100%, 50%)</code>.
+  </p>
+
+  <div class="colorWheel"></div>
+  <p style="font-size:12px;">
+    Цветовой круг HSV: 0°=красный, 60°=жёлтый, 120°=зелёный, 180°=голубой, 240°=синий, 300°=фиолетовый.
+  </p>
+</div>
+
+<div class="container">
+  <canvas id="gridCanvas" width="400" height="300"></canvas>
+  <canvas id="complexPlane" width="300" height="300" style="display:none;"></canvas>
+  <div id="logPanel">Нажмите на любой пиксель...</div>
+</div>
+
+<script>
+function toggleExplanation() {
+  const el = document.getElementById('explanation');
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+// === ВСЁ ОСТАЛЬНОЕ БЕЗ ИЗМЕНЕНИЙ ===
+const GRID_W = 20;
+const GRID_H = 15;
+const CELL_SIZE = 20;
+const MAX_ITER = 100;
+const ZOOM = 1;
+const MOVE_X = -0.5;
+const MOVE_Y = 0;
+
+let pixelData = [];
+
+function initPixelData() {
+  pixelData = [];
+  for (let y = 0; y < GRID_H; y++) {
+    pixelData[y] = [];
+    for (let x = 0; x < GRID_W; x++) {
+      const pr = 1.5 * (x - GRID_W / 2) / (0.5 * ZOOM * GRID_W) + MOVE_X;
+      const pi = (y - GRID_H / 2) / (0.5 * ZOOM * GRID_H) + MOVE_Y;
+
+      let zr = 0, zi = 0;
+      let iter = 0;
+      const trajectory = [{re: zr, im: zi}];
+
+      while (iter < MAX_ITER && zr*zr + zi*zi <= 4) {
+        const newZr = zr*zr - zi*zi + pr;
+        const newZi = 2*zr*zi + pi;
+        zr = newZr;
+        zi = newZi;
+        iter++;
+        trajectory.push({re: zr, im: zi});
+        if (zr*zr + zi*zi > 4) break;
+      }
+
+      const hue = (iter % 256) * 360 / 256;
+      const color = `hsl(${hue}, 100%, 50%)`;
+
+      pixelData[y][x] = { x, y, pr, pi, iter, color, trajectory };
+    }
+  }
+}
+
+function drawFullGrid() {
+  const canvas = document.getElementById('gridCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let y = 0; y < GRID_H; y++) {
+    for (let x = 0; x < GRID_W; x++) {
+      const d = pixelData[y][x];
+      ctx.fillStyle = d.color;
+      ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`(${x},${y})`,
+        x * CELL_SIZE + CELL_SIZE/2,
+        y * CELL_SIZE + CELL_SIZE - 2);
+    }
+  }
+}
+
+function drawComplexPlane(pr, pi, trajectory) {
+  const canvas = document.getElementById('complexPlane');
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  const size = 300;
+  const scale = 80;
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, size, size);
+
+  ctx.strokeStyle = '#444';
+  ctx.beginPath();
+  ctx.moveTo(size/2, 0); ctx.lineTo(size/2, size);
+  ctx.moveTo(0, size/2); ctx.lineTo(size, size/2);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#ff4444';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, 2*scale, 0, Math.PI*2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#00ff00';
+  ctx.beginPath();
+  ctx.arc(size/2 + pr*scale, size/2 - pi*scale, 5, 0, Math.PI*2);
+  ctx.fill();
+
+  if (trajectory.length > 0) {
+    ctx.strokeStyle = '#ffff00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(size/2 + trajectory[0].re*scale, size/2 - trajectory[0].im*scale);
+    for (let i = 1; i < trajectory.length; i++) {
+      ctx.lineTo(size/2 + trajectory[i].re*scale, size/2 - trajectory[i].im*scale);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = '#ff00ff';
+    const last = trajectory[trajectory.length - 1];
+    ctx.beginPath();
+    ctx.arc(size/2 + last.re*scale, size/2 - last.im*scale, 4, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function showPixelInfo(x, y) {
+  if (x < 0 || x >= GRID_W || y < 0 || y >= GRID_H) return;
+  const d = pixelData[y][x];
+  const hue = (d.iter % 256) * 360 / 256;
+
+  let html = `
+    <strong>Пиксель:</strong> (${d.x}, ${d.y})<br>
+    <strong>c =</strong> ${d.pr.toFixed(4)} + ${d.pi.toFixed(4)}i<br>
+    <strong>Итераций:</strong> ${d.iter}<br>
+    <strong>Hue:</strong> ${hue.toFixed(1)}°<br>
+    <strong>Цвет:</strong> hsl(${hue.toFixed(1)}, 100%, 50%)<br>
+    <button onclick="showIterations(${x}, ${y})">Показать все итерации</button>
+  `;
+  document.getElementById('logPanel').innerHTML = html;
+  drawComplexPlane(d.pr, d.pi, d.trajectory);
+}
+
+function showIterations(x, y) {
+  const d = pixelData[y][x];
+  let log = `<strong>Итерации для (${x}, ${y}):</strong><br><pre style="font-size:11px;">`;
+  for (let i = 0; i < d.trajectory.length; i++) {
+    const z = d.trajectory[i];
+    const mod = Math.sqrt(z.re*z.re + z.im*z.im);
+    log += `Итерация ${i}: z = ${z.re.toFixed(4)} + ${z.im.toFixed(4)}i  |z| = ${mod.toFixed(4)}\n`;
+    if (mod > 2 && i > 0) break;
+  }
+  log += '</pre>';
+  document.getElementById('logPanel').innerHTML = log + 
+    `<button onclick="showPixelInfo(${x}, ${y})">← Назад</button>`;
+}
+
+document.getElementById('gridCanvas').addEventListener('click', (e) => {
+  const rect = e.target.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const clickY = e.clientY - rect.top;
+  const gridX = Math.floor(clickX / CELL_SIZE);
+  const gridY = Math.floor(clickY / CELL_SIZE);
+  showPixelInfo(gridX, gridY);
+});
+
+initPixelData();
+drawFullGrid();
+document.getElementById('logPanel').innerHTML = 'Нажмите на пиксель → увидите его расчёт и траекторию z.';
+</script>
+
+</body>
+</html>
