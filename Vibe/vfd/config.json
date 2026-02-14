@@ -20,6 +20,17 @@
           }
         },
         {
+          "name": "ESQ_760",
+          "displayColumns": ["Code", "Name"],
+          "detailColumns": ["Code", "Name", "Description", "Action"],
+          "customLabels": {
+            "Code": "Код ошибки",
+            "Name": "Название ошибки",
+            "Description": "Описание ошибки",
+            "Action": "Рекомендуемые действия"
+          }
+        },        
+        {
           "name": "Sie_G120_En",
           "displayColumns": ["Code", "Cause"],
           "detailColumns": ["Code", "Cause", "Action"],
@@ -37,6 +48,21 @@
             "Code": "Код ошибки",
             "Name": "Причина",
             "Description": "действия"
+          }
+        }
+      ]
+    },
+     {
+      "file": "reports.db",
+      "url": null,
+      "tables": [
+        {
+          "name": "Reports",
+          "displayColumns": ["id", "FilePath"],
+          "detailColumns": ["FilePath", "ReportText"],
+          "customLabels": {
+            "FilePath": "Путь",
+            "ReportText": "Текст"
           }
         }
       ]
