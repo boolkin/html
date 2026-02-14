@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Поиск в базе данных ошибок</title>
-    <!-- Подключаем SQL.js -->
     <script src="sql-wasm.js"></script>
     <style>
         :root {
@@ -16,6 +15,7 @@
             --bg-body: #f3f4f6;
             --bg-white: #ffffff;
             --danger-color: #ef4444;
+            --header-height: 60px;
         }
 
         * {
@@ -29,36 +29,41 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: var(--bg-body);
             color: var(--text-main);
-            height: 90vh;
+            /* Используем dvh для корректной высоты на мобилках */
+            height: 100dvh; 
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Предотвращаем скролл тела, скроллим только контейнеры */
+            overflow: hidden;
         }
 
-        /* === ВЕРХНЯЯ ПАНЕЛЬ (ПОИСК) === */
+        /* === ВЕРХНЯЯ ПАНЕЛЬ === */
         .top-bar {
             background: var(--bg-white);
-            padding: 12px 16px;
+            padding: 8px 12px;
             border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 20;
         }
 
         .search-wrapper {
             position: relative;
-            max-width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
         }
 
         .search-wrapper input {
             width: 100%;
-            padding: 12px 40px 12px 16px; /* Место справа для кнопки справки */
+            padding: 10px 80px 10px 14px; /* Место справа для кнопок */
             font-size: 16px; /* Чтобы не зумил на iOS */
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background: #f9fafb;
             outline: none;
-            transition: border-color 0.2s;
+            color: var(--text-main);
         }
 
         .search-wrapper input:focus {
@@ -71,28 +76,39 @@
             color: #aaa;
         }
 
-        /* Кнопка справки внутри поиска */
-        .help-btn-small {
+        /* Иконки внутри строки поиска */
+        .icon-btn {
             position: absolute;
             right: 8px;
             top: 50%;
             transform: translateY(-50%);
-            background: none;
-            border: none;
+            background: #f3f4f6;
+            border: 1px solid var(--border-color);
             color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             cursor: pointer;
-            padding: 6px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 16px;
             font-weight: bold;
-            font-size: 14px;
         }
 
-        .help-btn-small:hover, .help-btn-small:active {
-            background: #eee;
+        .icon-btn:active {
+            background: #e5e7eb;
             color: var(--primary-color);
+        }
+
+        .icon-btn.help {
+            right: 48px; /* Слева от кнопки фильтров */
+            border-radius: 6px 0 0 6px;
+            border-right: none;
+        }
+        
+        .icon-btn.filter {
+            border-radius: 0 6px 6px 0;
         }
 
         /* Информационная панель */
@@ -102,10 +118,48 @@
             padding: 10px 16px;
             font-size: 0.85em;
             color: #1e40af;
-            display: none; /* Скрыта по умолчанию */
+            display: none;
             flex-shrink: 0;
         }
         .info-panel.show { display: block; }
+
+        /* === ВЫДВИЖНАЯ ПАНЕЛЬ ФИЛЬТРОВ === */
+        .filter-drawer {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            display: none; /* Скрыто по умолчанию */
+            flex-direction: column;
+            max-height: 40vh; /* Максимум 40% высоты экрана */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 15;
+        }
+
+        .filter-drawer.open {
+            display: flex;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .drawer-header {
+            padding: 8px 16px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: #fafafa;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .filters-scroll-area {
+            overflow-y: auto;
+            padding: 12px 16px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         /* === ОСНОВНАЯ ОБЛАСТЬ === */
         .main-container {
@@ -122,7 +176,7 @@
             overflow-y: auto;
             padding: 10px;
             border-right: 1px solid var(--border-color);
-            min-width: 0; /* Важно для Flexbox */
+            min-width: 0;
         }
 
         .results-header {
@@ -174,7 +228,7 @@
             overflow-y: auto;
             padding: 15px;
             background: #fafafa;
-            display: none; /* Скрыто на мобильном по умолчанию, показываем при клике */
+            display: none;
         }
 
         .detail-card {
@@ -215,35 +269,9 @@
             border-radius: 3px;
         }
 
-        /* === НИЖНЯЯ ПАНЕЛЬ (ФИЛЬТРЫ) === */
-        .footer {
-            background: var(--bg-white);
-            border-top: 1px solid var(--border-color);
-            flex-shrink: 0;
-            height: 140px; /* Фиксированная высота для фильтров */
-            display: flex;
-            flex-direction: column;
-        }
-
-        .footer-header {
-            padding: 8px 16px;
-            font-size: 0.8em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 1px solid #f3f4f6;
-            background: #fafafa;
-        }
-
-        .filters-scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 16px;
-        }
-
-        /* Группы фильтров */
-        .filter-group {
-            margin-bottom: 12px;
-        }
+        /* СТИЛИ ФИЛЬТРОВ */
+        .filter-group { margin-bottom: 12px; }
+        .filter-group:last-child { margin-bottom: 0; }
 
         .filter-group-title {
             font-size: 0.8em;
@@ -255,7 +283,6 @@
             gap: 6px;
         }
 
-        /* Чипсы фильтров */
         .filter-chip {
             display: inline-flex;
             align-items: center;
@@ -269,7 +296,6 @@
             cursor: pointer;
             user-select: none;
             color: var(--text-secondary);
-            transition: all 0.1s;
         }
 
         .filter-chip.active {
@@ -277,8 +303,7 @@
             color: white;
             border-color: var(--primary-color);
         }
-        
-        /* Состояние "выключено" (серое/перечеркнутое) */
+
         .filter-chip.disabled {
             background: #f3f4f6;
             color: #9ca3af;
@@ -287,14 +312,14 @@
             opacity: 0.8;
         }
 
-        /* Статусные сообщения */
+        /* СТАТУСНЫЕ СООБЩЕНИЯ */
         .status-msg {
             position: absolute;
             top: 0; left: 0; right: 0;
             padding: 10px;
             text-align: center;
             background: rgba(255,255,255,0.95);
-            z-index: 20;
+            z-index: 30;
             font-size: 0.9em;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             display: none;
@@ -304,13 +329,11 @@
 
         /* Мобильная адаптация */
         @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-            }
+            .main-container { flex-direction: column; }
             .results-list {
                 width: 100%;
                 border-right: none;
-                flex: 1; /* Занимает все доступное место */
+                flex: 1;
             }
             .detail-section {
                 position: absolute;
@@ -319,11 +342,8 @@
                 transform: translateX(100%);
                 transition: transform 0.2s ease-in-out;
             }
-            .detail-section.open {
-                transform: translateX(0);
-                display: block;
-            }
-            /* Кнопка "Назад" в деталях для мобильных */
+            .detail-section.open { transform: translateX(0); display: block; }
+            
             .back-btn {
                 display: block;
                 margin-bottom: 10px;
@@ -340,7 +360,6 @@
             .detail-section { display: block; }
         }
 
-        /* Утилитные классы */
         .hidden { display: none !important; }
     </style>
 </head>
@@ -350,14 +369,27 @@
     <div class="top-bar">
         <div class="search-wrapper">
             <input type="text" id="searchInput" placeholder="Поиск..." disabled autocomplete="off">
-            <button id="helpBtn" class="help-btn-small" title="Справка">?</button>
+            <!-- Кнопки справа -->
+            <button id="helpBtn" class="icon-btn help" title="Справка">?</button>
+            <button id="filterToggleBtn" class="icon-btn filter" title="Фильтры">☰</button>
         </div>
     </div>
 
-    <!-- ИНФОРМАЦИЯ -->
+    <!-- ПАНЕЛЬ СПРАВКИ -->
     <div id="infoPanel" class="info-panel">
         <strong>Поиск:</strong> Введите слова. Будут найдены записи, содержащие все эти слова.<br>
         <span id="dbListInfo" style="opacity: 0.8;"></span>
+    </div>
+
+    <!-- ВЫДВИЖНАЯ ПАНЕЛЬ ФИЛЬТРОВ (Была в футере, теперь здесь) -->
+    <div id="filterDrawer" class="filter-drawer">
+        <div class="drawer-header">
+            <span>Фильтры: Базы и Таблицы</span>
+            <span style="cursor:pointer; font-weight:bold;" id="closeDrawerBtn">✕</span>
+        </div>
+        <div class="filters-scroll-area" id="filtersArea">
+            <!-- Фильтры генерируются JS -->
+        </div>
     </div>
 
     <!-- СООБЩЕНИЯ О СТАТУСЕ -->
@@ -383,22 +415,14 @@
         </div>
     </div>
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ ФИЛЬТРОВ -->
-    <div class="footer">
-        <div class="footer-header">Фильтры (Базы и Таблицы)</div>
-        <div class="filters-scroll-area" id="filtersArea">
-            <!-- Фильтры генерируются JS -->
-        </div>
-    </div>
-
     <script>
         // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
         let databases = {};
         let config = null;
         let allData = [];
         let currentResults = [];
-        let enabledDatabases = {}; // { "db_file": boolean }
-        let enabledTables = {};     // { "db_file.table_name": boolean }
+        let enabledDatabases = {}; 
+        let enabledTables = {};     
         let dbRecordCounts = {};
 
         // === ИНИЦИАЛИЗАЦИЯ ===
@@ -425,7 +449,6 @@
                 
                 if (!config.databases) throw new Error('Нет списка баз данных');
                 
-                // Умолчания
                 if (!config.maxDisplayResults) config.maxDisplayResults = 30;
                 
                 hideStatus();
@@ -452,7 +475,7 @@
 
                 for (const dbConf of config.databases) {
                     const dbName = dbConf.file || 'unknown';
-                    enabledDatabases[dbName] = true; // Включены по умолчанию
+                    enabledDatabases[dbName] = true; 
                     
                     try {
                         const dbRes = await fetch(dbConf.url || dbName);
@@ -465,7 +488,6 @@
 
                         for (const tblConf of dbConf.tables) {
                             const tblName = tblConf.name;
-                            // Включаем таблицы по умолчанию
                             const tableKey = `${dbName}.${tblName}`;
                             enabledTables[tableKey] = true;
 
@@ -489,7 +511,6 @@
                             }
                         }
 
-                        // Считаем записи
                         const count = Object.values(databases[dbName].tables).reduce((a, b) => a + b.length, 0);
                         dbRecordCounts[dbName] = count;
                         totalRec += count;
@@ -532,7 +553,7 @@
             }
         }
 
-        // === ИНТЕРФЕЙС ФИЛЬТРОВ (БД + ТАБЛИЦЫ) ===
+        // === ИНТЕРФЕЙС ФИЛЬТРОВ ===
         function renderFilters() {
             const container = document.getElementById('filtersArea');
             container.innerHTML = '';
@@ -544,39 +565,30 @@
                 const group = document.createElement('div');
                 group.className = 'filter-group';
 
-                // Заголовок группы (База данных)
                 const title = document.createElement('div');
                 title.className = 'filter-group-title';
                 title.innerHTML = `<span>${dbName}</span> <span style="font-weight:400; font-size:0.8em; color:#999;">(${dbRecordCounts[dbName]})</span>`;
                 
-                // Клик по заголовку переключает всю БД
                 title.style.cursor = 'pointer';
                 title.onclick = () => {
                     const newState = !enabledDatabases[dbName];
                     enabledDatabases[dbName] = newState;
-                    
-                    // При отключении БД отключаем и все её таблицы визуально
-                    // При включении БД возвращаем таблицам их состояние (или включаем все)
-                    // Проще: перерисовать фильтры
                     renderFilters(); 
                     performSearch(document.getElementById('searchInput').value);
                 };
 
                 group.appendChild(title);
 
-                // Список таблиц
                 const dbInfo = databases[dbName];
                 if (dbInfo && dbConf.tables) {
                     dbConf.tables.forEach(tblConf => {
                         const tblName = tblConf.name;
                         const tableKey = `${dbName}.${tblName}`;
                         
-                        // Проверяем, есть ли данные в таблице
                         if (!dbInfo.tables[tblName]) return;
 
                         const chip = document.createElement('span');
                         
-                        // Состояние чипа зависит от: включена ли БДАТА И включена ли ТАБЛИЦА
                         const isDbActive = enabledDatabases[dbName];
                         const isTblActive = enabledTables[tableKey];
                         
@@ -591,14 +603,12 @@
                         chip.textContent = tblName;
 
                         chip.onclick = (e) => {
-                            e.stopPropagation(); // Чтобы не триггерить клик по группе
+                            e.stopPropagation(); 
                             
-                            // Если БД выключена, сначала включим её
                             if (!enabledDatabases[dbName]) {
                                 enabledDatabases[dbName] = true;
                             }
                             
-                            // Переключаем таблицу
                             enabledTables[tableKey] = !enabledTables[tableKey];
                             
                             renderFilters();
@@ -622,18 +632,13 @@
 
             const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
             
-            // Фильтрация
             let results = allData.filter(item => {
-                // 1. Фильтр по БД
                 if (!enabledDatabases[item.db]) return false;
-                // 2. Фильтр по Таблице (ключевой функционал)
                 const tableKey = `${item.db}.${item.table}`;
                 if (!enabledTables[tableKey]) return false;
-                
                 return true;
             });
 
-            // Текстовый поиск
             words.forEach(word => {
                 results = results.filter(item => {
                     const cols = item.config.detailColumns;
@@ -663,7 +668,6 @@
                 return;
             }
 
-            // Фрагмент для быстрой отрисовки
             const frag = document.createDocumentFragment();
 
             results.forEach((item, idx) => {
@@ -686,7 +690,6 @@
             document.getElementById('resultsList').innerHTML = '';
             document.getElementById('countBadge').textContent = '0';
             document.getElementById('detailContent').innerHTML = '<div style="text-align:center; color:#999; padding: 20px;">Выберите запись</div>';
-            // На мобильном скрываем детали при очистке
             document.getElementById('detailSection').classList.remove('open');
         }
 
@@ -694,7 +697,6 @@
         function showDetail(idx) {
             const item = currentResults[idx];
             
-            // Подсветка активного элемента
             const allItems = document.querySelectorAll('.result-item');
             allItems.forEach(i => i.classList.remove('active'));
             if(allItems[idx]) allItems[idx].classList.add('active');
@@ -716,10 +718,8 @@
             });
             detailEl.innerHTML = html;
 
-            // Показываем панель деталей (особенно важно для мобильных)
             document.getElementById('detailSection').classList.add('open');
 
-            // Подсветка текста
             highlightWords(document.getElementById('searchInput').value);
         }
 
@@ -729,7 +729,6 @@
 
             document.querySelectorAll('.detail-value').forEach(el => {
                 const text = el.textContent;
-                // Простая замена с экранированием регулярок
                 let newText = text;
                 words.forEach(w => {
                     const reg = new RegExp(`(${escRegExp(w)})`, 'gi');
@@ -751,13 +750,38 @@
             // Справка
             document.getElementById('helpBtn').addEventListener('click', () => {
                 const p = document.getElementById('infoPanel');
-                p.classList.toggle('show');
+                const isOpen = p.classList.contains('show');
+                if (isOpen) p.classList.remove('show');
+                else {
+                    p.classList.add('show');
+                    // Если фильтры открыты, можно закрыть их для экономии места
+                    document.getElementById('filterDrawer').classList.remove('open');
+                }
             });
 
-            // Кнопка назад (мобильные)
+            // Кнопка Назад (мобильные)
             document.getElementById('backBtn').addEventListener('click', () => {
                 document.getElementById('detailSection').classList.remove('open');
             });
+
+            // === НОВАЯ ЛОГИКА: Открытие/Закрытие ФИЛЬТРОВ ===
+            const drawer = document.getElementById('filterDrawer');
+            const toggleBtn = document.getElementById('filterToggleBtn');
+            const closeBtn = document.getElementById('closeDrawerBtn');
+
+            function toggleDrawer() {
+                const isOpen = drawer.classList.contains('open');
+                if (isOpen) {
+                    drawer.classList.remove('open');
+                } else {
+                    drawer.classList.add('open');
+                    // Закрываем справку, если открыта
+                    document.getElementById('infoPanel').classList.remove('show');
+                }
+            }
+
+            toggleBtn.addEventListener('click', toggleDrawer);
+            closeBtn.addEventListener('click', toggleDrawer);
         }
 
         function updateInfo() {
