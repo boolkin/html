@@ -144,12 +144,8 @@
     <!-- Mode Toggle -->
     <div class="section">
         <div class="checkbox-group" onclick="toggleTrainMode()">
-            <input type="checkbox" id="chkTrain" checked onchange="toggleTrainMode()">
+            <input type="checkbox" id="chkTrain" onchange="toggleTrainMode()">
             <label for="chkTrain">Режим обучения</label>
-        </div>
-        <div class="control-group" style="margin-top:10px;">
-            <label>Файл данных (names.txt)</label>
-            <input type="file" id="inputFile" accept=".txt">
         </div>
     </div>
 
@@ -189,6 +185,10 @@
             <label>Learning Rate (Скорость)</label>
             <input type="number" id="inputLR" value="0.01" step="0.001">
         </div>
+        <div class="control-group" style="margin-top:10px;">
+            <label>Файл данных (names.txt)</label>
+            <input type="file" id="inputFile" accept=".txt">
+        </div>
     </div>
 
     <!-- Generation Params (Always Visible) -->
@@ -196,7 +196,7 @@
         <div class="section-title">Генерация</div>
         <div class="control-group">
             <label>Temperature (Креативность)</label>
-            <input type="number" id="inputTemp" value="0.7" step="0.1">
+            <input type="number" id="inputTemp" value="0.5" step="0.1">
         </div>
         <div class="control-group">
             <label>Кол-во имен</label>
@@ -649,7 +649,7 @@ async function startProcess() {
         docs = text.trim().split('\n').map(l => l.trim()).filter(l => l);
     } else {
         try {
-            const resp = await fetch('https://raw.githubusercontent.com/karpathy/makemore/refs/heads/master/names.txt');
+            const resp = await fetch('https://boolkin.github.io/html/Vibe/microgpt/names.txt');
             docs = (await resp.text()).trim().split('\n').map(l => l.trim()).filter(l => l);
         } catch(e) {
             docs = ["emma", "olivia", "ava", "sophia", "isabella", "mia"];
