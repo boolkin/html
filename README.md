@@ -58,11 +58,17 @@ D1 - расписание - https://boolkin.github.io/html/Vibe/D1.html
 https://boolkin.github.io/html/Vibe/D1_widget.html  
 MasterMind - https://boolkin.github.io/html/Vibe/MasterMind/  
 Рулетка пиксельная - https://boolkin.github.io/html/Vibe/pixRul.html  
+
 Прочее  
 https://boolkin.github.io/html/Vibe/JSON-blocks.html  
 https://boolkin.github.io/html/Vibe/tension.html  
+
 Сайт Втемиртау.КЗ  - https://boolkin.github.io/html/Vibe/vtemirtau  
+
 OPC2WEB - https://boolkin.github.io/html/Vibe/opc2web.html  
+
 Калькулятор дат - https://boolkin.github.io/html/Vibe/datecalc.html  
 
 Поиск в базе данных SQLite - https://boolkin.github.io/html/Vibe/vfd/  
+
+microgpt - https://boolkin.github.io/html/Vibe/microgpt/  
