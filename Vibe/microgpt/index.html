@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT на чистом JS (Настраиваемый)</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #222;
+            color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 800px;
+            background: #333;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 8px;
+        }
+        h1 {
+            font-size: 1.2em;
+            text-align: center;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #444;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-group label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        .control-group input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #666;
+            background: #222;
+            color: #fff;
+            font-family: monospace;
+        }
+        .control-group input[type="file"] {
+            padding: 5px;
+        }
+        .hint {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        #console {
+            background-color: #000;
+            color: #0f0;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 14px;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover { background-color: #218838; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>GPT на чистом JS (Autograd)</h1>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="inputFile">Файл с данными (names.txt)</label>
+            <input type="file" id="inputFile" accept=".txt">
+            <span class="hint">Опционально. Иначе загрузит из сети.</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="inputSeed">Seed</label>
+            <input type="number" id="inputSeed" value="42">
+            <span class="hint">Случайное зерно.</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="inputSteps">Шаги обучения</label>
+            <input type="number" id="inputSteps" value="1000" step="100">
+            <span class="hint">Количество итераций.</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="inputBlock">Block Size (Макс. длина)</label>
+            <input type="number" id="inputBlock" value="16" step="1">
+            <span class="hint">Макс. длина контекста/имени.</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="inputLR">Learning Rate</label>
+            <input type="number" id="inputLR" value="0.01" step="0.001">
+        </div>
+        
+        <div class="control-group">
+            <label for="inputTemp">Temperature</label>
+            <input type="number" id="inputTemp" value="0.5" step="0.1">
+        </div>
+    </div>
+
+    <div id="console"></div>
+    <button id="startBtn" onclick="startTraining()">Запустить обучение</button>
+</div>
+
+<script>
+// ==========================================
+// 1. Утилиты
+// ==========================================
+const consoleEl = document.getElementById('console');
+
+function print(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    consoleEl.appendChild(div);
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function clearConsole() {
+    consoleEl.innerHTML = '';
+}
+
+// ==========================================
+// 2. Random (Seeded)
+// ==========================================
+let seed = 42;
+
+function random() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+}
+
+function gaussRandom() {
+    let u = 0, v = 0;
+    while(u === 0) u = random();
+    while(v === 0) v = random();
+    return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+}
+
+function randn(std = 1) {
+    return gaussRandom() * std;
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+// ==========================================
+// 3. Value (Autograd)
+// ==========================================
+class Value {
+    constructor(data, children = [], localGrads = []) {
+        this.data = data;
+        this.grad = 0;
+        this._children = children;
+        this._localGrads = localGrads;
+    }
+
+    add(other) {
+        other = other instanceof Value ? other : new Value(other);
+        return new Value(this.data + other.data, [this, other], [1, 1]);
+    }
+
+    mul(other) {
+        other = other instanceof Value ? other : new Value(other);
+        return new Value(this.data * other.data, [this, other], [other.data, this.data]);
+    }
+
+    pow(other) {
+        return new Value(this.data ** other, [this], [other * this.data ** (other - 1)]);
+    }
+
+    log() {
+        const safeData = Math.max(this.data, 1e-10); 
+        return new Value(Math.log(safeData), [this], [1 / safeData]);
+    }
+
+    exp() {
+        const x = Math.min(this.data, 20); 
+        return new Value(Math.exp(x), [this], [Math.exp(x)]);
+    }
+
+    relu() {
+        return new Value(Math.max(0, this.data), [this], [this.data > 0 ? 1 : 0]);
+    }
+
+    neg() { return this.mul(-1); }
+    sub(other) { return this.add(other instanceof Value ? other.neg() : -other); }
+    div(other) { return this.mul(other instanceof Value ? other.pow(-1) : new Value(other).pow(-1)); }
+    
+    backward() {
+        const topo = [];
+        const visited = new Set();
+        const buildTopo = (v) => {
+            if (!visited.has(v)) {
+                visited.add(v);
+                v._children.forEach(child => buildTopo(child));
+                topo.push(v);
+            }
+        };
+        buildTopo(this);
+
+        this.grad = 1;
+        for (let i = topo.length - 1; i >= 0; i--) {
+            const v = topo[i];
+            for (let j = 0; j < v._children.length; j++) {
+                const child = v._children[j];
+                const localGrad = v._localGrads[j];
+                child.grad += localGrad * v.grad;
+            }
+        }
+    }
+}
+
+// ==========================================
+// 4. Функции модели
+// ==========================================
+
+function sumVals(arr) {
+    return arr.reduce((a, b) => a.add(b), new Value(0));
+}
+
+function matrix(nout, nin, std = 0.08) {
+    const m = [];
+    for (let i = 0; i < nout; i++) {
+        const row = [];
+        for (let j = 0; j < nin; j++) {
+            row.push(new Value(randn(std)));
+        }
+        m.push(row);
+    }
+    return m;
+}
+
+function linear(x, w) {
+    const out = [];
+    for (let i = 0; i < w.length; i++) {
+        let sum = new Value(0);
+        for (let j = 0; j < x.length; j++) {
+            sum = sum.add(w[i][j].mul(x[j]));
+        }
+        out.push(sum);
+    }
+    return out;
+}
+
+function softmax(logits) {
+    const maxVal = Math.max(...logits.map(l => l.data));
+    const exps = logits.map(l => l.sub(maxVal).exp());
+    const total = sumVals(exps);
+    if (total.data === 0) return logits.map(l => new Value(1 / logits.length)); 
+    return exps.map(e => e.div(total));
+}
+
+function rmsnorm(x) {
+    const n = x.length;
+    let ms = new Value(0);
+    x.forEach(xi => { ms = ms.add(xi.mul(xi)); });
+    ms = ms.div(n);
+    
+    const eps = 1e-5;
+    const scale = ms.add(eps).pow(-0.5);
+    
+    return x.map(xi => xi.mul(scale));
+}
+
+// ==========================================
+// 5. Основная логика
+// ==========================================
+async function startTraining() {
+    const btn = document.getElementById('startBtn');
+    btn.disabled = true;
+    clearConsole();
+    
+    // Считывание параметров
+    seed = parseInt(document.getElementById('inputSeed').value);
+    const num_steps = parseInt(document.getElementById('inputSteps').value);
+    const learning_rate = parseFloat(document.getElementById('inputLR').value);
+    const temperature = parseFloat(document.getElementById('inputTemp').value);
+    const block_size = parseInt(document.getElementById('inputBlock').value); // Новый параметр
+    const fileInput = document.getElementById('inputFile');
+
+    print(`Настройки: Seed=${seed}, Steps=${num_steps}, BlockSize=${block_size}, LR=${learning_rate}`);
+    
+    let docs = [];
+    
+    // Загрузка данных
+    if (fileInput.files.length > 0) {
+        print("Чтение локального файла...");
+        const file = fileInput.files[0];
+        try {
+            const text = await file.text();
+            docs = text.trim().split('\n').map(l => l.trim()).filter(l => l);
+            print(`Прочитано ${docs.length} строк.`);
+        } catch (e) {
+            print("Ошибка чтения файла: " + e);
+        }
+    } else {
+        print("Загрузка из интернета...");
+        try {
+            const response = await fetch('https://raw.githubusercontent.com/karpathy/makemore/refs/heads/master/names.txt');
+            const text = await response.text();
+            docs = text.trim().split('\n').map(l => l.trim()).filter(l => l);
+        } catch (e) {
+            print("Ошибка сети. Используем демо.");
+            docs = ["emma", "olivia", "ava", "sophia", "isabella", "mia"];
+        }
+    }
+
+    if (docs.length === 0) {
+        print("Нет данных!");
+        btn.disabled = false;
+        return;
+    }
+    
+    shuffle(docs);
+    print(`кол-во документов: ${docs.length}`);
+
+    const ucharsSet = new Set();
+    docs.forEach(d => d.split('').forEach(c => ucharsSet.add(c)));
+    const uchars = Array.from(ucharsSet).sort();
+    
+    const BOS = uchars.length;
+    const vocab_size = uchars.length + 1;
+    print(`размер токенизатора: ${vocab_size}`);
+
+    const n_embd = 16;
+    const n_head = 4;
+    const n_layer = 1;
+    const head_dim = n_embd / n_head;
+
+    const state_dict = {
+        'wte': matrix(vocab_size, n_embd),
+        'wpe': matrix(block_size, n_embd), // Используем block_size
+        'lm_head': matrix(vocab_size, n_embd)
+    };
+
+    for (let i = 0; i < n_layer; i++) {
+        state_dict[`layer${i}.attn_wq`] = matrix(n_embd, n_embd);
+        state_dict[`layer${i}.attn_wk`] = matrix(n_embd, n_embd);
+        state_dict[`layer${i}.attn_wv`] = matrix(n_embd, n_embd);
+        state_dict[`layer${i}.attn_wo`] = matrix(n_embd, n_embd);
+        state_dict[`layer${i}.mlp_fc1`] = matrix(4 * n_embd, n_embd);
+        state_dict[`layer${i}.mlp_fc2`] = matrix(n_embd, 4 * n_embd);
+    }
+
+    const params = [];
+    Object.values(state_dict).forEach(mat => {
+        mat.forEach(row => {
+            row.forEach(val => params.push(val));
+        });
+    });
+    print(`количество параметров: ${params.length}`);
+
+    function gpt(token_id, pos_id, keys, values) {
+        const tok_emb = state_dict['wte'][token_id];
+        const pos_emb = state_dict['wpe'][pos_id]; // Если pos_id >= block_size, здесь будет ошибка
+        
+        let x = tok_emb.map((t, i) => t.add(pos_emb[i]));
+        x = rmsnorm(x);
+
+        for (let li = 0; li < n_layer; li++) {
+            const x_residual = x;
+            x = rmsnorm(x);
+
+            const q = linear(x, state_dict[`layer${li}.attn_wq`]);
+            const k = linear(x, state_dict[`layer${li}.attn_wk`]);
+            const v = linear(x, state_dict[`layer${li}.attn_wv`]);
+
+            keys[li].push(k);
+            values[li].push(v);
+
+            const x_attn_parts = [];
+            
+            for (let h = 0; h < n_head; h++) {
+                const hs = h * head_dim;
+                const he = hs + head_dim;
+                
+                const q_h = q.slice(hs, he);
+                const k_h = keys[li].map(k_vec => k_vec.slice(hs, he));
+                const v_h = values[li].map(v_vec => v_vec.slice(hs, he));
+
+                const attn_logits = [];
+                for (let t = 0; t < k_h.length; t++) {
+                    let dot = new Value(0);
+                    for(let j=0; j<head_dim; j++) {
+                        dot = dot.add(q_h[j].mul(k_h[t][j]));
+                    }
+                    attn_logits.push(dot.div(Math.sqrt(head_dim)));
+                }
+
+                const attn_weights = softmax(attn_logits);
+
+                const head_out = [];
+                for (let j = 0; j < head_dim; j++) {
+                    let sum = new Value(0);
+                    for (let t = 0; t < v_h.length; t++) {
+                        sum = sum.add(attn_weights[t].mul(v_h[t][j]));
+                    }
+                    head_out.push(sum);
+                }
+                x_attn_parts.push(...head_out);
+            }
+
+            x = linear(x_attn_parts, state_dict[`layer${li}.attn_wo`]);
+            x = x.map((xi, i) => xi.add(x_residual[i]));
+
+            const x_residual2 = x;
+            x = rmsnorm(x);
+            x = linear(x, state_dict[`layer${li}.mlp_fc1`]);
+            x = x.map(xi => xi.relu());
+            x = linear(x, state_dict[`layer${li}.mlp_fc2`]);
+            x = x.map((xi, i) => xi.add(x_residual2[i]));
+        }
+
+        const logits = linear(x, state_dict['lm_head']);
+        return logits;
+    }
+
+    const beta1 = 0.85;
+    const beta2 = 0.99;
+    const eps_adam = 1e-8;
+    const m = new Array(params.length).fill(0);
+    const v = new Array(params.length).fill(0);
+
+    print("Начинаем обучение...");
+    
+    for (let step = 0; step < num_steps; step++) {
+        const doc = docs[step % docs.length];
+        const tokens = [BOS, ...doc.split('').map(ch => uchars.indexOf(ch)), BOS];
+        
+        // Ограничиваем длину обучающей последовательности текущим block_size
+        const n = Math.min(block_size, tokens.length - 1);
+
+        const keys = Array.from({length: n_layer}, () => []);
+        const values = Array.from({length: n_layer}, () => []);
+        
+        const losses = [];
+
+        for (let pos_id = 0; pos_id < n; pos_id++) {
+            const token_id = tokens[pos_id];
+            const target_id = tokens[pos_id + 1];
+            
+            const logits = gpt(token_id, pos_id, keys, values);
+            const probs = softmax(logits);
+            
+            const prob_target = probs[target_id];
+            
+            losses.push(prob_target.log().mul(-1));
+        }
+
+        const loss = sumVals(losses).div(n);
+        
+        loss.backward();
+
+        const lr_t = learning_rate * (1 - step / num_steps);
+        
+        for (let i = 0; i < params.length; i++) {
+            const p = params[i];
+            const grad = p.grad;
+            
+            m[i] = beta1 * m[i] + (1 - beta1) * grad;
+            v[i] = beta2 * v[i] + (1 - beta2) * (grad ** 2);
+            
+            const m_hat = m[i] / (1 - beta1 ** (step + 1));
+            const v_hat = v[i] / (1 - beta2 ** (step + 1));
+            
+            p.data -= lr_t * m_hat / (Math.sqrt(v_hat) + eps_adam);
+            p.grad = 0;
+        }
+
+        if ((step + 1) % 50 === 0) {
+            print(`step ${step+1} / ${num_steps} | loss ${loss.data.toFixed(4)}`);
+            await new Promise(r => setTimeout(r, 0)); 
+        }
+    }
+
+    print("\n--- инференс ---");
+    
+    function weightedChoice(items, weights) {
+        const total = weights.reduce((a, b) => a + b, 0);
+        const r = Math.random() * total;
+        let sum = 0;
+        for (let i = 0; i < items.length; i++) {
+            sum += weights[i];
+            if (r <= sum) return items[i];
+        }
+        return items[items.length - 1];
+    }
+
+    for (let sample_idx = 0; sample_idx < 20; sample_idx++) {
+        const keys = Array.from({length: n_layer}, () => []);
+        const values = Array.from({length: n_layer}, () => []);
+        let token_id = BOS;
+        const sample = [];
+        
+        // Цикл генерации ограничен block_size
+        for (let pos_id = 0; pos_id < block_size; pos_id++) {
+            const logits = gpt(token_id, pos_id, keys, values);
+            
+            const scaledLogits = logits.map(l => l.div(temperature));
+            const probs = softmax(scaledLogits);
+            const weights = probs.map(p => p.data);
+            
+            token_id = weightedChoice([...Array(vocab_size).keys()], weights);
+            
+            if (token_id === BOS) break;
+            sample.push(uchars[token_id]);
+        }
+        print(`Образец ${sample_idx+1}: ${sample.join('')}`);
+        await new Promise(r => setTimeout(r, 10));
+    }
+
+    btn.disabled = false;
+}
+
+</script>
+</body>
+</html>
