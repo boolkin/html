@@ -670,7 +670,7 @@ async function startProcess() {
 
     for (let step = 0; step < num_steps; step++) {
         const doc = docs[step % docs.length];
-        const tokens = [BOS, ...doc.split('').map(ch => uchars.indexOf(ch)), BOS];
+        const tokens = [BOS, ...doc.split('').filter(ch => uchars.includes(ch)).map(ch => uchars.indexOf(ch)), BOS];
         const n = Math.min(config.block_size, tokens.length - 1);
 
         const keys = Array.from({length: config.n_layer}, () => []);
@@ -679,9 +679,15 @@ async function startProcess() {
 
         for (let pos_id = 0; pos_id < n; pos_id++) {
             const token_id = tokens[pos_id], target_id = tokens[pos_id + 1];
+            // Пропускаем невалидные target_id
+            if (target_id < 0 || target_id >= vocab_size) continue;
             const logits = gpt(token_id, pos_id, keys, values);
             const probs = softmax(logits);
             losses.push(probs[target_id].log().mul(-1));
+            if (!probs[target_id]) {
+                console.warn(`⚠️ probs[${target_id}] undefined | token_id: ${token_id} | char: "${uchars[target_id] || '?'}"`);
+                continue;
+            }
         }
 
         const loss = sumVals(losses).div(n);
