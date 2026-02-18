@@ -72,3 +72,5 @@ OPC2WEB - https://boolkin.github.io/html/Vibe/opc2web.html
 Поиск в базе данных SQLite - https://boolkin.github.io/html/Vibe/vfd/  
 
 microgpt - https://boolkin.github.io/html/Vibe/microgpt/  
+
+Regex - поиск по документу - https://boolkin.github.io/html/Vibe/Regex.html  
