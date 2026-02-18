@@ -2,200 +2,343 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPT Neural Network Lab</title>
     <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-panel: #252526;
+            --bg-section: #2d2d2d;
+            --border-color: #3e3e42;
+            --text-main: #ddd;
+            --text-dim: #aaa;
+            --accent: #4ec9b0;
+            --primary: #0e639c;
+            --sidebar-width: 480px;
+            --mobile-header-height: auto; /* Динамическая высота */
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e1e;
-            color: #ddd;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             margin: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
         }
 
-        /* Sidebar Layout */
+        /* --- Sidebar Layout (Desktop) --- */
         .sidebar {
-            width: 360px;
-            background-color: #252526;
+            width: var(--sidebar-width);
+            background-color: var(--bg-panel);
             padding: 20px;
-            border-right: 1px solid #444;
+            border-right: 1px solid var(--border-color);
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
+            align-content: start;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
         }
 
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #1e1e1e;
+            background: var(--bg-dark);
+            min-width: 0;
         }
 
-        /* Controls Styling */
-        h1 { font-size: 1.2rem; margin: 0 0 5px 0; color: #fff; }
-        .subtitle { font-size: 0.8rem; color: #888; margin-bottom: 10px; }
+        /* --- Mobile Header (Hidden on Desktop) --- */
+        .mobile-header {
+            display: none; /* Скрыт на ПК */
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            z-index: 1000; /* Выше чем у сайдбара */
+            background-color: var(--bg-panel);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 10px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .mobile-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mobile-header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* --- Overlay for mobile sidebar --- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* --- Helper Classes --- */
+        .full-width { grid-column: 1 / -1; }
+
+        /* --- Controls Styling --- */
+        h1 { font-size: 1.4rem; margin: 0; color: #fff; }
+        .subtitle { font-size: 0.85rem; color: #888; margin: 0; }
+        
+        /* В сайдбаре немного отступы другие */
+        .sidebar .header-block {
+            margin-bottom: 10px;
+        }
+        .sidebar .header-block .subtitle {
+            margin-top: 4px;
+        }
 
         .section {
-            background: #2d2d2d;
+            background: var(--bg-section);
             padding: 12px;
             border-radius: 6px;
-            border: 1px solid #3e3e42;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .section-title {
             font-size: 0.8rem;
             font-weight: bold;
-            color: #4ec9b0;
-            margin-bottom: 10px;
+            color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 1px;
-            display: flex;
-            justify-content: space-between;
         }
 
-        .control-group { margin-bottom: 10px; }
-        .control-group:last-child { margin-bottom: 0; }
-
+        .control-group { margin-bottom: 0; }
         .control-group label {
             display: block;
             font-size: 0.75rem;
-            color: #aaa;
-            margin-bottom: 3px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
         }
 
         .control-group input[type="number"],
         .control-group input[type="file"] {
             width: 100%;
-            padding: 5px;
+            padding: 8px;
             border-radius: 4px;
             border: 1px solid #555;
             background: #333;
             color: #fff;
             box-sizing: border-box;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px;
-            background: #333;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-section);
             border-radius: 4px;
             cursor: pointer;
+            border: 1px solid var(--accent);
         }
         .checkbox-group input { width: auto; transform: scale(1.2); }
-        .checkbox-group label { margin: 0; font-size: 0.9rem; color: #fff; cursor: pointer; font-weight: bold; }
+        .checkbox-group label { margin: 0; font-size: 1rem; color: #fff; cursor: pointer; font-weight: bold; }
 
         button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: bold;
             transition: background 0.2s;
+            white-space: nowrap; /* Чтобы текст кнопки не прыгал */
         }
 
-        .btn-primary { background-color: #0e639c; color: white; }
+        .btn-primary { background-color: var(--primary); color: white; }
         .btn-primary:hover { background-color: #1177bb; }
         .btn-primary:disabled { background-color: #555; cursor: not-allowed; }
 
-        .btn-secondary { background-color: #3e3e42; color: #ddd; font-size: 0.8rem; margin-top: 5px; }
+        .btn-secondary { background-color: #3e3e42; color: #ddd; font-size: 0.85rem; padding: 8px; }
         .btn-secondary:hover { background-color: #505055; }
+        
+        .btn-group { display: flex; flex-direction: column; gap: 5px; }
 
-        /* Console Styling */
+        /* --- Console Styling --- */
         #console {
             flex: 1;
             background-color: #000;
-            color: #0f0;
+            color: #ddd;
             padding: 15px;
             overflow-y: auto;
             white-space: pre-wrap;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            line-height: 1.4;
+            font-size: 1.1em;
+            line-height: 1.3;
         }
         
         .status-bar {
             background: #333;
-            padding: 5px 15px;
-            font-size: 0.75rem;
+            padding: 8px 15px;
+            font-size: 0.8rem;
             color: #888;
             border-top: 1px solid #444;
         }
 
-        /* Conditional visibility class */
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+
+        /* ==========================================
+           MOBILE ADAPTATION 
+           ========================================== */
+        @media (max-width: 800px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* --- Show Mobile Header --- */
+            .mobile-header {
+                display: flex;
+            }
+
+            /* Скрываем заголовок внутри сайдбара на мобильном, он теперь в хедере */
+            .sidebar .header-block {
+                display: none;
+            }
+            
+            /* Кнопки в хедере */
+            .mobile-header .btn-secondary {
+                flex: 1;
+            }
+            .mobile-header .btn-primary {
+                flex: 2;
+            }
+
+            /* --- Sidebar Transform to Drawer --- */
+            .sidebar {
+                position: fixed;
+                left: 0;
+                /* Прижимаем к низу хедера (приблизительно 100px) */
+                top: 0; 
+                padding-top: 150px; /* Место под Header, чтобы не перекрывал */
+                height: 80%;
+                width: 85%;
+                max-width: 400px;
+                z-index: 999; /* Ниже чем хедер */
+                transform: translateX(-100%);
+                grid-template-columns: 1fr;
+                border-right: none;
+                box-shadow: 4px 0 10px rgba(0,0,0,0.5);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            /* Кнопка "Запуск" внутри сайдбара на мобильном скрываем */
+            .sidebar #startBtn {
+                display: none;
+            }
+
+            /* --- Overlay Logic --- */
+            .sidebar-overlay.visible {
+                display: block;
+                opacity: 1;
+            }
+
+            /* --- Console Adjustments --- */
+            #console {
+                min-height: 300px;
+            }
+
+            .control-group input[type="number"] {
+                font-size: 16px;
+                padding: 10px;
+            }
+            
+            .full-width {
+                grid-column: 1;
+            }
+        }
     </style>
 </head>
 <body>
 
+<!-- Overlay (dimmed background) -->
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
 <!-- Left Sidebar -->
-<div class="sidebar">
-    <div>
-        <h1>GPT Lab</h1>
-        <div class="subtitle">Конструктор и обучатель нейросети</div>
+<div class="sidebar" id="sidebar">
+    <!-- Header Block (Visible only on Desktop) -->
+    <div class="full-width header-block">
+        <h1>MicroGPT on JS</h1>
+        <div class="subtitle">Попробуй обучить свою нейросеть (сделано из <a href="https://habr.com/ru/articles/996404/" target="_blank">microgpt)</a></div>
     </div>
 
     <!-- Mode Toggle -->
-    <div class="section">
+    <div class="section full-width" style="padding:0; border:none; background: transparent;">
         <div class="checkbox-group" onclick="toggleTrainMode()">
-            <input type="checkbox" id="chkTrain" onchange="toggleTrainMode()">
+            <input type="checkbox" id="chkTrain" onchange="updateButtonLabels()">
             <label for="chkTrain">Режим обучения</label>
         </div>
     </div>
 
-    <!-- Architecture Params (Visible only if Train Mode) -->
+    <!-- Architecture Params -->
     <div class="section" id="sectArch">
-        <div class="section-title">Архитектура модели</div>
+        <div class="section-title">Архитектура</div>
         <div class="control-group">
-            <label>Block Size (Длина контекста)</label>
+            <label>Block Size</label>
             <input type="number" id="inputBlock" value="16" step="1">
         </div>
         <div class="control-group">
-            <label>Размер эмбеддинга (n_embd)</label>
+            <label>n_embd</label>
             <input type="number" id="inputEmbd" value="16" step="1">
         </div>
         <div class="control-group">
-            <label>Количество голов внимания (n_head)</label>
+            <label>n_head</label>
             <input type="number" id="inputHeads" value="4" step="1">
         </div>
         <div class="control-group">
-            <label>Количество слоев (n_layer)</label>
+            <label>n_layer</label>
             <input type="number" id="inputLayers" value="1" step="1">
         </div>
     </div>
 
-    <!-- Training Params (Visible only if Train Mode) -->
+    <!-- Training Params -->
     <div class="section" id="sectTrain">
-        <div class="section-title">Параметры обучения</div>
+        <div class="section-title">Обучение</div>
         <div class="control-group">
-            <label>Seed (Случайное зерно)</label>
+            <label>Seed</label>
             <input type="number" id="inputSeed" value="42">
         </div>
         <div class="control-group">
-            <label>Шаги обучения (Steps)</label>
+            <label>Steps</label>
             <input type="number" id="inputSteps" value="1000" step="100">
         </div>
         <div class="control-group">
-            <label>Learning Rate (Скорость)</label>
+            <label>Learning Rate</label>
             <input type="number" id="inputLR" value="0.01" step="0.001">
         </div>
-        <div class="control-group" style="margin-top:10px;">
-            <label>Файл данных (names.txt)</label>
+        <div class="control-group" style="margin-top:5px;">
+            <label>Файл данных</label>
             <input type="file" id="inputFile" accept=".txt">
         </div>
     </div>
 
-    <!-- Generation Params (Always Visible) -->
+    <!-- Generation Params -->
     <div class="section">
         <div class="section-title">Генерация</div>
         <div class="control-group">
-            <label>Temperature (Креативность)</label>
+            <label>Temperature</label>
             <input type="number" id="inputTemp" value="0.5" step="0.1">
         </div>
         <div class="control-group">
@@ -206,17 +349,35 @@
 
     <!-- Weights Management -->
     <div class="section">
-        <div class="section-title">Управление весами</div>
-        <button class="btn-secondary" onclick="exportWeights()">Экспорт весов (JSON)</button>
-        <button class="btn-secondary" onclick="triggerImport()">Импорт весов (JSON)</button>
-        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importWeights(this)">
+        <div class="section-title">Веса</div>
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="exportWeights()">Экспорт (JSON)</button>
+            <button class="btn-secondary" onclick="triggerImport()">Импорт (JSON)</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importWeights(this)">
+        </div>
     </div>
 
-    <button id="startBtn" class="btn-primary" onclick="startProcess()">Запуск</button>
+    <!-- Start Button (Visible only on Desktop via CSS) -->
+    <button id="startBtn" class="btn-primary full-width" onclick="startProcess()">Запуск</button>
 </div>
 
-<!-- Main Content -->
+<!-- Main Content Area -->
 <div class="main-content">
+    
+    <!-- Mobile Top Bar -->
+    <div class="mobile-header">
+        <div class="mobile-header-content">
+            <div>
+                <h1>MicroGPT on JS</h1>
+                <div class="subtitle">Попробуй обучить свою нейросеть (сделано из <a href="https://habr.com/ru/articles/996404/" target="_blank">microgpt)</a></div>
+            </div>
+        </div>
+        <div class="mobile-header-buttons">
+            <button class="btn-secondary" onclick="toggleSidebar()">⚙️ Настройки</button>
+            <button id="mobileStartBtn" class="btn-primary" onclick="startProcess()">▶ Запуск</button>
+        </div>
+    </div>
+
     <div id="console"></div>
     <div class="status-bar" id="statusBar">Готов к работе</div>
 </div>
@@ -227,6 +388,11 @@
 // ==========================================
 const consoleEl = document.getElementById('console');
 const statusEl = document.getElementById('statusBar');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+const chkTrain = document.getElementById('chkTrain');
+const startBtnDesktop = document.getElementById('startBtn');
+const startBtnMobile = document.getElementById('mobileStartBtn');
 
 function print(text) {
     const div = document.createElement('div');
@@ -238,9 +404,28 @@ function print(text) {
 function clearConsole() { consoleEl.innerHTML = ''; }
 function setStatus(text) { statusEl.textContent = text; }
 
+// Toggle Sidebar (Mobile)
+function toggleSidebar() {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+}
+
+// Update Button Labels based on Mode
+function updateButtonLabels() {
+    const isTrain = chkTrain.checked;
+    const text = isTrain ? "🚀 Запуск обучения" : "✨ Запуск генерации";
+    
+    startBtnDesktop.textContent = text;
+    startBtnMobile.textContent = text;
+}
+
 // Toggle UI sections visibility
 function toggleTrainMode() {
-    const isTrain = document.getElementById('chkTrain').checked;
+    // Синхронизируем чекбокс (на случай вызова из label)
+    // chkTrain.checked уже обновлен браузером до вызова onchange, 
+    // но если вызывать функцию вручную, нужно быть аккуратным.
+    
+    const isTrain = chkTrain.checked;
     const sectArch = document.getElementById('sectArch');
     const sectTrain = document.getElementById('sectTrain');
     
@@ -251,9 +436,12 @@ function toggleTrainMode() {
         sectArch.classList.add('hidden');
         sectTrain.classList.add('hidden');
     }
+    
+    updateButtonLabels();
 }
-// Initialize visibility
-toggleTrainMode();
+
+// Initialize UI state
+toggleTrainMode(); 
 
 // ==========================================
 // 2. Random (Seeded)
@@ -377,7 +565,6 @@ let config = {
 };
 
 function initModel(vocab, newConfig) {
-    // Update global config
     config = newConfig;
     
     uchars = vocab;
@@ -410,9 +597,8 @@ function gpt(token_id, pos_id, keys, values) {
     const { n_layer, n_head, n_embd, block_size } = config;
     const head_dim = n_embd / n_head;
     
-    // Safety checks
-    if (token_id >= vocab_size) token_id = BOS; // fallback
-    if (pos_id >= block_size) pos_id = block_size - 1; // clamp position
+    if (token_id >= vocab_size) token_id = BOS;
+    if (pos_id >= block_size) pos_id = block_size - 1;
 
     let x = state_dict['wte'][token_id].map((t, i) => t.add(state_dict['wpe'][pos_id][i]));
     x = rmsnorm(x);
@@ -496,27 +682,22 @@ function loadFromLocalStorage() {
     try {
         const data = JSON.parse(json);
         if (data.vocab && data.weights && data.config) {
-            // Restore config
             config = data.config;
             
-            // Restore UI from loaded config
             document.getElementById('inputBlock').value = config.block_size;
             document.getElementById('inputEmbd').value = config.n_embd;
             document.getElementById('inputHeads').value = config.n_head;
             document.getElementById('inputLayers').value = config.n_layer;
 
-            // Restore vocab
             uchars = data.vocab;
             BOS = uchars.length;
             vocab_size = uchars.length + 1;
             
-            // Restore weights
             state_dict = {};
             for (const [key, matData] of Object.entries(data.weights)) {
                 state_dict[key] = matData.map(row => row.map(val => new Value(val)));
             }
             
-            // Update params list
             params = [];
             Object.values(state_dict).forEach(mat => mat.forEach(row => row.forEach(val => params.push(val))));
             
@@ -554,7 +735,6 @@ function importWeights(input) {
         try {
             const data = JSON.parse(e.target.result);
             if (data.vocab && data.weights && data.config) {
-                // Restore everything
                 config = data.config;
                 uchars = data.vocab;
                 BOS = uchars.length;
@@ -568,7 +748,6 @@ function importWeights(input) {
                 params = [];
                 Object.values(state_dict).forEach(mat => mat.forEach(row => row.forEach(val => params.push(val))));
                 
-                // Update UI
                 document.getElementById('inputBlock').value = config.block_size;
                 document.getElementById('inputEmbd').value = config.n_embd;
                 document.getElementById('inputHeads').value = config.n_head;
@@ -577,7 +756,12 @@ function importWeights(input) {
                 localStorage.setItem('gpt_model', JSON.stringify(data));
                 
                 print(`Импортирована модель: ${config.n_layer} слоев, ${config.n_embd} эмбеддинг.`);
-                alert("Веса успешно загружены! Теперь можете запустить генерацию (уберите галочку 'Обучать').");
+                alert("Веса успешно загружены! Теперь можете запустить генерацию.");
+                
+                // Автоматически переключаемся в режим генерации
+                chkTrain.checked = false;
+                toggleTrainMode();
+                toggleSidebar(); // Закрываем меню после импорта
             } else {
                 alert("Неверный формат файла.");
             }
@@ -593,11 +777,18 @@ function importWeights(input) {
 // 6. Main Logic
 // ==========================================
 async function startProcess() {
+    // Закрываем сайдбар при запуске
+    if (window.innerWidth <= 800 && sidebar.classList.contains('open')) {
+        toggleSidebar();
+    }
+
     const btn = document.getElementById('startBtn');
     btn.disabled = true;
+    startBtnMobile.disabled = true; // Блокируем обе кнопки
+    
     clearConsole();
     
-    const isTrain = document.getElementById('chkTrain').checked;
+    const isTrain = chkTrain.checked;
     
     // If Generation Only Mode
     if (!isTrain) {
@@ -608,6 +799,7 @@ async function startProcess() {
             if (!loadFromLocalStorage()) {
                 print("Ошибка: Веса не найдены. Включите обучение или импортируйте веса.");
                 btn.disabled = false;
+                startBtnMobile.disabled = false;
                 return;
             }
         }
@@ -615,13 +807,13 @@ async function startProcess() {
         print(`Модель загружена. Архитектура: Layers=${config.n_layer}, Embd=${config.n_embd}, Heads=${config.n_head}.`);
         await generateNames();
         btn.disabled = false;
+        startBtnMobile.disabled = false;
         return;
     }
 
     // --- Training Mode ---
     print("Режим: Обучение.");
     
-    // Read Configuration from UI
     const newConfig = {
         block_size: parseInt(document.getElementById('inputBlock').value),
         n_embd: parseInt(document.getElementById('inputEmbd').value),
@@ -629,10 +821,10 @@ async function startProcess() {
         n_layer: parseInt(document.getElementById('inputLayers').value)
     };
 
-    // Basic Validation
     if (newConfig.n_embd % newConfig.n_head !== 0) {
         alert("Ошибка: Размер эмбеддинга должен делиться на количество голов без остатка!");
         btn.disabled = false;
+        startBtnMobile.disabled = false;
         return;
     }
 
@@ -679,15 +871,10 @@ async function startProcess() {
 
         for (let pos_id = 0; pos_id < n; pos_id++) {
             const token_id = tokens[pos_id], target_id = tokens[pos_id + 1];
-            // Пропускаем невалидные target_id
             if (target_id < 0 || target_id >= vocab_size) continue;
             const logits = gpt(token_id, pos_id, keys, values);
             const probs = softmax(logits);
             losses.push(probs[target_id].log().mul(-1));
-            if (!probs[target_id]) {
-                console.warn(`⚠️ probs[${target_id}] undefined | token_id: ${token_id} | char: "${uchars[target_id] || '?'}"`);
-                continue;
-            }
         }
 
         const loss = sumVals(losses).div(n);
@@ -715,8 +902,14 @@ async function startProcess() {
     print("Обучение завершено.");
     saveToLocalStorage();
     
+    // Автоматическое переключение на генерацию после обучения
+    chkTrain.checked = false;
+    toggleTrainMode();
+    
     await generateNames();
+    
     btn.disabled = false;
+    startBtnMobile.disabled = false;
 }
 
 async function generateNames() {
