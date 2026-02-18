@@ -131,6 +131,7 @@
         }
 
         .control-group input[type="number"],
+        .control-group input[type="text"],
         .control-group input[type="file"] {
             width: 100%;
             padding: 8px;
@@ -356,6 +357,11 @@
             <label>Кол-во имен</label>
             <input type="number" id="inputCount" value="20" step="5">
         </div>
+        <div class="control-group">
+        <label>Префикс (начало имени)</label>
+        <input type="text" id="inputPrefix" value="" placeholder="Например: ale, mar" maxlength="10">
+        <small style="color:var(--text-dim); font-size:0.7rem;">Неизвестные символы будут пропущены</small>
+    </div>
     </div>
 
     <!-- Weights Management -->
@@ -923,11 +929,17 @@ async function startProcess() {
     startBtnMobile.disabled = false;
 }
 
+document.getElementById('inputPrefix').value = ""; // очистка префикса при перезагрузке
+
 async function generateNames() {
     const temperature = parseFloat(document.getElementById('inputTemp').value);
     const count = parseInt(document.getElementById('inputCount').value);
+    const prefixInput = document.getElementById('inputPrefix').value.trim();
     
     print(`\n--- Генерация (${count} имен, T=${temperature}) ---`);
+    if (prefixInput) {
+        print(`Префикс: "${prefixInput}"`);
+    }
 
     function weightedChoice(items, weights) {
         const total = weights.reduce((a, b) => a + b, 0);
@@ -943,21 +955,62 @@ async function generateNames() {
     for (let s = 0; s < count; s++) {
         const keys = Array.from({length: config.n_layer}, () => []);
         const values = Array.from({length: config.n_layer}, () => []);
+        
+        // Начальные значения
         let token_id = BOS;
+        let pos_id = 0;
         const sample = [];
         
-        for (let pos_id = 0; pos_id < config.block_size; pos_id++) {
+        // === ОБРАБОТКА ПРЕФИКСА ===
+        if (prefixInput) {
+            const validPrefix = [];
+            // Валидация символов префикса по словарю
+            for (let ch of prefixInput) {
+                const idx = uchars.indexOf(ch);
+                if (idx !== -1) {
+                    validPrefix.push(idx);
+                } else {
+                    print(`⚠ Символ "${ch}" не в словаре, пропущен`);
+                }
+            }
+            
+            // "Прогоняем" валидный префикс через модель для заполнения KV-кэша
+            for (let i = 0; i < validPrefix.length; i++) {
+                if (pos_id >= config.block_size) {
+                    print(`⚠ Префикс обрезан из-за ограничения block_size`);
+                    break;
+                }
+                // Обновляем кэш модели, подавая текущий токен на текущей позиции
+                gpt(token_id, pos_id, keys, values);
+                // Добавляем символ префикса в результат
+                sample.push(uchars[validPrefix[i]]);
+                // Готовимся к следующей итерации: следующий токен становится входным
+                token_id = validPrefix[i];
+                pos_id++;
+            }
+        }
+        
+        // === ОСНОВНАЯ ГЕНЕРАЦИЯ (продолжение после префикса) ===
+        for (; pos_id < config.block_size; pos_id++) {
             const logits = gpt(token_id, pos_id, keys, values);
             const scaledLogits = logits.map(l => l.div(temperature));
             const probs = softmax(scaledLogits);
             const weights = probs.map(p => p.data);
             
-            token_id = weightedChoice([...Array(vocab_size).keys()], weights);
+            // Сэмплируем следующий токен
+            const next_token_id = weightedChoice([...Array(vocab_size).keys()], weights);
             
-            if (token_id === BOS) break;
-            sample.push(uchars[token_id]);
+            // BOS = конец последовательности
+            if (next_token_id === BOS) break;
+            
+            sample.push(uchars[next_token_id]);
+            token_id = next_token_id; // для следующей итерации
         }
-        print(`${s+1}. ${sample.join('')}`);
+        
+        const result = sample.join('');
+        print(`${s+1}. ${result || '(пусто)'}`);
+        
+        // Небольшая пауза для отзывчивости UI
         if(s % 5 === 0) await new Promise(r => setTimeout(r, 0));
     }
 }
