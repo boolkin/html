@@ -26,7 +26,9 @@
             min-height: 100vh;
             display: flex;
         }
-
+        a {
+            color: rgb(0, 183, 255); /* Цвет ссылок */
+        }
         /* --- Sidebar Layout (Desktop) --- */
         .sidebar {
             width: var(--sidebar-width);
@@ -285,7 +287,7 @@
     </div>
 
     <!-- Mode Toggle -->
-    <div class="section full-width" style="padding:0; border:none; background: transparent;">
+    <div class="section full-width" style="padding:0; border:none; background: transparent;" onclick="toggleTrainMode()">
         <div class="checkbox-group" onclick="toggleTrainMode()">
             <input type="checkbox" id="chkTrain" onchange="updateButtonLabels()">
             <label for="chkTrain">Режим обучения</label>
