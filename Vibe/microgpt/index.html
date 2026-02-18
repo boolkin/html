@@ -1,1019 +1,1008 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPT Neural Network Lab</title>
-    <style>
-        :root {
-            --bg-dark: #1e1e1e;
-            --bg-panel: #252526;
-            --bg-section: #2d2d2d;
-            --border-color: #3e3e42;
-            --text-main: #ddd;
-            --text-dim: #aaa;
-            --accent: #4ec9b0;
-            --primary: #0e639c;
-            --sidebar-width: 480px;
-            --mobile-header-height: auto; /* Динамическая высота */
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-        }
-        a {
-            color: rgb(0, 183, 255); /* Цвет ссылок */
-        }
-        /* --- Sidebar Layout (Desktop) --- */
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--bg-panel);
-            padding: 20px;
-            border-right: 1px solid var(--border-color);
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            align-content: start;
-            flex-shrink: 0;
-            transition: transform 0.3s ease;
-        }
-
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-dark);
-            min-width: 0;
-        }
-
-        /* --- Mobile Header (Hidden on Desktop) --- */
-        .mobile-header {
-            display: none; /* Скрыт на ПК */
-            flex-direction: column;
-            position: sticky;
-            top: 0;
-            z-index: 1000; /* Выше чем у сайдбара */
-            background-color: var(--bg-panel);
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
-            gap: 10px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .mobile-header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .mobile-header-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* --- Overlay for mobile sidebar --- */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 998;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        /* --- Helper Classes --- */
-        .full-width { grid-column: 1 / -1; }
-
-        /* --- Controls Styling --- */
-        h1 { font-size: 1.4rem; margin: 0; color: #fff; }
-        .subtitle { font-size: 0.85rem; color: #888; margin: 0; }
-        
-        /* В сайдбаре немного отступы другие */
-        .sidebar .header-block {
-            margin-bottom: 10px;
-        }
-        .sidebar .header-block .subtitle {
-            margin-top: 4px;
-        }
-
-        .section {
-            background: var(--bg-section);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .section-title {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .control-group { margin-bottom: 0; }
-        .control-group label {
-            display: block;
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            margin-bottom: 4px;
-        }
-
-        .control-group input[type="number"],
-        .control-group input[type="text"],
-        .control-group input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #555;
-            background: #333;
-            color: #fff;
-            box-sizing: border-box;
-            font-size: 0.9rem;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: var(--bg-section);
-            border-radius: 4px;
-            cursor: pointer;
-            border: 1px solid var(--accent);
-        }
-        .checkbox-group input { width: auto; transform: scale(1.2); }
-        .checkbox-group label { 
-            margin: 0; 
-            font-size: 1rem; 
-            color: #fff; 
-            cursor: pointer; 
-            font-weight: bold; 
-
-            display: block;
-            width: 100%;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: background 0.2s;
-            white-space: nowrap; /* Чтобы текст кнопки не прыгал */
-        }
-
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: #1177bb; }
-        .btn-primary:disabled { background-color: #555; cursor: not-allowed; }
-
-        .btn-secondary { background-color: #3e3e42; color: #ddd; font-size: 0.85rem; padding: 8px; }
-        .btn-secondary:hover { background-color: #505055; }
-        
-        .btn-group { display: flex; flex-direction: column; gap: 5px; }
-
-        /* --- Console Styling --- */
-        #console {
-            flex: 1;
-            background-color: #000;
-            color: #ddd;
-            padding: 15px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.1em;
-            line-height: 1.3;
-        }
-        
-        .status-bar {
-            background: #333;
-            padding: 8px 15px;
-            font-size: 0.8rem;
-            color: #888;
-            border-top: 1px solid #444;
-        }
-
-        .hidden { display: none !important; }
-
-        /* ==========================================
-           MOBILE ADAPTATION 
-           ========================================== */
-        @media (max-width: 800px) {
-            body {
-                flex-direction: column;
-            }
-
-            /* --- Show Mobile Header --- */
-            .mobile-header {
-                display: flex;
-            }
-
-            /* Скрываем заголовок внутри сайдбара на мобильном, он теперь в хедере */
-            .sidebar .header-block {
-                display: none;
-            }
-            
-            /* Кнопки в хедере */
-            .mobile-header .btn-secondary {
-                flex: 1;
-            }
-            .mobile-header .btn-primary {
-                flex: 2;
-            }
-
-            /* --- Sidebar Transform to Drawer --- */
-            .sidebar {
-                position: fixed;
-                left: 0;
-                /* Прижимаем к низу хедера (приблизительно 100px) */
-                top: 0; 
-                padding-top: 150px; /* Место под Header, чтобы не перекрывал */
-                height: 80%;
-                width: 85%;
-                max-width: 400px;
-                z-index: 999; /* Ниже чем хедер */
-                transform: translateX(-100%);
-                grid-template-columns: 1fr;
-                border-right: none;
-                box-shadow: 4px 0 10px rgba(0,0,0,0.5);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            /* Кнопка "Запуск" внутри сайдбара на мобильном скрываем */
-            .sidebar #startBtn {
-                display: none;
-            }
-
-            /* --- Overlay Logic --- */
-            .sidebar-overlay.visible {
-                display: block;
-                opacity: 1;
-            }
-
-            /* --- Console Adjustments --- */
-            #console {
-                min-height: 300px;
-            }
-
-            .control-group input[type="number"] {
-                font-size: 16px;
-                padding: 10px;
-            }
-            
-            .full-width {
-                grid-column: 1;
-            }
-        }
-    </style>
+    <script src="chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<!-- Overlay (dimmed background) -->
-<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <!-- Overlay (dimmed background) -->
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<!-- Left Sidebar -->
-<div class="sidebar" id="sidebar">
-    <!-- Header Block (Visible only on Desktop) -->
-    <div class="full-width header-block">
-        <h1>MicroGPT on JS</h1>
-        <div class="subtitle">Попробуй обучить свою нейросеть (сделано из <a href="https://habr.com/ru/articles/996404/" target="_blank">microgpt)</a></div>
-    </div>
+    <!-- Left Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <!-- Header Block (Visible only on Desktop) -->
+        <div class="full-width header-block">
+            <h1>MicroGPT on JS</h1>
+            <div class="subtitle"><big>Попробуй обучить свою нейросеть</big><br>Cделано на основе <a
+                    href="https://habr.com/ru/articles/996404/" target="_blank">microgpt</a></div>
+        </div>
 
-    <!-- Mode Toggle -->
-    <div class="section full-width" style="padding:0; border:none; background: transparent;" onclick="toggleTrainMode()">
-        <div class="checkbox-group" >
-            <input type="checkbox" id="chkTrain" onchange="updateButtonLabels()">
-            <label for="chkTrain">Режим обучения</label>
-        </div>
-    </div>
-
-    <!-- Architecture Params -->
-    <div class="section" id="sectArch">
-        <div class="section-title">Архитектура</div>
-        <div class="control-group">
-            <label>Block Size</label>
-            <input type="number" id="inputBlock" value="16" step="1">
-        </div>
-        <div class="control-group">
-            <label>n_embd</label>
-            <input type="number" id="inputEmbd" value="16" step="1">
-        </div>
-        <div class="control-group">
-            <label>n_head</label>
-            <input type="number" id="inputHeads" value="4" step="1">
-        </div>
-        <div class="control-group">
-            <label>n_layer</label>
-            <input type="number" id="inputLayers" value="1" step="1">
-        </div>
-    </div>
-
-    <!-- Training Params -->
-    <div class="section" id="sectTrain">
-        <div class="section-title">Обучение</div>
-        <div class="control-group">
-            <label>Seed</label>
-            <input type="number" id="inputSeed" value="42">
-        </div>
-        <div class="control-group">
-            <label>Steps</label>
-            <input type="number" id="inputSteps" value="1000" step="100">
-        </div>
-        <div class="control-group">
-            <label>Learning Rate</label>
-            <input type="number" id="inputLR" value="0.01" step="0.001">
-        </div>
-        <div class="control-group" style="margin-top:5px;">
-            <label>Файл данных</label>
-            <input type="file" id="inputFile" accept=".txt">
-        </div>
-    </div>
-
-    <!-- Generation Params -->
-    <div class="section">
-        <div class="section-title">Генерация</div>
-        <div class="control-group">
-            <label>Temperature</label>
-            <input type="number" id="inputTemp" value="0.5" step="0.1">
-        </div>
-        <div class="control-group">
-            <label>Кол-во имен</label>
-            <input type="number" id="inputCount" value="20" step="5">
-        </div>
-        <div class="control-group">
-        <label>Префикс (начало имени)</label>
-        <input type="text" id="inputPrefix" value="" placeholder="Например: Бор, Ал" maxlength="16">
-        <small style="color:var(--text-dim); font-size:0.7rem;">Неизвестные символы будут пропущены, учитывается регистр</small>
-    </div>
-    </div>
-
-    <!-- Weights Management -->
-    <div class="section">
-        <div class="section-title">Веса</div>
-        <div class="btn-group">
-            <button class="btn-secondary" onclick="exportWeights()">Экспорт (JSON)</button>
-            <button class="btn-secondary" onclick="triggerImport()">Импорт (JSON)</button>
-            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importWeights(this)">
-        </div>
-    </div>
-
-    <!-- Start Button (Visible only on Desktop via CSS) -->
-    <button id="startBtn" class="btn-primary full-width" onclick="startProcess()">Запуск</button>
-</div>
-
-<!-- Main Content Area -->
-<div class="main-content">
-    
-    <!-- Mobile Top Bar -->
-    <div class="mobile-header">
-        <div class="mobile-header-content">
-            <div>
-                <h1>MicroGPT on JS</h1>
-                <div class="subtitle">Попробуй обучить свою нейросеть (сделано из <a href="https://habr.com/ru/articles/996404/" target="_blank">microgpt)</a></div>
+        <!-- Mode Toggle -->
+        <div class="section full-width" style="padding:0; border:none; background: transparent;"
+            onclick="toggleTrainMode()">
+            <div class="checkbox-group">
+                <input type="checkbox" id="chkTrain" onchange="updateButtonLabels()">
+                <label for="chkTrain">Режим обучения</label>
             </div>
         </div>
-        <div class="mobile-header-buttons">
-            <button class="btn-secondary" onclick="toggleSidebar()">⚙️ Настройки</button>
-            <button id="mobileStartBtn" class="btn-primary" onclick="startProcess()">▶ Запуск</button>
+
+        <!-- Architecture Params -->
+        <div class="section" id="sectArch">
+            <div class="section-title">Архитектура</div>
+            <div class="control-group">
+                <label>Block Size</label>
+                <input type="number" id="inputBlock" value="16" step="1">
+            </div>
+            <div class="control-group">
+                <label>n_embd</label>
+                <input type="number" id="inputEmbd" value="16" step="1">
+            </div>
+            <div class="control-group">
+                <label>n_head</label>
+                <input type="number" id="inputHeads" value="4" step="1">
+            </div>
+            <div class="control-group">
+                <label>n_layer</label>
+                <input type="number" id="inputLayers" value="1" step="1">
+            </div>
+        </div>
+
+        <!-- Training Params -->
+        <div class="section" id="sectTrain">
+            <div class="section-title">Обучение</div>
+            <div class="control-group">
+                <label>Seed</label>
+                <input type="number" id="inputSeed" value="42">
+            </div>
+            <div class="control-group">
+                <label>Steps</label>
+                <input type="number" id="inputSteps" value="1000" step="100">
+            </div>
+            <div class="control-group">
+                <label>Learning Rate</label>
+                <input type="number" id="inputLR" value="0.01" step="0.001">
+            </div>
+            <div class="control-group" style="margin-top:5px;">
+                <label>Файл данных</label>
+                <input type="file" id="inputFile" accept=".txt">
+            </div>
+        </div>
+
+        <!-- Generation Params -->
+        <div class="section">
+            <div class="section-title">Генерация</div>
+            <div class="control-group">
+                <label>Temperature</label>
+                <input type="number" id="inputTemp" value="0.5" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Кол-во имен</label>
+                <input type="number" id="inputCount" value="20" step="5">
+            </div>
+            <div class="control-group">
+                <label>Префикс (начало имени)</label>
+                <input type="text" id="inputPrefix" value="" placeholder="Например: Бор, Ал" maxlength="16">
+                <small style="color:var(--text-dim); font-size:0.7rem;">Неизвестные символы будут пропущены, учитывается
+                    регистр</small>
+            </div>
+        </div>
+
+        <!-- Weights Management -->
+        <div class="section">
+            <div class="section-title">Прочее</div>
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="openChartModal()">Показать график обучения</button>
+            </div>
+            <div class="control-group">
+                <label>Вывод в консоль</label>
+                <input type="number" id="ConsoleCount" value="10" step="5">
+                <small style="color:var(--text-dim); font-size:0.7rem;">Выводить в консоль каждый n шаг при
+                    обучении</small>
+            </div>
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="exportWeights()">Экспорт (JSON)</button>
+                <button class="btn-secondary" onclick="triggerImport()">Импорт (JSON)</button>
+                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importWeights(this)">
+            </div>
+        </div>
+
+        <!-- Start Button (Visible only on Desktop via CSS) -->
+        <button id="startBtn" class="btn-primary full-width" onclick="startProcess()">Запуск</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+
+        <!-- Mobile Top Bar -->
+        <div class="mobile-header">
+            <div class="mobile-header-content">
+                <div>
+                    <h1>MicroGPT on JS</h1>
+                    <div class="subtitle">Попробуй обучить свою нейросеть (сделано из <a
+                            href="https://habr.com/ru/articles/996404/" target="_blank">microgpt)</a></div>
+                </div>
+            </div>
+            <div class="mobile-header-buttons">
+                <button class="btn-secondary" onclick="toggleSidebar()">⚙️ Настройки</button>
+                <button id="mobileStartBtn" class="btn-primary" onclick="startProcess()">▶ Запуск</button>
+            </div>
+        </div>
+
+        <div id="console"></div>
+        <div class="status-bar" id="statusBar">Готов к работе</div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📉 График обучения (Step vs Loss)</h3>
+                <span class="close-btn" onclick="closeChartModal()">&times;</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="lossChart"></canvas>
+            </div>
+            <!-- Кнопки действий -->
+            <div class="modal-actions">
+                <button class="btn-save" onclick="saveChartAsImage()">
+                    💾 Сохранить график (PNG)
+                </button>
+            </div>
+
         </div>
     </div>
 
-    <div id="console"></div>
-    <div class="status-bar" id="statusBar">Готов к работе</div>
-</div>
+    <script>
+        let myChart = null;
+        function openChartModal() {
+            const modal = document.getElementById('chartModal');
+            modal.style.display = "block";
+            document.body.style.overflow = "hidden";
+            drawChart();
+        }
 
-<script>
-// ==========================================
-// 1. Core Utils & UI
-// ==========================================
-const consoleEl = document.getElementById('console');
-const statusEl = document.getElementById('statusBar');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const chkTrain = document.getElementById('chkTrain');
-const startBtnDesktop = document.getElementById('startBtn');
-const startBtnMobile = document.getElementById('mobileStartBtn');
+        function closeChartModal() {
+            const modal = document.getElementById('chartModal');
+            modal.style.display = "none";
+            document.body.style.overflow = "auto";
+        }
 
-function print(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    consoleEl.appendChild(div);
-    consoleEl.scrollTop = consoleEl.scrollHeight;
-}
-
-function clearConsole() { consoleEl.innerHTML = ''; }
-function setStatus(text) { statusEl.textContent = text; }
-
-// Toggle Sidebar (Mobile)
-function toggleSidebar() {
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('visible');
-}
-
-// Update Button Labels based on Mode
-function updateButtonLabels() {
-    const isTrain = chkTrain.checked;
-    const text = isTrain ? "🚀 Запуск обучения" : "✨ Запуск генерации";
-    
-    startBtnDesktop.textContent = text;
-    startBtnMobile.textContent = text;
-}
-
-// Toggle UI sections visibility
-function toggleTrainMode() {
-    // Синхронизируем чекбокс (на случай вызова из label)
-    // chkTrain.checked уже обновлен браузером до вызова onchange, 
-    // но если вызывать функцию вручную, нужно быть аккуратным.
-    
-    const isTrain = chkTrain.checked;
-    const sectArch = document.getElementById('sectArch');
-    const sectTrain = document.getElementById('sectTrain');
-    
-    if (isTrain) {
-        sectArch.classList.remove('hidden');
-        sectTrain.classList.remove('hidden');
-    } else {
-        sectArch.classList.add('hidden');
-        sectTrain.classList.add('hidden');
-    }
-    
-    updateButtonLabels();
-}
-
-// Initialize UI state
-toggleTrainMode(); 
-
-// ==========================================
-// 2. Random (Seeded)
-// ==========================================
-let seed = 42;
-function random() {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
-}
-function gaussRandom() {
-    let u = 0, v = 0;
-    while(u === 0) u = random();
-    while(v === 0) v = random();
-    return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
-}
-function randn(std = 1) { return gaussRandom() * std; }
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
-// ==========================================
-// 3. Autograd Engine
-// ==========================================
-class Value {
-    constructor(data, children = [], localGrads = []) {
-        this.data = data;
-        this.grad = 0;
-        this._children = children;
-        this._localGrads = localGrads;
-    }
-
-    add(other) {
-        other = other instanceof Value ? other : new Value(other);
-        return new Value(this.data + other.data, [this, other], [1, 1]);
-    }
-    mul(other) {
-        other = other instanceof Value ? other : new Value(other);
-        return new Value(this.data * other.data, [this, other], [other.data, this.data]);
-    }
-    pow(other) { return new Value(this.data ** other, [this], [other * this.data ** (other - 1)]); }
-    log() { const safeData = Math.max(this.data, 1e-10); return new Value(Math.log(safeData), [this], [1 / safeData]); }
-    exp() { const x = Math.min(this.data, 20); return new Value(Math.exp(x), [this], [Math.exp(x)]); }
-    relu() { return new Value(Math.max(0, this.data), [this], [this.data > 0 ? 1 : 0]); }
-    neg() { return this.mul(-1); }
-    sub(other) { return this.add(other instanceof Value ? other.neg() : -other); }
-    div(other) { return this.mul(other instanceof Value ? other.pow(-1) : new Value(other).pow(-1)); }
-    
-    backward() {
-        const topo = []; const visited = new Set();
-        const buildTopo = (v) => {
-            if (!visited.has(v)) { visited.add(v); v._children.forEach(child => buildTopo(child)); topo.push(v); }
-        };
-        buildTopo(this);
-        this.grad = 1;
-        for (let i = topo.length - 1; i >= 0; i--) {
-            const v = topo[i];
-            for (let j = 0; j < v._children.length; j++) {
-                v._children[j].grad += v._localGrads[j] * v.grad;
+        window.onclick = function (event) {
+            const modal = document.getElementById('chartModal');
+            if (event.target == modal) {
+                closeChartModal();
             }
         }
-    }
-}
-
-// ==========================================
-// 4. Model Architecture
-// ==========================================
-function sumVals(arr) { return arr.reduce((a, b) => a.add(b), new Value(0)); }
-
-function matrix(nout, nin, std = 0.08) {
-    const m = [];
-    for (let i = 0; i < nout; i++) {
-        const row = [];
-        for (let j = 0; j < nin; j++) row.push(new Value(randn(std)));
-        m.push(row);
-    }
-    return m;
-}
-
-function linear(x, w) {
-    const out = [];
-    for (let i = 0; i < w.length; i++) {
-        let sum = new Value(0);
-        for (let j = 0; j < x.length; j++) sum = sum.add(w[i][j].mul(x[j]));
-        out.push(sum);
-    }
-    return out;
-}
-
-function softmax(logits) {
-    const maxVal = Math.max(...logits.map(l => l.data));
-    const exps = logits.map(l => l.sub(maxVal).exp());
-    const total = sumVals(exps);
-    if (total.data === 0) return logits.map(l => new Value(1 / logits.length)); 
-    return exps.map(e => e.div(total));
-}
-
-function rmsnorm(x) {
-    const n = x.length;
-    let ms = new Value(0);
-    x.forEach(xi => { ms = ms.add(xi.mul(xi)); });
-    ms = ms.div(n);
-    return x.map(xi => xi.mul(ms.add(1e-5).pow(-0.5)));
-}
-
-// Global Model State
-let state_dict = {};
-let uchars = [];
-let vocab_size = 0;
-let BOS = 0;
-let params = [];
-
-// Configuration object
-let config = {
-    n_embd: 16,
-    n_head: 4,
-    n_layer: 1,
-    block_size: 16
-};
-
-function initModel(vocab, newConfig) {
-    config = newConfig;
-    
-    uchars = vocab;
-    BOS = uchars.length;
-    vocab_size = uchars.length + 1;
-    
-    const { n_embd, n_layer, block_size } = config;
-    
-    state_dict = {
-        'wte': matrix(vocab_size, n_embd),
-        'wpe': matrix(block_size, n_embd),
-        'lm_head': matrix(vocab_size, n_embd)
-    };
-
-    for (let i = 0; i < n_layer; i++) {
-        state_dict[`layer${i}.attn_wq`] = matrix(n_embd, n_embd);
-        state_dict[`layer${i}.attn_wk`] = matrix(n_embd, n_embd);
-        state_dict[`layer${i}.attn_wv`] = matrix(n_embd, n_embd);
-        state_dict[`layer${i}.attn_wo`] = matrix(n_embd, n_embd);
-        state_dict[`layer${i}.mlp_fc1`] = matrix(4 * n_embd, n_embd);
-        state_dict[`layer${i}.mlp_fc2`] = matrix(n_embd, 4 * n_embd);
-    }
-
-    params = [];
-    Object.values(state_dict).forEach(mat => mat.forEach(row => row.forEach(val => params.push(val))));
-    return params.length;
-}
-
-function gpt(token_id, pos_id, keys, values) {
-    const { n_layer, n_head, n_embd, block_size } = config;
-    const head_dim = n_embd / n_head;
-    
-    if (token_id >= vocab_size) token_id = BOS;
-    if (pos_id >= block_size) pos_id = block_size - 1;
-
-    let x = state_dict['wte'][token_id].map((t, i) => t.add(state_dict['wpe'][pos_id][i]));
-    x = rmsnorm(x);
-
-    for (let li = 0; li < n_layer; li++) {
-        const x_residual = x;
-        x = rmsnorm(x);
-
-        const q = linear(x, state_dict[`layer${li}.attn_wq`]);
-        const k = linear(x, state_dict[`layer${li}.attn_wk`]);
-        const v = linear(x, state_dict[`layer${li}.attn_wv`]);
-
-        keys[li].push(k);
-        values[li].push(v);
-
-        const x_attn_parts = [];
-        for (let h = 0; h < n_head; h++) {
-            const hs = h * head_dim, he = hs + head_dim;
-            const q_h = q.slice(hs, he);
-            const k_h = keys[li].map(k_vec => k_vec.slice(hs, he));
-            const v_h = values[li].map(v_vec => v_vec.slice(hs, he));
-
-            const attn_logits = [];
-            for (let t = 0; t < k_h.length; t++) {
-                let dot = new Value(0);
-                for(let j=0; j<head_dim; j++) dot = dot.add(q_h[j].mul(k_h[t][j]));
-                attn_logits.push(dot.div(Math.sqrt(head_dim)));
+        // ============================================
+        // ФУНКЦИЯ СОХРАНЕНИЯ ГРАФИКА КАК КАРТИНКИ
+        // ============================================
+        function saveChartAsImage() {
+            if (!myChart) {
+                alert('Сначала откройте график!');
+                return;
             }
-            const attn_weights = softmax(attn_logits);
-            const head_out = [];
-            for (let j = 0; j < head_dim; j++) {
+
+            const originalCanvas = document.getElementById('lossChart');
+
+            // Создаем временный canvas для сохранения с фоном
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Устанавливаем тот же размер
+            tempCanvas.width = originalCanvas.width;
+            tempCanvas.height = originalCanvas.height;
+
+            // Рисуем темный фон
+            tempCtx.fillStyle = '#1e1e2f';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            // Рисуем оригинальный canvas поверх фона
+            tempCtx.drawImage(originalCanvas, 0, 0);
+
+            // Конвертируем в PNG
+            const imageBase64 = tempCanvas.toDataURL('image/png', 1.0);
+
+            // Скачиваем
+            const link = document.createElement('a');
+            link.download = `loss_graph_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+            link.href = imageBase64;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function drawChart() {
+            const consoleText = document.getElementById('console').innerText;
+            const lines = consoleText.split('\n');
+
+            const steps = [];
+            const losses = [];
+
+            // Регулярное выражение для парсинга
+            const regex = /step\s+(\d+)\s*\/\s*\d+\s*\|\s*loss\s+([\d.]+)/i;
+
+            lines.forEach(line => {
+                const match = line.match(regex);
+                if (match) {
+                    const step = parseInt(match[1]);
+                    const loss = parseFloat(match[2]);
+                    if (!isNaN(step) && !isNaN(loss)) {
+                        steps.push(step);
+                        losses.push(loss);
+                    }
+                }
+            });
+
+            if (steps.length === 0) {
+                alert('Не найдены данные для отображения графика!');
+                return;
+            }
+
+            // Определяем диапазон данных
+            const minStep = Math.min(...steps);
+            const maxStep = Math.max(...steps);
+            const minLoss = Math.min(...losses);
+            const maxLoss = Math.max(...losses);
+
+            // Вычисляем шаг для оси X динамически
+            const range = maxStep - minStep;
+            let xStepSize = 1;
+            if (range > 500) {
+                xStepSize = 50;
+            } else if (range > 100) {
+                xStepSize = 10;
+            } else if (range > 50) {
+                xStepSize = 5;
+            } else if (range > 20) {
+                xStepSize = 2;
+            }
+
+            // Создаем массив данных
+            const chartData = steps.map((step, index) => ({
+                x: step,
+                y: losses[index]
+            }));
+
+            const ctx = document.getElementById('lossChart').getContext('2d');
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            const canvas = document.getElementById('lossChart');
+            canvas.width = 1000;   // Фиксированная ширина (минус padding 30px*2)
+            canvas.height = 496;  // Фиксированная высота
+
+            myChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Loss',
+                        data: chartData,
+
+                        // ТОЛЬКО ТОЧКИ, БЕЗ ЛИНИЙ
+                        showLine: false,
+                        pointRadius: 8,
+                        pointHoverRadius: 8,  // Не увеличиваем при наведении
+                        pointBackgroundColor: 'rgba(0, 217, 255, 0.9)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointStyle: 'circle',
+
+                        borderColor: '#00d9ff',
+                        backgroundColor: 'rgba(0, 217, 255, 0.6)',
+                        borderWidth: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    devicePixelRatio: false,
+                    // ОТКЛЮЧАЕМ ВСЕ ИНТЕРАКТИВНЫЕ ЭЛЕМЕНТЫ
+                    hover: {
+                        mode: null,
+                        intersect: true
+                    },
+
+                    plugins: {
+                        // ОТКЛЮЧАЕМ ВСПЛЫВАЮЩИЕ ПОДСКАЗКИ
+                        tooltip: {
+                            enabled: false
+                        },
+
+                        // ОТКЛЮЧАЕМ ЛЕГЕНДУ (если не нужна)
+                        legend: {
+                            display: false
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: minStep - 1,
+                            max: maxStep + 1,
+                            title: {
+                                display: true,
+                                text: 'Шаг обучения (Step)',
+                                color: '#00d9ff',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: true,
+                                borderColor: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#aaa',
+                                stepSize: xStepSize,
+                                font: {
+                                    size: 11
+                                },
+                                callback: function (value) {
+                                    return Math.round(value);
+                                }
+                            }
+                        },
+                        y: {
+                            min: Math.max(0, minLoss - 0.5),
+                            max: maxLoss + 0.5,
+                            title: {
+                                display: true,
+                                text: 'Функция потерь (Loss)',
+                                color: '#00d9ff',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: true,
+                                borderColor: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#aaa',
+                                font: {
+                                    size: 11
+                                },
+                                callback: function (value) {
+                                    return value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // ==========================================
+        // 1. Core Utils & UI
+        // ==========================================
+        const consoleEl = document.getElementById('console');
+        const statusEl = document.getElementById('statusBar');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const chkTrain = document.getElementById('chkTrain');
+        const startBtnDesktop = document.getElementById('startBtn');
+        const startBtnMobile = document.getElementById('mobileStartBtn');
+
+        function print(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            consoleEl.appendChild(div);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function clearConsole() { consoleEl.innerHTML = ''; }
+        function setStatus(text) { statusEl.textContent = text; }
+
+        // Toggle Sidebar (Mobile)
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        }
+
+        // Update Button Labels based on Mode
+        function updateButtonLabels() {
+            const isTrain = chkTrain.checked;
+            const text = isTrain ? "🚀 Запуск обучения" : "✨ Запуск генерации";
+
+            startBtnDesktop.textContent = text;
+            startBtnMobile.textContent = text;
+        }
+
+        // Toggle UI sections visibility
+        function toggleTrainMode() {
+            // Синхронизируем чекбокс (на случай вызова из label)
+            // chkTrain.checked уже обновлен браузером до вызова onchange, 
+            // но если вызывать функцию вручную, нужно быть аккуратным.
+
+            const isTrain = chkTrain.checked;
+            const sectArch = document.getElementById('sectArch');
+            const sectTrain = document.getElementById('sectTrain');
+
+            if (isTrain) {
+                sectArch.classList.remove('hidden');
+                sectTrain.classList.remove('hidden');
+            } else {
+                sectArch.classList.add('hidden');
+                sectTrain.classList.add('hidden');
+            }
+
+            updateButtonLabels();
+        }
+
+        // Initialize UI state
+        toggleTrainMode();
+
+        // ==========================================
+        // 2. Random (Seeded)
+        // ==========================================
+        let seed = 42;
+        function random() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
+        }
+        function gaussRandom() {
+            let u = 0, v = 0;
+            while (u === 0) u = random();
+            while (v === 0) v = random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+        function randn(std = 1) { return gaussRandom() * std; }
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // ==========================================
+        // 3. Autograd Engine
+        // ==========================================
+        class Value {
+            constructor(data, children = [], localGrads = []) {
+                this.data = data;
+                this.grad = 0;
+                this._children = children;
+                this._localGrads = localGrads;
+            }
+
+            add(other) {
+                other = other instanceof Value ? other : new Value(other);
+                return new Value(this.data + other.data, [this, other], [1, 1]);
+            }
+            mul(other) {
+                other = other instanceof Value ? other : new Value(other);
+                return new Value(this.data * other.data, [this, other], [other.data, this.data]);
+            }
+            pow(other) { return new Value(this.data ** other, [this], [other * this.data ** (other - 1)]); }
+            log() { const safeData = Math.max(this.data, 1e-10); return new Value(Math.log(safeData), [this], [1 / safeData]); }
+            exp() { const x = Math.min(this.data, 20); return new Value(Math.exp(x), [this], [Math.exp(x)]); }
+            relu() { return new Value(Math.max(0, this.data), [this], [this.data > 0 ? 1 : 0]); }
+            neg() { return this.mul(-1); }
+            sub(other) { return this.add(other instanceof Value ? other.neg() : -other); }
+            div(other) { return this.mul(other instanceof Value ? other.pow(-1) : new Value(other).pow(-1)); }
+
+            backward() {
+                const topo = []; const visited = new Set();
+                const buildTopo = (v) => {
+                    if (!visited.has(v)) { visited.add(v); v._children.forEach(child => buildTopo(child)); topo.push(v); }
+                };
+                buildTopo(this);
+                this.grad = 1;
+                for (let i = topo.length - 1; i >= 0; i--) {
+                    const v = topo[i];
+                    for (let j = 0; j < v._children.length; j++) {
+                        v._children[j].grad += v._localGrads[j] * v.grad;
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 4. Model Architecture
+        // ==========================================
+        function sumVals(arr) { return arr.reduce((a, b) => a.add(b), new Value(0)); }
+
+        function matrix(nout, nin, std = 0.08) {
+            const m = [];
+            for (let i = 0; i < nout; i++) {
+                const row = [];
+                for (let j = 0; j < nin; j++) row.push(new Value(randn(std)));
+                m.push(row);
+            }
+            return m;
+        }
+
+        function linear(x, w) {
+            const out = [];
+            for (let i = 0; i < w.length; i++) {
                 let sum = new Value(0);
-                for (let t = 0; t < v_h.length; t++) sum = sum.add(attn_weights[t].mul(v_h[t][j]));
-                head_out.push(sum);
+                for (let j = 0; j < x.length; j++) sum = sum.add(w[i][j].mul(x[j]));
+                out.push(sum);
             }
-            x_attn_parts.push(...head_out);
+            return out;
         }
 
-        x = linear(x_attn_parts, state_dict[`layer${li}.attn_wo`]);
-        x = x.map((xi, i) => xi.add(x_residual[i]));
+        function softmax(logits) {
+            const maxVal = Math.max(...logits.map(l => l.data));
+            const exps = logits.map(l => l.sub(maxVal).exp());
+            const total = sumVals(exps);
+            if (total.data === 0) return logits.map(l => new Value(1 / logits.length));
+            return exps.map(e => e.div(total));
+        }
 
-        const x_residual2 = x;
-        x = rmsnorm(x);
-        x = linear(x, state_dict[`layer${li}.mlp_fc1`]);
-        x = x.map(xi => xi.relu());
-        x = linear(x, state_dict[`layer${li}.mlp_fc2`]);
-        x = x.map((xi, i) => xi.add(x_residual2[i]));
-    }
-    return linear(x, state_dict['lm_head']);
-}
+        function rmsnorm(x) {
+            const n = x.length;
+            let ms = new Value(0);
+            x.forEach(xi => { ms = ms.add(xi.mul(xi)); });
+            ms = ms.div(n);
+            return x.map(xi => xi.mul(ms.add(1e-5).pow(-0.5)));
+        }
 
-// ==========================================
-// 5. Serialization
-// ==========================================
+        // Global Model State
+        let state_dict = {};
+        let uchars = [];
+        let vocab_size = 0;
+        let BOS = 0;
+        let params = [];
 
-function getModelData() {
-    const weights = {};
-    for (const [key, mat] of Object.entries(state_dict)) {
-        weights[key] = mat.map(row => row.map(v => v.data));
-    }
-    return {
-        config: config,
-        vocab: uchars,
-        weights: weights
-    };
-}
+        // Configuration object
+        let config = {
+            n_embd: 16,
+            n_head: 4,
+            n_layer: 1,
+            block_size: 16
+        };
 
-function saveToLocalStorage() {
-    try {
-        const data = getModelData();
-        localStorage.setItem('gpt_model', JSON.stringify(data));
-        print("Веса и конфигурация сохранены в LocalStorage.");
-    } catch(e) {
-        print("Ошибка сохранения в LocalStorage: " + e.message);
-    }
-}
+        function initModel(vocab, newConfig) {
+            config = newConfig;
 
-function loadFromLocalStorage() {
-    const json = localStorage.getItem('gpt_model');
-    if (!json) return false;
-    try {
-        const data = JSON.parse(json);
-        if (data.vocab && data.weights && data.config) {
-            config = data.config;
-            
-            document.getElementById('inputBlock').value = config.block_size;
-            document.getElementById('inputEmbd').value = config.n_embd;
-            document.getElementById('inputHeads').value = config.n_head;
-            document.getElementById('inputLayers').value = config.n_layer;
-
-            uchars = data.vocab;
+            uchars = vocab;
             BOS = uchars.length;
             vocab_size = uchars.length + 1;
-            
-            state_dict = {};
-            for (const [key, matData] of Object.entries(data.weights)) {
-                state_dict[key] = matData.map(row => row.map(val => new Value(val)));
+
+            const { n_embd, n_layer, block_size } = config;
+
+            state_dict = {
+                'wte': matrix(vocab_size, n_embd),
+                'wpe': matrix(block_size, n_embd),
+                'lm_head': matrix(vocab_size, n_embd)
+            };
+
+            for (let i = 0; i < n_layer; i++) {
+                state_dict[`layer${i}.attn_wq`] = matrix(n_embd, n_embd);
+                state_dict[`layer${i}.attn_wk`] = matrix(n_embd, n_embd);
+                state_dict[`layer${i}.attn_wv`] = matrix(n_embd, n_embd);
+                state_dict[`layer${i}.attn_wo`] = matrix(n_embd, n_embd);
+                state_dict[`layer${i}.mlp_fc1`] = matrix(4 * n_embd, n_embd);
+                state_dict[`layer${i}.mlp_fc2`] = matrix(n_embd, 4 * n_embd);
             }
-            
+
             params = [];
             Object.values(state_dict).forEach(mat => mat.forEach(row => row.forEach(val => params.push(val))));
-            
-            return true;
+            return params.length;
         }
-    } catch(e) {
-        print("Ошибка загрузки из LocalStorage: " + e.message);
-    }
-    return false;
-}
 
-function exportWeights() {
-    if(Object.keys(state_dict).length === 0) {
-        alert("Модель не инициализирована. Сначала запустите обучение.");
-        return;
-    }
-    const data = getModelData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `gpt_model_L${config.n_layer}E${config.n_embd}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    print("Веса экспортированы в файл.");
-}
+        function gpt(token_id, pos_id, keys, values) {
+            const { n_layer, n_head, n_embd, block_size } = config;
+            const head_dim = n_embd / n_head;
 
-function triggerImport() { document.getElementById('importFile').click(); }
+            if (token_id >= vocab_size) token_id = BOS;
+            if (pos_id >= block_size) pos_id = block_size - 1;
 
-function importWeights(input) {
-    if (input.files.length === 0) return;
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (data.vocab && data.weights && data.config) {
-                config = data.config;
-                uchars = data.vocab;
-                BOS = uchars.length;
-                vocab_size = uchars.length + 1;
-                
-                state_dict = {};
-                for (const [key, matData] of Object.entries(data.weights)) {
-                    state_dict[key] = matData.map(row => row.map(val => new Value(val)));
+            let x = state_dict['wte'][token_id].map((t, i) => t.add(state_dict['wpe'][pos_id][i]));
+            x = rmsnorm(x);
+
+            for (let li = 0; li < n_layer; li++) {
+                const x_residual = x;
+                x = rmsnorm(x);
+
+                const q = linear(x, state_dict[`layer${li}.attn_wq`]);
+                const k = linear(x, state_dict[`layer${li}.attn_wk`]);
+                const v = linear(x, state_dict[`layer${li}.attn_wv`]);
+
+                keys[li].push(k);
+                values[li].push(v);
+
+                const x_attn_parts = [];
+                for (let h = 0; h < n_head; h++) {
+                    const hs = h * head_dim, he = hs + head_dim;
+                    const q_h = q.slice(hs, he);
+                    const k_h = keys[li].map(k_vec => k_vec.slice(hs, he));
+                    const v_h = values[li].map(v_vec => v_vec.slice(hs, he));
+
+                    const attn_logits = [];
+                    for (let t = 0; t < k_h.length; t++) {
+                        let dot = new Value(0);
+                        for (let j = 0; j < head_dim; j++) dot = dot.add(q_h[j].mul(k_h[t][j]));
+                        attn_logits.push(dot.div(Math.sqrt(head_dim)));
+                    }
+                    const attn_weights = softmax(attn_logits);
+                    const head_out = [];
+                    for (let j = 0; j < head_dim; j++) {
+                        let sum = new Value(0);
+                        for (let t = 0; t < v_h.length; t++) sum = sum.add(attn_weights[t].mul(v_h[t][j]));
+                        head_out.push(sum);
+                    }
+                    x_attn_parts.push(...head_out);
                 }
-                
-                params = [];
-                Object.values(state_dict).forEach(mat => mat.forEach(row => row.forEach(val => params.push(val))));
-                
-                document.getElementById('inputBlock').value = config.block_size;
-                document.getElementById('inputEmbd').value = config.n_embd;
-                document.getElementById('inputHeads').value = config.n_head;
-                document.getElementById('inputLayers').value = config.n_layer;
-                
-                localStorage.setItem('gpt_model', JSON.stringify(data));
-                
-                print(`Импортирована модель: ${config.n_layer} слоев, ${config.n_embd} эмбеддинг.`);
-                alert("Веса успешно загружены! Теперь можете запустить генерацию.");
-                
-                // Автоматически переключаемся в режим генерации
-                chkTrain.checked = false;
-                toggleTrainMode();
-                toggleSidebar(); // Закрываем меню после импорта
-            } else {
-                alert("Неверный формат файла.");
+
+                x = linear(x_attn_parts, state_dict[`layer${li}.attn_wo`]);
+                x = x.map((xi, i) => xi.add(x_residual[i]));
+
+                const x_residual2 = x;
+                x = rmsnorm(x);
+                x = linear(x, state_dict[`layer${li}.mlp_fc1`]);
+                x = x.map(xi => xi.relu());
+                x = linear(x, state_dict[`layer${li}.mlp_fc2`]);
+                x = x.map((xi, i) => xi.add(x_residual2[i]));
             }
-        } catch(e) {
-            alert("Ошибка чтения JSON: " + e);
+            return linear(x, state_dict['lm_head']);
         }
-    };
-    reader.readAsText(file);
-    input.value = '';
-}
 
-// ==========================================
-// 6. Main Logic
-// ==========================================
-async function startProcess() {
-    // Закрываем сайдбар при запуске
-    if (window.innerWidth <= 800 && sidebar.classList.contains('open')) {
-        toggleSidebar();
-    }
+        // ==========================================
+        // 5. Serialization
+        // ==========================================
 
-    const btn = document.getElementById('startBtn');
-    btn.disabled = true;
-    startBtnMobile.disabled = true; // Блокируем обе кнопки
-    
-    clearConsole();
-    
-    const isTrain = chkTrain.checked;
-    
-    // If Generation Only Mode
-    if (!isTrain) {
-        print("Режим: Генерация без обучения.");
-        setStatus("Загрузка весов...");
-        
-        if (Object.keys(state_dict).length === 0) {
-            if (!loadFromLocalStorage()) {
-                print("Ошибка: Веса не найдены. Включите обучение или импортируйте веса.");
+        function getModelData() {
+            const weights = {};
+            for (const [key, mat] of Object.entries(state_dict)) {
+                weights[key] = mat.map(row => row.map(v => v.data));
+            }
+            return {
+                config: config,
+                vocab: uchars,
+                weights: weights
+            };
+        }
+
+        function saveToLocalStorage() {
+            try {
+                const data = getModelData();
+                localStorage.setItem('gpt_model', JSON.stringify(data));
+                print("Веса и конфигурация сохранены в LocalStorage.");
+            } catch (e) {
+                print("Ошибка сохранения в LocalStorage: " + e.message);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            const json = localStorage.getItem('gpt_model');
+            if (!json) return false;
+            try {
+                const data = JSON.parse(json);
+                if (data.vocab && data.weights && data.config) {
+                    config = data.config;
+
+                    document.getElementById('inputBlock').value = config.block_size;
+                    document.getElementById('inputEmbd').value = config.n_embd;
+                    document.getElementById('inputHeads').value = config.n_head;
+                    document.getElementById('inputLayers').value = config.n_layer;
+
+                    uchars = data.vocab;
+                    BOS = uchars.length;
+                    vocab_size = uchars.length + 1;
+
+                    state_dict = {};
+                    for (const [key, matData] of Object.entries(data.weights)) {
+                        state_dict[key] = matData.map(row => row.map(val => new Value(val)));
+                    }
+
+                    params = [];
+                    Object.values(state_dict).forEach(mat => mat.forEach(row => row.forEach(val => params.push(val))));
+
+                    return true;
+                }
+            } catch (e) {
+                print("Ошибка загрузки из LocalStorage: " + e.message);
+            }
+            return false;
+        }
+
+        function exportWeights() {
+            if (Object.keys(state_dict).length === 0) {
+                alert("Модель не инициализирована. Сначала запустите обучение.");
+                return;
+            }
+            const data = getModelData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gpt_model_L${config.n_layer}E${config.n_embd}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            print("Веса экспортированы в файл.");
+        }
+
+        function triggerImport() { document.getElementById('importFile').click(); }
+
+        function importWeights(input) {
+            if (input.files.length === 0) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.vocab && data.weights && data.config) {
+                        config = data.config;
+                        uchars = data.vocab;
+                        BOS = uchars.length;
+                        vocab_size = uchars.length + 1;
+
+                        state_dict = {};
+                        for (const [key, matData] of Object.entries(data.weights)) {
+                            state_dict[key] = matData.map(row => row.map(val => new Value(val)));
+                        }
+
+                        params = [];
+                        Object.values(state_dict).forEach(mat => mat.forEach(row => row.forEach(val => params.push(val))));
+
+                        document.getElementById('inputBlock').value = config.block_size;
+                        document.getElementById('inputEmbd').value = config.n_embd;
+                        document.getElementById('inputHeads').value = config.n_head;
+                        document.getElementById('inputLayers').value = config.n_layer;
+
+                        localStorage.setItem('gpt_model', JSON.stringify(data));
+
+                        print(`Импортирована модель: ${config.n_layer} слоев, ${config.n_embd} эмбеддинг.`);
+                        alert("Веса успешно загружены! Теперь можете запустить генерацию.");
+
+                        // Автоматически переключаемся в режим генерации
+                        chkTrain.checked = false;
+                        toggleTrainMode();
+                        toggleSidebar(); // Закрываем меню после импорта
+                    } else {
+                        alert("Неверный формат файла.");
+                    }
+                } catch (e) {
+                    alert("Ошибка чтения JSON: " + e);
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // ==========================================
+        // 6. Main Logic
+        // ==========================================
+        async function startProcess() {
+            // Закрываем сайдбар при запуске
+            if (window.innerWidth <= 800 && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+
+            const btn = document.getElementById('startBtn');
+            btn.disabled = true;
+            startBtnMobile.disabled = true; // Блокируем обе кнопки
+
+            clearConsole();
+
+            const isTrain = chkTrain.checked;
+
+            // If Generation Only Mode
+            if (!isTrain) {
+                print("Режим: Генерация без обучения.");
+                setStatus("Загрузка весов...");
+
+                if (Object.keys(state_dict).length === 0) {
+                    if (!loadFromLocalStorage()) {
+                        print("Ошибка: Веса не найдены. Включите обучение или импортируйте веса.");
+                        btn.disabled = false;
+                        startBtnMobile.disabled = false;
+                        return;
+                    }
+                }
+
+                print(`Модель загружена. Архитектура: Layers=${config.n_layer}, Embd=${config.n_embd}, Heads=${config.n_head}.`);
+                await generateNames();
                 btn.disabled = false;
                 startBtnMobile.disabled = false;
                 return;
             }
-        }
-        
-        print(`Модель загружена. Архитектура: Layers=${config.n_layer}, Embd=${config.n_embd}, Heads=${config.n_head}.`);
-        await generateNames();
-        btn.disabled = false;
-        startBtnMobile.disabled = false;
-        return;
-    }
 
-    // --- Training Mode ---
-    print("Режим: Обучение.");
-    
-    const newConfig = {
-        block_size: parseInt(document.getElementById('inputBlock').value),
-        n_embd: parseInt(document.getElementById('inputEmbd').value),
-        n_head: parseInt(document.getElementById('inputHeads').value),
-        n_layer: parseInt(document.getElementById('inputLayers').value)
-    };
+            // --- Training Mode ---
+            print("Режим: Обучение.");
 
-    if (newConfig.n_embd % newConfig.n_head !== 0) {
-        alert("Ошибка: Размер эмбеддинга должен делиться на количество голов без остатка!");
-        btn.disabled = false;
-        startBtnMobile.disabled = false;
-        return;
-    }
+            const newConfig = {
+                block_size: parseInt(document.getElementById('inputBlock').value),
+                n_embd: parseInt(document.getElementById('inputEmbd').value),
+                n_head: parseInt(document.getElementById('inputHeads').value),
+                n_layer: parseInt(document.getElementById('inputLayers').value)
+            };
 
-    seed = parseInt(document.getElementById('inputSeed').value);
-    const num_steps = parseInt(document.getElementById('inputSteps').value);
-    const learning_rate = parseFloat(document.getElementById('inputLR').value);
-    
-    let docs = [];
-    setStatus("Загрузка данных...");
-    
-    const fileInput = document.getElementById('inputFile');
-    if (fileInput.files.length > 0) {
-        const text = await fileInput.files[0].text();
-        docs = text.trim().split('\n').map(l => l.trim()).filter(l => l);
-    } else {
-        try {
-            const resp = await fetch('https://boolkin.github.io/html/Vibe/microgpt/names.txt');
-            docs = (await resp.text()).trim().split('\n').map(l => l.trim()).filter(l => l);
-        } catch(e) {
-            docs = ["emma", "olivia", "ava", "sophia", "isabella", "mia"];
-        }
-    }
-    
-    shuffle(docs);
-    print(`Данные: ${docs.length} примеров.`);
+            if (newConfig.n_embd % newConfig.n_head !== 0) {
+                alert("Ошибка: Размер эмбеддинга должен делиться на количество голов без остатка!");
+                btn.disabled = false;
+                startBtnMobile.disabled = false;
+                return;
+            }
 
-    const vocab = Array.from(new Set(docs.join(''))).sort();
-    const num_params = initModel(vocab, newConfig);
-    print(`Параметры модели: Layers=${config.n_layer}, Embd=${config.n_embd}, Heads=${config.n_head}`);
-    print(`Всего параметров: ${num_params}. Начинаем обучение...`);
+            seed = parseInt(document.getElementById('inputSeed').value);
+            const num_steps = parseInt(document.getElementById('inputSteps').value);
+            const learning_rate = parseFloat(document.getElementById('inputLR').value);
 
-    const beta1 = 0.85, beta2 = 0.99, eps_adam = 1e-8;
-    const m = new Array(params.length).fill(0);
-    const v = new Array(params.length).fill(0);
+            let docs = [];
+            setStatus("Загрузка данных...");
 
-    for (let step = 0; step < num_steps; step++) {
-        const doc = docs[step % docs.length];
-        const tokens = [BOS, ...doc.split('').filter(ch => uchars.includes(ch)).map(ch => uchars.indexOf(ch)), BOS];
-        const n = Math.min(config.block_size, tokens.length - 1);
-
-        const keys = Array.from({length: config.n_layer}, () => []);
-        const values = Array.from({length: config.n_layer}, () => []);
-        const losses = [];
-
-        for (let pos_id = 0; pos_id < n; pos_id++) {
-            const token_id = tokens[pos_id], target_id = tokens[pos_id + 1];
-            if (target_id < 0 || target_id >= vocab_size) continue;
-            const logits = gpt(token_id, pos_id, keys, values);
-            const probs = softmax(logits);
-            losses.push(probs[target_id].log().mul(-1));
-        }
-
-        const loss = sumVals(losses).div(n);
-        loss.backward();
-
-        const lr_t = learning_rate * (1 - step / num_steps);
-        
-        for (let i = 0; i < params.length; i++) {
-            const p = params[i], grad = p.grad;
-            m[i] = beta1 * m[i] + (1 - beta1) * grad;
-            v[i] = beta2 * v[i] + (1 - beta2) * (grad ** 2);
-            const m_hat = m[i] / (1 - beta1 ** (step + 1));
-            const v_hat = v[i] / (1 - beta2 ** (step + 1));
-            p.data -= lr_t * m_hat / (Math.sqrt(v_hat) + eps_adam);
-            p.grad = 0;
-        }
-
-        if ((step + 1) % 50 === 0) {
-            print(`step ${step+1} / ${num_steps} | loss ${loss.data.toFixed(4)}`);
-            setStatus(`Обучение... ${step+1}/${num_steps}`);
-            await new Promise(r => setTimeout(r, 0)); 
-        }
-    }
-
-    print("Обучение завершено.");
-    saveToLocalStorage();
-    
-    // Автоматическое переключение на генерацию после обучения
-    chkTrain.checked = false;
-    toggleTrainMode();
-    
-    await generateNames();
-    
-    btn.disabled = false;
-    startBtnMobile.disabled = false;
-}
-
-document.getElementById('inputPrefix').value = ""; // очистка префикса при перезагрузке
-
-async function generateNames() {
-    const temperature = parseFloat(document.getElementById('inputTemp').value);
-    const count = parseInt(document.getElementById('inputCount').value);
-    const prefixInput = document.getElementById('inputPrefix').value.trim();
-    
-    print(`\n--- Генерация (${count} имен, T=${temperature}) ---`);
-    if (prefixInput) {
-        print(`Префикс: "${prefixInput}"`);
-    }
-
-    function weightedChoice(items, weights) {
-        const total = weights.reduce((a, b) => a + b, 0);
-        const r = Math.random() * total;
-        let sum = 0;
-        for (let i = 0; i < items.length; i++) {
-            sum += weights[i];
-            if (r <= sum) return items[i];
-        }
-        return items[items.length - 1];
-    }
-
-    for (let s = 0; s < count; s++) {
-        const keys = Array.from({length: config.n_layer}, () => []);
-        const values = Array.from({length: config.n_layer}, () => []);
-        
-        // Начальные значения
-        let token_id = BOS;
-        let pos_id = 0;
-        const sample = [];
-        
-        // === ОБРАБОТКА ПРЕФИКСА ===
-        if (prefixInput) {
-            const validPrefix = [];
-            // Валидация символов префикса по словарю
-            for (let ch of prefixInput) {
-                const idx = uchars.indexOf(ch);
-                if (idx !== -1) {
-                    validPrefix.push(idx);
-                } else {
-                    print(`⚠ Символ "${ch}" не в словаре, пропущен`);
+            const fileInput = document.getElementById('inputFile');
+            if (fileInput.files.length > 0) {
+                const text = await fileInput.files[0].text();
+                docs = text.trim().split('\n').map(l => l.trim()).filter(l => l);
+            } else {
+                try {
+                    const resp = await fetch('https://boolkin.github.io/html/Vibe/microgpt/names.txt');
+                    docs = (await resp.text()).trim().split('\n').map(l => l.trim()).filter(l => l);
+                } catch (e) {
+                    docs = ["emma", "olivia", "ava", "sophia", "isabella", "mia"];
                 }
             }
-            
-            // "Прогоняем" валидный префикс через модель для заполнения KV-кэша
-            for (let i = 0; i < validPrefix.length; i++) {
-                if (pos_id >= config.block_size) {
-                    print(`⚠ Префикс обрезан из-за ограничения block_size`);
-                    break;
+
+            shuffle(docs);
+            print(`Данные: ${docs.length} примеров.`);
+
+            const vocab = Array.from(new Set(docs.join(''))).sort();
+            const num_params = initModel(vocab, newConfig);
+            print(`Параметры модели: Layers=${config.n_layer}, Embd=${config.n_embd}, Heads=${config.n_head}`);
+            print(`Всего параметров: ${num_params}. Начинаем обучение...`);
+
+            const beta1 = 0.85, beta2 = 0.99, eps_adam = 1e-8;
+            const m = new Array(params.length).fill(0);
+            const v = new Array(params.length).fill(0);
+            const cc = document.getElementById("ConsoleCount").value;
+            for (let step = 0; step < num_steps; step++) {
+                const doc = docs[step % docs.length];
+                const tokens = [BOS, ...doc.split('').filter(ch => uchars.includes(ch)).map(ch => uchars.indexOf(ch)), BOS];
+                const n = Math.min(config.block_size, tokens.length - 1);
+
+                const keys = Array.from({ length: config.n_layer }, () => []);
+                const values = Array.from({ length: config.n_layer }, () => []);
+                const losses = [];
+
+                for (let pos_id = 0; pos_id < n; pos_id++) {
+                    const token_id = tokens[pos_id], target_id = tokens[pos_id + 1];
+                    if (target_id < 0 || target_id >= vocab_size) continue;
+                    const logits = gpt(token_id, pos_id, keys, values);
+                    const probs = softmax(logits);
+                    losses.push(probs[target_id].log().mul(-1));
                 }
-                // Обновляем кэш модели, подавая текущий токен на текущей позиции
-                gpt(token_id, pos_id, keys, values);
-                // Добавляем символ префикса в результат
-                sample.push(uchars[validPrefix[i]]);
-                // Готовимся к следующей итерации: следующий токен становится входным
-                token_id = validPrefix[i];
-                pos_id++;
+
+                const loss = sumVals(losses).div(n);
+                loss.backward();
+
+                const lr_t = learning_rate * (1 - step / num_steps);
+
+                for (let i = 0; i < params.length; i++) {
+                    const p = params[i], grad = p.grad;
+                    m[i] = beta1 * m[i] + (1 - beta1) * grad;
+                    v[i] = beta2 * v[i] + (1 - beta2) * (grad ** 2);
+                    const m_hat = m[i] / (1 - beta1 ** (step + 1));
+                    const v_hat = v[i] / (1 - beta2 ** (step + 1));
+                    p.data -= lr_t * m_hat / (Math.sqrt(v_hat) + eps_adam);
+                    p.grad = 0;
+                }
+
+                if ((step + 1) % cc === 0) {
+                    print(`step ${step + 1} / ${num_steps} | loss ${loss.data.toFixed(4)}`);
+                    setStatus(`Обучение... ${step + 1}/${num_steps}`);
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            print("Обучение завершено.");
+            saveToLocalStorage();
+
+            // Автоматическое переключение на генерацию после обучения
+            chkTrain.checked = false;
+            toggleTrainMode();
+            openChartModal();
+            await generateNames();
+
+            btn.disabled = false;
+            startBtnMobile.disabled = false;
+        }
+
+        document.getElementById('inputPrefix').value = ""; // очистка префикса при перезагрузке
+
+        async function generateNames() {
+            const temperature = parseFloat(document.getElementById('inputTemp').value);
+            const count = parseInt(document.getElementById('inputCount').value);
+            const prefixInput = document.getElementById('inputPrefix').value.trim();
+
+            print(`\n--- Генерация (${count} имен, T=${temperature}) ---`);
+            if (prefixInput) {
+                print(`Префикс: "${prefixInput}"`);
+            }
+
+            function weightedChoice(items, weights) {
+                const total = weights.reduce((a, b) => a + b, 0);
+                const r = Math.random() * total;
+                let sum = 0;
+                for (let i = 0; i < items.length; i++) {
+                    sum += weights[i];
+                    if (r <= sum) return items[i];
+                }
+                return items[items.length - 1];
+            }
+
+            for (let s = 0; s < count; s++) {
+                const keys = Array.from({ length: config.n_layer }, () => []);
+                const values = Array.from({ length: config.n_layer }, () => []);
+
+                // Начальные значения
+                let token_id = BOS;
+                let pos_id = 0;
+                const sample = [];
+
+                // === ОБРАБОТКА ПРЕФИКСА ===
+                if (prefixInput) {
+                    const validPrefix = [];
+                    // Валидация символов префикса по словарю
+                    for (let ch of prefixInput) {
+                        const idx = uchars.indexOf(ch);
+                        if (idx !== -1) {
+                            validPrefix.push(idx);
+                        } else {
+                            print(`⚠ Символ "${ch}" не в словаре, пропущен`);
+                        }
+                    }
+
+                    // "Прогоняем" валидный префикс через модель для заполнения KV-кэша
+                    for (let i = 0; i < validPrefix.length; i++) {
+                        if (pos_id >= config.block_size) {
+                            print(`⚠ Префикс обрезан из-за ограничения block_size`);
+                            break;
+                        }
+                        // Обновляем кэш модели, подавая текущий токен на текущей позиции
+                        gpt(token_id, pos_id, keys, values);
+                        // Добавляем символ префикса в результат
+                        sample.push(uchars[validPrefix[i]]);
+                        // Готовимся к следующей итерации: следующий токен становится входным
+                        token_id = validPrefix[i];
+                        pos_id++;
+                    }
+                }
+
+                // === ОСНОВНАЯ ГЕНЕРАЦИЯ (продолжение после префикса) ===
+                for (; pos_id < config.block_size; pos_id++) {
+                    const logits = gpt(token_id, pos_id, keys, values);
+                    const scaledLogits = logits.map(l => l.div(temperature));
+                    const probs = softmax(scaledLogits);
+                    const weights = probs.map(p => p.data);
+
+                    // Сэмплируем следующий токен
+                    const next_token_id = weightedChoice([...Array(vocab_size).keys()], weights);
+
+                    // BOS = конец последовательности
+                    if (next_token_id === BOS) break;
+
+                    sample.push(uchars[next_token_id]);
+                    token_id = next_token_id; // для следующей итерации
+                }
+
+                const result = sample.join('');
+                print(`${s + 1}. ${result || '(пусто)'}`);
+
+                // Небольшая пауза для отзывчивости UI
+                if (s % 5 === 0) await new Promise(r => setTimeout(r, 0));
             }
         }
-        
-        // === ОСНОВНАЯ ГЕНЕРАЦИЯ (продолжение после префикса) ===
-        for (; pos_id < config.block_size; pos_id++) {
-            const logits = gpt(token_id, pos_id, keys, values);
-            const scaledLogits = logits.map(l => l.div(temperature));
-            const probs = softmax(scaledLogits);
-            const weights = probs.map(p => p.data);
-            
-            // Сэмплируем следующий токен
-            const next_token_id = weightedChoice([...Array(vocab_size).keys()], weights);
-            
-            // BOS = конец последовательности
-            if (next_token_id === BOS) break;
-            
-            sample.push(uchars[next_token_id]);
-            token_id = next_token_id; // для следующей итерации
-        }
-        
-        const result = sample.join('');
-        print(`${s+1}. ${result || '(пусто)'}`);
-        
-        // Небольшая пауза для отзывчивости UI
-        if(s % 5 === 0) await new Promise(r => setTimeout(r, 0));
-    }
-}
-</script>
+    </script>
 </body>
+
 </html>

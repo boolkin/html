@@ -1,0 +1,473 @@
+:root {
+    --bg-dark: #1e1e1e;
+    --bg-panel: #252526;
+    --bg-section: #2d2d2d;
+    --border-color: #3e3e42;
+    --text-main: #ddd;
+    --text-dim: #aaa;
+    --accent: #4ec9b0;
+    --primary: #0e639c;
+    --sidebar-width: 480px;
+    --mobile-header-height: auto;
+    /* Динамическая высота */
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+}
+
+a {
+    color: rgb(0, 183, 255);
+    /* Цвет ссылок */
+}
+
+/* --- Sidebar Layout (Desktop) --- */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-panel);
+    padding: 20px;
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    align-content: start;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-dark);
+    min-width: 0;
+}
+
+/* --- Mobile Header (Hidden on Desktop) --- */
+.mobile-header {
+    display: none;
+    /* Скрыт на ПК */
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    /* Выше чем у сайдбара */
+    background-color: var(--bg-panel);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 10px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* --- Overlay for mobile sidebar --- */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* --- Helper Classes --- */
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* --- Controls Styling --- */
+h1 {
+    font-size: 1.4rem;
+    margin: 0;
+    color: #fff;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0;
+}
+
+/* В сайдбаре немного отступы другие */
+.sidebar .header-block {
+    margin-bottom: 10px;
+}
+
+.sidebar .header-block .subtitle {
+    margin-top: 4px;
+}
+
+.section {
+    background: var(--bg-section);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.section-title {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.control-group {
+    margin-bottom: 0;
+}
+
+.control-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+}
+
+.control-group input[type="number"],
+.control-group input[type="text"],
+.control-group input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-section);
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--accent);
+}
+
+.checkbox-group input {
+    width: auto;
+    transform: scale(1.2);
+}
+
+.checkbox-group label {
+    margin: 0;
+    font-size: 1rem;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+
+    display: block;
+    width: 100%;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.2s;
+    white-space: nowrap;
+    /* Чтобы текст кнопки не прыгал */
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #1177bb;
+}
+
+.btn-primary:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #3e3e42;
+    color: #ddd;
+    font-size: 0.85rem;
+    padding: 8px;
+}
+
+.btn-secondary:hover {
+    background-color: #505055;
+}
+
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* --- Console Styling --- */
+#console {
+    flex: 1;
+    background-color: #000;
+    color: #ddd;
+    padding: 15px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.1em;
+    line-height: 1.3;
+    scroll-behavior: smooth;
+    /* Плавная прокрутка */
+}
+
+.status-bar {
+    background: #333;
+    padding: 8px 15px;
+    font-size: 0.8rem;
+    color: #888;
+    border-top: 1px solid #444;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================
+    MOBILE ADAPTATION 
+    ========================================== */
+@media (max-width: 800px) {
+    body {
+        flex-direction: column;
+    }
+
+    /* --- Show Mobile Header --- */
+    .mobile-header {
+        display: flex;
+    }
+
+    /* Скрываем заголовок внутри сайдбара на мобильном, он теперь в хедере */
+    .sidebar .header-block {
+        display: none;
+    }
+
+    /* Кнопки в хедере */
+    .mobile-header .btn-secondary {
+        flex: 1;
+    }
+
+    .mobile-header .btn-primary {
+        flex: 2;
+    }
+
+    /* --- Sidebar Transform to Drawer --- */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        /* Прижимаем к низу хедера (приблизительно 100px) */
+        top: 0;
+        padding-top: 150px;
+        /* Место под Header, чтобы не перекрывал */
+        height: 80%;
+        width: 85%;
+        max-width: 400px;
+        z-index: 999;
+        /* Ниже чем хедер */
+        transform: translateX(-100%);
+        grid-template-columns: 1fr;
+        border-right: none;
+        box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* Кнопка "Запуск" внутри сайдбара на мобильном скрываем */
+    .sidebar #startBtn {
+        display: none;
+    }
+
+    /* --- Overlay Logic --- */
+    .sidebar-overlay.visible {
+        display: block;
+        opacity: 1;
+    }
+
+    /* --- Console Adjustments --- */
+    #console {
+        min-height: 300px;
+    }
+
+    .control-group input[type="number"] {
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    .full-width {
+        grid-column: 1;
+    }
+}
+
+/* ============================================ */
+/* МОДАЛЬНОЕ ОКНО - ИСПРАВЛЕННОЕ ЦЕНТРИРОВАНИЕ  */
+/* ============================================ */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    /* Важно: overflow видим для прокрутки содержимого */
+    overflow: visible;
+}
+
+.modal-content {
+    /* Фиксированный размер для ПК */
+    width: 1000px;
+    height: 650px;
+
+    /* Центрирование через flexbox - работает везде */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background: linear-gradient(135deg, #1e1e2f 0%, #2d2d44 100%);
+    padding: 30px;
+    border: 1px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.modal h3 {
+    color: #00d9ff;
+    font-size: 24px;
+}
+
+.close-btn {
+    color: #aaa;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+    line-height: 20px;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.btn-save {
+    padding: 10px 20px;
+    font-size: 14px;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+}
+
+.chart-container {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+    min-height: 0;
+}
+
+/* ============================================ */
+/* АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ            */
+/* ============================================ */
+@media (max-width: 1050px) {
+    .modal {
+        /* Разрешаем прокрутку в обе стороны */
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        /* Плавная прокрутка на iOS */
+    }
+
+    .modal-content {
+        /* Убираем центрирование для мобильных */
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+
+        /* Минимальные размеры чтобы график не сжимался */
+        min-width: 1000px;
+        min-height: 650px;
+
+        /* Отступы чтобы было видно края */
+        margin: 20px auto;
+
+        /* Тень и границы */
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal h3 {
+        font-size: 20px;
+    }
+}
+
+/* Для очень маленьких экранов - горизонтальная ориентация */
+@media (max-height: 700px) and (orientation: landscape) {
+    .modal-content {
+        min-height: 600px;
+        margin: 10px auto;
+    }
+}
