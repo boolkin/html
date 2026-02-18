@@ -153,7 +153,16 @@
             border: 1px solid var(--accent);
         }
         .checkbox-group input { width: auto; transform: scale(1.2); }
-        .checkbox-group label { margin: 0; font-size: 1rem; color: #fff; cursor: pointer; font-weight: bold; }
+        .checkbox-group label { 
+            margin: 0; 
+            font-size: 1rem; 
+            color: #fff; 
+            cursor: pointer; 
+            font-weight: bold; 
+
+            display: block;
+            width: 100%;
+        }
 
         button {
             width: 100%;
@@ -288,7 +297,7 @@
 
     <!-- Mode Toggle -->
     <div class="section full-width" style="padding:0; border:none; background: transparent;" onclick="toggleTrainMode()">
-        <div class="checkbox-group" onclick="toggleTrainMode()">
+        <div class="checkbox-group" >
             <input type="checkbox" id="chkTrain" onchange="updateButtonLabels()">
             <label for="chkTrain">Режим обучения</label>
         </div>
