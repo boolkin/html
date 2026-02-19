@@ -846,7 +846,7 @@
                 docs = text.trim().split('\n').map(l => l.trim()).filter(l => l);
             } else {
                 try {
-                    const resp = await fetch('https://boolkin.github.io/html/Vibe/microgpt/names.txt');
+                    const resp = await fetch('https://boolkin.github.io/html/Vibe/microgpt/datasets/dogs.txt');
                     docs = (await resp.text()).trim().split('\n').map(l => l.trim()).filter(l => l);
                 } catch (e) {
                     docs = ["emma", "olivia", "ava", "sophia", "isabella", "mia"];
