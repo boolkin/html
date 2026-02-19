@@ -73,4 +73,6 @@ OPC2WEB - https://boolkin.github.io/html/Vibe/opc2web.html
 
 microgpt - https://boolkin.github.io/html/Vibe/microgpt/  
 
-Regex - поиск по документу - https://boolkin.github.io/html/Vibe/Regex.html  
+Regex - редактирование текста при помощи регулярок - https://boolkin.github.io/html/Vibe/Regex.html  
+
+Генератор имен и кличек - https://boolkin.github.io/html/Vibe/namesGen.html  
