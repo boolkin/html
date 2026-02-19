@@ -68,8 +68,17 @@
                 <label>Learning Rate</label>
                 <input type="number" id="inputLR" value="0.01" step="0.001">
             </div>
+            <div class="control-group">
+                <label for="datasetSelect">Готовый датасет:</label>
+                <select id="datasetSelect" class="form-select">
+                    <option value="dogs" selected>Клички собак</option>
+                    <option value="names">Мужские имена</option>
+                    <option value="cities">Города России</option>
+                    <option value="engNames">English names</option>
+                </select>
+            </div>
             <div class="control-group" style="margin-top:5px;">
-                <label>Файл данных</label>
+                <label>Или свой датасет (.txt)</label>
                 <input type="file" id="inputFile" accept=".txt">
             </div>
         </div>
@@ -159,6 +168,36 @@
     </div>
 
     <script>
+        const datasetUrls = {
+            dogs: 'https://boolkin.github.io/html/Vibe/microgpt/datasets/dogs.txt',
+            names: 'https://boolkin.github.io/html/Vibe/microgpt/datasets/names.txt',
+            cities: 'https://boolkin.github.io/html/Vibe/microgpt/datasets/cities.txt',
+            engNames: 'https://raw.githubusercontent.com/karpathy/makemore/988aa59/names.txt'
+        };
+
+        let currentDatasetUrl = datasetUrls.dogs;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectElement = document.getElementById('datasetSelect');
+
+            // Функция обработки изменения выбора
+            function handleDatasetChange() {
+                const selectedValue = selectElement.value;
+                currentDatasetUrl = datasetUrls[selectedValue];
+                
+                // Для отладки (можно удалить)
+                console.log('Выбран URL:', currentDatasetUrl);
+                
+                // Здесь можно вызвать вашу функцию, передав ей currentDatasetUrl
+                // myFunction(currentDatasetUrl);
+            }
+
+            // Навешиваем обработчик события
+            selectElement.addEventListener('change', handleDatasetChange);
+
+            // Инициализация (на случай, если нужно сразу получить URL по умолчанию)
+            //handleDatasetChange(); 
+        });
         let myChart = null;
         function openChartModal() {
             const modal = document.getElementById('chartModal');
@@ -846,7 +885,8 @@
                 docs = text.trim().split('\n').map(l => l.trim()).filter(l => l);
             } else {
                 try {
-                    const resp = await fetch('https://boolkin.github.io/html/Vibe/microgpt/datasets/dogs.txt');
+                    console.log(currentDatasetUrl);
+                    const resp = await fetch(currentDatasetUrl);
                     docs = (await resp.text()).trim().split('\n').map(l => l.trim()).filter(l => l);
                 } catch (e) {
                     docs = ["emma", "olivia", "ava", "sophia", "isabella", "mia"];

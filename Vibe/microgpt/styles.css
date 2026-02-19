@@ -471,3 +471,35 @@ button {
         margin: 10px auto;
     }
 }
+
+/* Стили для выпадающего списка в темной теме */
+.control-group select.form-select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+    /* Убираем стандартную стрелку браузера (опционально) */
+    appearance: none; 
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    cursor: pointer;
+}
+
+/* Убираем стандартный фокус браузера и добавляем свой */
+.control-group select.form-select:focus {
+    outline: none;
+    border-color: #007bff; /* Можно заменить на ваш акцентный цвет */
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Опции списка (для совместимости) */
+.control-group select.form-select option {
+    background: #333;
+    color: #fff;
+}
