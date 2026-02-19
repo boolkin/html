@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Regex Processor: Extract & Replace</title>
+    <title>Regex Processor: Extract, Replace & Clean</title>
     <style>
         :root {
             --primary-color: #2563eb;
             --primary-hover: #1d4ed8;
             --secondary-color: #10b981;
             --secondary-hover: #059669;
+            --tool-bg: #f1f5f9;
+            --tool-text: #475569;
+            --tool-border: #cbd5e1;
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
             --text-main: #1f2937;
@@ -98,7 +101,7 @@
             display: flex;
             gap: 8px;
             align-items: flex-end;
-            min-width: 280px; /* Ensure space for input+button */
+            min-width: 280px;
         }
         
         @media (max-width: 900px) {
@@ -132,17 +135,15 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-        /* Regex input is wider */
         .regex-wrapper {
             flex: 2;
             min-width: 300px;
         }
 
-        /* Buttons */
+        /* --- Buttons --- */
         button {
             cursor: pointer;
             border: none;
-            padding: 10px 20px;
             border-radius: 8px;
             font-weight: 600;
             font-size: 0.95rem;
@@ -152,7 +153,6 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            height: 46px; /* Match input height roughly */
         }
 
         button:active {
@@ -161,12 +161,14 @@
 
         .btn-keep {
             background-color: var(--secondary-color);
+            padding: 10px 20px;
             box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
         }
         .btn-keep:hover { background-color: var(--secondary-hover); }
 
         .btn-replace {
             background-color: var(--primary-color);
+            padding: 10px 20px;
             box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
         }
         .btn-replace:hover { background-color: var(--primary-hover); }
@@ -202,7 +204,50 @@
             align-items: center;
         }
 
-        .col-header .badge {
+        .editor-tools {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background-color: white;
+            border: 1px solid var(--tool-border);
+            color: var(--tool-text);
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            height: 32px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .tool-btn:hover {
+            background-color: var(--tool-bg);
+            color: var(--text-main);
+            border-color: #94a3b8;
+        }
+
+        .move-btn-container {
+            padding: 12px;
+            background-color: #f8fafc;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-move-bottom {
+            width: 100%;
+            height: 44px;
+            background-color: #64748b; /* Slate 500 */
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .btn-move-bottom:hover {
+            background-color: #475569; /* Slate 600 */
+        }
+
+        .badge {
             font-size: 0.75rem;
             padding: 2px 8px;
             border-radius: 12px;
@@ -230,33 +275,115 @@
 
         /* --- Info & Help Section --- */
         .info-panel {
-            padding: 16px 24px;
+            padding: 20px 24px;
             background-color: #fff;
             border-top: 1px solid var(--border-color);
             font-size: 0.9rem;
             color: var(--text-secondary);
+        }
+        
+        .info-panel h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
         }
 
         .syntax-help {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            margin-top: 10px;
+            margin-bottom: 25px;
         }
 
-        .help-item {
+        .help-inline {
             display: flex;
             align-items: center;
             gap: 6px;
+            background: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
         }
 
         .code-snippet {
-            background-color: #f1f5f9;
+            background-color: #e2e8f0;
             padding: 2px 6px;
             border-radius: 4px;
             font-family: monospace;
-            color: #d946ef; /* Purple for emphasis */
-            border: 1px solid #e2e8f0;
+            color: #d946ef; 
+            border: 1px solid #cbd5e1;
+        }
+
+        /* --- Примеры в виде карточек (Grid) --- */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .example-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer; /* Указываем, что карточка кликабельна */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .example-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+            border-color: var(--primary-color);
+        }
+        
+        .example-card:active {
+            transform: scale(0.98);
+        }
+
+        /* Иконка/индикатор клика */
+        .example-card::after {
+            content: "→";
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: var(--border-color);
+            transition: color 0.2s;
+        }
+        
+        .example-card:hover::after {
+            color: var(--primary-color);
+        }
+
+        .example-card h3 {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin-bottom: 8px;
+            padding-right: 20px; /* Отступ для стрелки */
+        }
+
+        .example-card p {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .example-meta {
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.8rem;
+            margin-top: 8px;
         }
 
         /* --- Toast Notification --- */
@@ -297,6 +424,12 @@
             .editor-col {
                 min-height: 300px;
             }
+            .editor-tools {
+                justify-content: space-between;
+            }
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -305,7 +438,7 @@
 <div class="container">
     <header>
         <h1>Regex Master Tool</h1>
-        <p class="subtitle">Инструмент для извлечения данных и массовой замены текста</p>
+        <p class="subtitle">Извлечение, замена и очистка данных</p>
     </header>
 
     <div class="toolbar">
@@ -321,7 +454,7 @@
                 <label for="keep-template">Что оставить (шаблон)</label>
                 <input type="text" id="keep-template" placeholder="$1" value="$1">
             </div>
-            <button class="btn-keep" id="btn-keep" title="Найти и оставить только совпадения">
+            <button class="btn-keep" id="btn-keep">
                 Оставить
             </button>
         </div>
@@ -332,63 +465,129 @@
                 <label for="replace-template">На что заменить</label>
                 <input type="text" id="replace-template" placeholder="Новый текст \r\n след. строка" value="$1\n$2">
             </div>
-            <button class="btn-replace" id="btn-replace" title="Найти и заменить в тексте">
+            <button class="btn-replace" id="btn-replace">
                 Заменить
             </button>
         </div>
     </div>
 
     <div class="workspace">
+        <!-- ЛЕВАЯ КОЛОНКА: Исходный текст -->
         <div class="editor-col">
             <div class="col-header">
                 Исходный текст
                 <span class="badge">Input</span>
             </div>
+            
+            <!-- Инструменты для исходного текста -->
+            <div class="editor-tools">
+                <button class="tool-btn" id="btn-sort" title="Отсортировать строки по алфавиту">
+                    Сортировать А-Я
+                </button>
+                <button class="tool-btn" id="btn-dedup" title="Удалить повторяющиеся строки">
+                    Удалить дубликаты
+                </button>
+            </div>
+
             <textarea id="input-text" spellcheck="false" placeholder="Вставьте ваш текст сюда...">Клички для черных собак:
 Багир (Багира)
 Блэк (Блэки)
 Готик (Готика)</textarea>
+            
+            <!-- Нижняя панель: Кнопка переноса вправо -->
+            <div class="move-btn-container">
+                <button class="btn-move-bottom" id="btn-move-right" title="Переместить исходный текст в результат">
+                    Перенести текст ->
+                </button>
+            </div>
         </div>
+        
+        <!-- ПРАВАЯ КОЛОНКА: Результат -->
         <div class="editor-col">
             <div class="col-header">
                 Результат
                 <span class="badge">Output</span>
             </div>
+            
+            <!-- Инструменты для результата -->
+            <div class="editor-tools">
+                <button class="tool-btn" id="btn-copy" title="Скопировать результат в буфер обмена">
+                    Копировать
+                </button>
+            </div>
+
             <textarea id="output-text" readonly spellcheck="false" placeholder="Результат появится здесь..."></textarea>
+            
+            <!-- Нижняя панель: Кнопка переноса влево -->
+            <div class="move-btn-container">
+                <button class="btn-move-bottom" id="btn-move" title="Переместить результат в исходный текст для дальнейшей обработки">
+                    <- Перенести текст
+                </button>
+            </div>
         </div>
     </div>
 
     <div class="info-panel">
         <h2>Подсказки и синтаксис:</h2>
         <div class="syntax-help">
-            <div class="help-item">
+            <div class="help-inline">
                 Группы: <span class="code-snippet">$0</span> (все), <span class="code-snippet">$1</span>, <span class="code-snippet">$2</span>
             </div>
-            <div class="help-item">
-                Новая строка: используйте <span class="code-snippet">\n</span> или <span class="code-snippet">\r\n</span>
+            <div class="help-inline">
+                Новая строка: <span class="code-snippet">\n</span> или <span class="code-snippet">\r\n</span>
             </div>
-            <div class="help-item">
+            <div class="help-inline">
                 Табуляция: <span class="code-snippet">\t</span>
             </div>
         </div>
-        <div style="margin-top: 8px; font-size: 0.85rem; opacity: 0.8;">
+        
+        <div style="margin-bottom: 20px; font-size: 0.85rem; opacity: 0.8;">
             * Режим "Оставить" удаляет всё, что не подходит под выражение. <br>
             * Режим "Заменить" меняет совпадения на указанный текст, сохраняя структуру.
         </div>
-        <h2>Примеры:</h2>
-            <div class="help-item">
-                <p><strong>Оставить строки содержащие от 20 до 50 символов</strong>
-                </br>(удаляет строки большей и меньшей длины)</p>
-                <p><strong>Регулярное выражение:</strong> </br><span class="code-snippet">(^.{20,50}$)</span></p>
-                <p><strong>Шаблон оставить:</strong> </br><span class="code-snippet">$1</span></p>
+
+        <h2>Примеры (нажмите, чтобы подставить):</h2>
+        <div class="examples-grid">
+            <!-- Карточка 1 -->
+            <div class="example-card" onclick="loadExample('(^.{20,50}$)', '$1', '')">
+                <h3>Фильтр по длине строки</h3>
+                <p>Оставить только те строки, длина которых составляет от 20 до 50 символов.</p>
+                <div class="example-meta">
+                    <p><strong>Regex:</strong> <span class="code-snippet">(^.{20,50}$)</span></p>
+                    <p><strong>Оставить:</strong> <span class="code-snippet">$1</span></p>
+                </div>
             </div>
 
-            <div class="help-item">
-                <p><strong>Оставить не пустые строки</strong>
-                </br>(удаляет все пустые строки в документе)</p>
-                <p><strong>Регулярное выражение:</strong> </br><span class="code-snippet">(^.*\S.*$)</span></p>
-                <p><strong>Шаблон оставить:</strong> </br><span class="code-snippet">$1</span></p>
+            <!-- Карточка 2 -->
+            <div class="example-card" onclick="loadExample('(^.*\\S.*$)', '$1', '')">
+                <h3>Удалить пустые строки</h3>
+                <p>Оставить только строки, содержащие хотя бы один непробельный символ.</p>
+                <div class="example-meta">
+                    <p><strong>Regex:</strong> <span class="code-snippet">(^.*\S.*$)</span></p>
+                    <p><strong>Оставить:</strong> <span class="code-snippet">$1</span></p>
+                </div>
             </div>
+
+            <!-- Карточка 3 -->
+            <div class="example-card" onclick="loadExample('(.+)\\s*\\(((.+))\\)', '', '$1\\n$2')">
+                <h3>Разбить строку на части</h3>
+                <p>Разделить текст "Имя (Фамилия)" на две отдельные строки.</p>
+                <div class="example-meta">
+                    <p><strong>Regex:</strong> <span class="code-snippet">(.+)\s*\(((.+))\)</span></p>
+                    <p><strong>Заменить:</strong> <span class="code-snippet">$1\n$2</span></p>
+                </div>
+            </div>
+            
+            <!-- Карточка 4: НОВАЯ (Удаление пробелов) -->
+            <div class="example-card" onclick="loadExample(' ', '', '')">
+                <h3>Удалить все пробелы</h3>
+                <p>Удалить пробелы, табуляции и переносы строк, заменив их на пустоту.</p>
+                <div class="example-meta">
+                    <p><strong>Regex:</strong> <span class="code-snippet">(пробел)</span></p>
+                    <p><strong>Заменить:</strong> <span class="code-snippet">(пусто)</span></p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -404,9 +603,16 @@
         
         const btnKeep = document.getElementById('btn-keep');
         const btnReplace = document.getElementById('btn-replace');
+        
+        // Tools Buttons
+        const btnSort = document.getElementById('btn-sort');
+        const btnDedup = document.getElementById('btn-dedup');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnMoveLeft = document.getElementById('btn-move');
+        const btnMoveRight = document.getElementById('btn-move-right');
+        
         const toast = document.getElementById('toast');
 
-        // Функция показа уведомлений
         function showToast(message, isError = false) {
             toast.textContent = message;
             toast.className = isError ? 'error show' : 'show';
@@ -415,7 +621,6 @@
             }, 3000);
         }
 
-        // Функция для замены экранированных последовательностей на реальные символы
         function unescapeString(str) {
             return str
                 .replace(/\\r/g, '\r')
@@ -423,7 +628,7 @@
                 .replace(/\\t/g, '\t');
         }
 
-        // Основная логика для кнопки "Оставить" (Extract)
+        // --- Основная логика (Оставить) ---
         btnKeep.addEventListener('click', () => {
             const patternStr = regexInput.value;
             const template = keepInput.value || '$0';
@@ -435,7 +640,6 @@
             }
 
             try {
-                // Флаги: 'g' (global), 'm' (multiline), 'u' (unicode)
                 const regex = new RegExp(patternStr, 'gmu');
                 const matches = [...source.matchAll(regex)];
 
@@ -445,7 +649,6 @@
                     return;
                 }
 
-                // Формируем результат на основе шаблона
                 const results = matches.map(match => {
                     return template.replace(/\$(\$|\d+)/g, (all, group) => {
                         if (group === '$') return '$';
@@ -455,7 +658,7 @@
                 });
 
                 outputText.value = results.join('\n');
-                showToast(`Найдено и оставлено строк: ${results.length}`);
+                showToast(`Найдено: ${results.length} строк`);
 
             } catch (e) {
                 console.error(e);
@@ -464,7 +667,7 @@
             }
         });
 
-        // Основная логика для кнопки "Заменить" (Replace)
+        // --- Основная логика (Заменить) ---
         btnReplace.addEventListener('click', () => {
             const patternStr = regexInput.value;
             const replacementStrRaw = replaceInput.value;
@@ -477,11 +680,7 @@
 
             try {
                 const regex = new RegExp(patternStr, 'gmu');
-                
-                // Обрабатываем спецсимволы в строке замены (\n, \r, \t)
                 const replacementStr = unescapeString(replacementStrRaw);
-
-                // Стандартная замена в JS поддерживает $1, $0 в строке замены автоматически
                 const result = source.replace(regex, replacementStr);
 
                 outputText.value = result;
@@ -494,7 +693,79 @@
             }
         });
 
-        // Слушатели клавиши Enter для удобства
+        // --- Утилита: Сортировка (Input) ---
+        btnSort.addEventListener('click', () => {
+            if (!inputText.value) {
+                showToast('Нет данных для сортировки', true);
+                return;
+            }
+            
+            const lines = inputText.value.split('\n');
+            lines.sort((a, b) => a.localeCompare(b, 'ru'));
+            inputText.value = lines.join('\n');
+            showToast('Список отсортирован');
+        });
+
+        // --- Утилита: Удаление дубликатов (Input) ---
+        btnDedup.addEventListener('click', () => {
+            if (!inputText.value) {
+                showToast('Нет данных для обработки', true);
+                return;
+            }
+
+            const lines = inputText.value.split('\n');
+            const uniqueSet = new Set(lines);
+            const uniqueArray = Array.from(uniqueSet);
+            
+            const duplicatesCount = lines.length - uniqueArray.length;
+            
+            inputText.value = uniqueArray.join('\n');
+            
+            if (duplicatesCount > 0) {
+                showToast(`Удалено дубликатов: ${duplicatesCount}`);
+            } else {
+                showToast('Дубликаты не найдены');
+            }
+        });
+
+        // --- Утилита: Переместить ВПРАВО (Input -> Output) ---
+        btnMoveRight.addEventListener('click', () => {
+            if (!inputText.value) {
+                showToast('Нет текста для переноса', true);
+                return;
+            }
+            
+            outputText.value = inputText.value;
+            inputText.value = '';
+            showToast('Текст перенесен вправо');
+        });
+        
+        // --- Утилита: Переместить ВЛЕВО (Output -> Input) ---
+        btnMoveLeft.addEventListener('click', () => {
+            if (!outputText.value) {
+                showToast('Нет результата для переноса', true);
+                return;
+            }
+            
+            inputText.value = outputText.value;
+            outputText.value = '';
+            showToast('Результат перемещен в исходный текст');
+        });
+
+        // --- Утилита: Копирование ---
+        btnCopy.addEventListener('click', () => {
+            if (!outputText.value) return;
+            
+            outputText.select();
+            outputText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(outputText.value).then(() => {
+                showToast('Скопировано в буфер обмена');
+            }).catch(err => {
+                showToast('Не удалось скопировать', true);
+            });
+        });
+
+        // Enter key support
         [regexInput, keepInput].forEach(inp => {
             inp.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') btnKeep.click();
@@ -505,11 +776,31 @@
             if (e.key === 'Enter') btnReplace.click();
         });
 
-        // Демо-запуск при загрузке (показывает, как работает "Оставить")
+        // Автоклик "Заменить" при запуске
         setTimeout(() => {
             btnReplace.click();
         }, 500);
     });
+
+    // --- Глобальная функция для загрузки примеров (доступна из onclick) ---
+    function loadExample(regex, keepVal, replaceVal) {
+        const regexInput = document.getElementById('regex-input');
+        const keepInput = document.getElementById('keep-template');
+        const replaceInput = document.getElementById('replace-template');
+        
+        // Обрабатываем экранирование обратных слэшей, пришедших из HTML атрибутов
+        // В HTML атрибутах \s приходит как \s, но JS может интерпретировать это иначе, 
+        // поэтому просто присваиваем.
+        
+        regexInput.value = regex;
+        keepInput.value = keepVal;
+        replaceInput.value = replaceVal;
+        
+        showToast('Шаблон загружен. Нажмите кнопку действия.');
+        
+        // Анимация фокуса на поле регулярного выражения
+        regexInput.focus();
+    }
 </script>
 
 </body>
