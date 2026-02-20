@@ -31,8 +31,8 @@
         }
 
         header {
-            padding: 20px;
-            background: rgba(30, 41, 59, 0.9);
+            padding: 15px 20px;
+            background: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
             position: sticky;
@@ -46,27 +46,69 @@
             width: 100%;
         }
 
+        /* Header Layout */
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
         h1 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
+            font-size: 1.25rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .controls-wrapper {
+        .header-actions {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            gap: 10px;
+            align-items: center;
         }
 
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #000;
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-primary:disabled { background: #475569; color: #94a3b8; cursor: wait; }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+        
+        /* Hide Settings button on Desktop */
+        @media (min-width: 769px) {
+            .btn-settings-mobile { display: none; }
+        }
+
+        /* Mode Switcher */
         .mode-switcher {
             display: flex;
             background: var(--bg-color);
             border-radius: 8px;
             padding: 4px;
             border: 1px solid var(--border-color);
-            width: fit-content;
+            margin-bottom: 15px;
         }
 
         .mode-btn {
@@ -78,12 +120,39 @@
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s;
+            flex: 1;
         }
 
         .mode-btn.active {
             background: var(--card-bg);
             color: var(--accent-color);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Filters Container Logic */
+        .filters-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .filters-container.open {
+            max-height: 300px;
+            opacity: 1;
+            margin-bottom: 15px;
+        }
+
+        /* Desktop: Always show filters */
+        @media (min-width: 769px) {
+            .filters-container {
+                max-height: 200px;
+                opacity: 1;
+                overflow: visible;
+            }
+            .mode-switcher {
+                margin-bottom: 15px;
+            }
         }
 
         .controls-grid {
@@ -95,7 +164,7 @@
 
         @media (min-width: 768px) {
             .controls-grid {
-                grid-template-columns: 1fr 1fr 1fr auto;
+                grid-template-columns: 1fr 1fr 1fr; /* Type, Starts, Length */
             }
         }
 
@@ -125,37 +194,7 @@
 
         select:focus, input:focus { border-color: var(--accent-color); }
 
-        .btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            font-size: 1rem;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 140px;
-        }
-
-        .btn-primary {
-            background: var(--accent-color);
-            color: #000;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-primary:disabled {
-            background: #475569;
-            color: #94a3b8;
-            cursor: wait;
-        }
-
+        /* Main Content */
         main {
             flex: 1;
             padding: 40px 20px;
@@ -274,15 +313,31 @@
 
 <header>
     <div class="container">
-        <h1>
-            <span style="color:var(--accent-color)">⚡</span> ИмяГенератор
-        </h1>
-        <div class="controls-wrapper">
-            <div class="mode-switcher">
-                <button class="mode-btn active" onclick="setMode('db')" id="mode-db">База данных</button>
-                <button class="mode-btn" onclick="setMode('ai')" id="mode-ai">Нейросеть</button>
+        <!-- Top Row -->
+        <div class="header-top">
+            <h1>
+                <span style="color:var(--accent-color)">⚡</span> ИмяГенератор
+            </h1>
+            <div class="header-actions">
+                <!-- Visible only on mobile -->
+                <button class="btn btn-ghost btn-settings-mobile" onclick="toggleFilters()">
+                    Настройки
+                </button>
+                <!-- Always visible -->
+                <button class="btn btn-primary" onclick="generate()" id="mainBtn">
+                    Сгенерировать
+                </button>
             </div>
+        </div>
 
+        <!-- Mode Switcher (Always visible) -->
+        <div class="mode-switcher">
+            <button class="mode-btn active" onclick="setMode('db')" id="mode-db">База данных</button>
+            <button class="mode-btn" onclick="setMode('ai')" id="mode-ai">Нейросеть</button>
+        </div>
+
+        <!-- Filters Container (Collapsible on Mobile) -->
+        <div id="filtersContainer" class="filters-container">
             <div class="controls-grid">
                 <div class="control-group">
                     <label>Тип</label>
@@ -298,9 +353,6 @@
                 <div class="control-group">
                     <label>Мин. длина</label>
                     <input type="number" id="lengthFilter" placeholder="Любая" min="1" max="20">
-                </div>
-                <div class="control-group">
-                    <button class="btn btn-primary" onclick="generate()" id="mainBtn">Сгенерировать</button>
                 </div>
             </div>
         </div>
@@ -339,16 +391,24 @@ const heroMetaEl = document.getElementById('heroMeta');
 const nameGridEl = document.getElementById('nameGrid');
 const loader = document.getElementById('loader');
 const mainBtn = document.getElementById('mainBtn');
+const filtersContainer = document.getElementById('filtersContainer');
 
 let currentMode = 'db'; 
 let datasets = { names: [], pets: [] };
 
-// Структура для хранения моделей: names и pets разделены
+// Models storage
 const models = {
     names: { loaded: false, loading: false, data: null },
     pets:  { loaded: false, loading: false, data: null }
 };
-let activeModel = null; // Ссылка на текущую активную модель
+let activeModel = null; 
+
+// --- Filter Logic ---
+
+// Toggle filters on mobile
+function toggleFilters() {
+    filtersContainer.classList.toggle('open');
+}
 
 function setMode(mode) {
     currentMode = mode;
@@ -532,9 +592,8 @@ function rmsnorm(x) {
     return x.map(xi => xi.mul(ms.add(1e-5).pow(-0.5)));
 }
 
-// GPT function now uses passed model state or global activeModel
 function gpt(token_id, pos_id, keys, values, model) {
-    const m = model || activeModel; // Fallback to active if not passed
+    const m = model || activeModel;
     const { state_dict, config, vocab_size, BOS } = m;
     
     const { n_layer, n_head, n_embd, block_size } = config;
@@ -605,12 +664,10 @@ function importWeights(input, type) {
                 state_dict: {}
             };
             
-            // Reconstruct state_dict with Value objects
             for (const [key, matData] of Object.entries(data.weights)) {
                 modelData.state_dict[key] = matData.map(row => row.map(val => new Value(val)));
             }
 
-            // Save to the specific slot
             models[type].data = modelData;
             models[type].loaded = true;
             
@@ -629,12 +686,8 @@ const MODEL_URLS = {
 };
 
 async function loadAIModel(type) {
-    if (models[type].loaded) {
-        return true; // Already loaded
-    }
-    if (models[type].loading) {
-        return false; // Loading in progress
-    }
+    if (models[type].loaded) return true;
+    if (models[type].loading) return false;
 
     models[type].loading = true;
     showLoading(true);
@@ -670,13 +723,11 @@ async function generateFromAI() {
     const lengthVal = document.getElementById('lengthFilter').value;
     const minLen = lengthVal ? parseInt(lengthVal) : 0;
 
-    // 1. Ensure model is loaded and set as active
     if (!models[type].loaded) {
         const success = await loadAIModel(type);
         if (!success) return;
     }
     
-    // Set active model pointer
     activeModel = models[type].data;
 
     showLoading(true);
@@ -708,11 +759,9 @@ async function generateFromAI() {
         const values = Array.from({length: activeModel.config.n_layer}, () => []);
         const sample = [];
         
-        // Start generation
         let last_logits = gpt(activeModel.BOS, 0, keys, values, activeModel);
         let current_pos = 1; 
 
-        // --- PREFIX HANDLING ---
         if (prefix.length > 0) {
             for (let char of prefix) {
                 let tid = activeModel.uchars.indexOf(char);
@@ -724,7 +773,6 @@ async function generateFromAI() {
             }
         }
         
-        // --- CONTINUE GENERATION ---
         let cont = true;
         while(cont && current_pos < activeModel.config.block_size) {
             const scaledLogits = last_logits.map(l => l.div(temperature));
@@ -776,6 +824,11 @@ async function generateFromAI() {
 // 4. Main Controller
 // ==========================================
 function generate() {
+    // Auto-close filters on mobile when generating
+    if (window.innerWidth <= 768) {
+        filtersContainer.classList.remove('open');
+    }
+
     if (currentMode === 'db') {
         generateFromDB();
     } else {
