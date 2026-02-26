@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastermind Mobile</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --border-color: #ddd;
+            /* Цвета фишек */
+            --color-1: #FF5252; /* Красный */
+            --color-2: #4CAF50; /* Зеленый */
+            --color-3: #2196F3; /* Синий */
+            --color-4: #FFEB3B; /* Желтый */
+            --color-5: #9C27B0; /* Фиолетовый */
+            --color-6: #FF9800; /* Оранжевый */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Игровое поле */
+        #game-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Попытки прижимаются к низу */
+            padding: 10px;
+            overflow-y: auto;
+            gap: 8px;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            padding: 8px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .attempt-number { width: 30px; font-weight: bold; color: #888; font-size: 0.9rem; }
+
+        .slots { display: flex; gap: 8px; flex: 1; justify-content: center; }
+
+        .peg {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #eee;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .hints {
+            display: grid;
+            grid-template-columns: repeat(2, 12px);
+            grid-gap: 4px;
+            width: 30px;
+        }
+
+        .hint-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+        }
+
+        .hint-dot.black { background-color: #333; }
+        .hint-dot.white { background-color: #fff; border: 1px solid #999; }
+
+        /* Блок текущей попытки */
+        #current-attempt {
+            background: #e9ecef;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        /* Панель управления */
+        #controls {
+            background: var(--panel-bg);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+        }
+
+        .main-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .color-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+            transition: transform 0.1s;
+        }
+
+        .color-btn:active { transform: scale(0.9); }
+
+        .action-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .btn-check { background: #4CAF50; color: white; }
+        .btn-remove { background: #f44336; color: white; }
+        .btn-new { background: #2196F3; color: white; width: 100%; }
+        .btn:disabled { opacity: 0.5; }
+
+        /* Привязка цветов */
+        .c1 { background-color: var(--color-1); }
+        .c2 { background-color: var(--color-2); }
+        .c3 { background-color: var(--color-3); }
+        .c4 { background-color: var(--color-4); }
+        .c5 { background-color: var(--color-5); }
+        .c6 { background-color: var(--color-6); }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-board">
+        <!-- Сюда добавляются прошлые попытки -->
+    </div>
+
+    <div id="current-attempt">
+        <div class="peg" id="cur-0"></div>
+        <div class="peg" id="cur-1"></div>
+        <div class="peg" id="cur-2"></div>
+        <div class="peg" id="cur-3"></div>
+    </div>
+
+    <div id="controls">
+        <div class="main-controls">
+            <div class="color-picker">
+                <button class="color-btn c1" onclick="addColor(1)"></button>
+                <button class="color-btn c2" onclick="addColor(2)"></button>
+                <button class="color-btn c3" onclick="addColor(3)"></button>
+                <button class="color-btn c4" onclick="addColor(4)"></button>
+                <button class="color-btn c5" onclick="addColor(5)"></button>
+                <button class="color-btn c6" onclick="addColor(6)"></button>
+            </div>
+            <div class="action-btns">
+                <button class="btn btn-check" onclick="checkAttempt()">Ок</button>
+                <button class="btn btn-remove" onclick="removeLast()">←</button>
+            </div>
+        </div>
+        <button class="btn btn-new" onclick="initGame()">Новая игра</button>
+    </div>
+
+    <script>
+        let secretCode = [];
+        let currentGuess = [];
+        let attemptsCount = 0;
+        const MAX_SLOTS = 4;
+
+        function initGame() {
+            secretCode = [];
+            for (let i = 0; i < MAX_SLOTS; i++) {
+                secretCode.push(Math.floor(Math.random() * 6) + 1);
+            }
+            attemptsCount = 0;
+            currentGuess = [];
+            document.getElementById('game-board').innerHTML = '';
+            updateCurrentDisplay();
+            console.log("Secret Code:", secretCode); // Для отладки
+        }
+
+        function addColor(colorIndex) {
+            if (currentGuess.length < MAX_SLOTS) {
+                currentGuess.push(colorIndex);
+                updateCurrentDisplay();
+            }
+        }
+
+        function removeLast() {
+            currentGuess.pop();
+            updateCurrentDisplay();
+        }
+
+        function updateCurrentDisplay() {
+            for (let i = 0; i < MAX_SLOTS; i++) {
+                const slot = document.getElementById(`cur-${i}`);
+                slot.className = 'peg';
+                if (currentGuess[i]) {
+                    slot.classList.add(`c${currentGuess[i]}`);
+                }
+            }
+        }
+
+        function checkAttempt() {
+            if (currentGuess.length !== MAX_SLOTS) return;
+
+            attemptsCount++;
+            const result = calculateHints(secretCode, currentGuess);
+            renderAttemptInHistory(attemptsCount, currentGuess, result);
+
+            if (result.black === MAX_SLOTS) {
+                alert(`Победа! Вы угадали за ${attemptsCount} попыток.`);
+                initGame();
+            } else {
+                currentGuess = [];
+                updateCurrentDisplay();
+                // Прокрутка вниз
+                const board = document.getElementById('game-board');
+                board.scrollTop = board.scrollHeight;
+            }
+        }
+
+        function calculateHints(secret, guess) {
+            let black = 0;
+            let white = 0;
+            const secretCopy = [...secret];
+            const guessCopy = [...guess];
+
+            // Сначала ищем точные совпадения (черные)
+            for (let i = 0; i < MAX_SLOTS; i++) {
+                if (guessCopy[i] === secretCopy[i]) {
+                    black++;
+                    secretCopy[i] = null;
+                    guessCopy[i] = null;
+                }
+            }
+
+            // Затем ищем совпадения цветов в других местах (белые)
+            for (let i = 0; i < MAX_SLOTS; i++) {
+                if (guessCopy[i] !== null) {
+                    const foundIndex = secretCopy.indexOf(guessCopy[i]);
+                    if (foundIndex !== -1) {
+                        white++;
+                        secretCopy[foundIndex] = null;
+                    }
+                }
+            }
+
+            return { black, white };
+        }
+
+        function renderAttemptInHistory(num, guess, result) {
+            const board = document.getElementById('game-board');
+            const row = document.createElement('div');
+            row.className = 'row';
+
+            let slotsHtml = guess.map(color => `<div class="peg c${color}"></div>`).join('');
+            
+            let hintsHtml = '';
+            for (let i = 0; i < result.black; i++) hintsHtml += '<div class="hint-dot black"></div>';
+            for (let i = 0; i < result.white; i++) hintsHtml += '<div class="hint-dot white"></div>';
+            while (hintsHtml.split('hint-dot').length - 1 < 4) hintsHtml += '<div class="hint-dot"></div>';
+
+            row.innerHTML = `
+                <div class="attempt-number">#${num}</div>
+                <div class="slots">${slotsHtml}</div>
+                <div class="hints">${hintsHtml}</div>
+            `;
+            board.appendChild(row);
+        }
+
+        // Старт игры при загрузке
+        initGame();
+    </script>
+</body>
+</html>

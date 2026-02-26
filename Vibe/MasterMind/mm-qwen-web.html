@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastermind</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --board-bg: #ffffff;
+            --slot-bg: #e0e0e0;
+            --text-color: #333;
+            --primary-btn: #4a90e2;
+            --danger-btn: #e74c3c;
+            --success-btn: #2ecc71;
+            
+            /* Glossy Sphere Colors */
+            --c-red: radial-gradient(circle at 30% 30%, #ff7b7b, #c0392b);
+            --c-blue: radial-gradient(circle at 30% 30%, #7bafff, #2980b9);
+            --c-green: radial-gradient(circle at 30% 30%, #7bff96, #27ae60);
+            --c-yellow: radial-gradient(circle at 30% 30%, #fff57b, #f1c40f);
+            --c-purple: radial-gradient(circle at 30% 30%, #d97bff, #8e44ad);
+            --c-orange: radial-gradient(circle at 30% 30%, #ffaa7b, #d35400);
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation; /* Improves touch response */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            text-align: center;
+            padding: 10px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        h1 { margin: 0; font-size: 1.2rem; color: var(--text-color); }
+
+        /* --- Game Board (History) --- */
+        #game-board {
+            flex: 1;
+            background: var(--board-bg);
+            margin: 10px;
+            border-radius: 12px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Stick items to bottom */
+            padding: 10px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .history-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .attempt-number {
+            width: 30px;
+            font-size: 0.8rem;
+            color: #999;
+            text-align: center;
+        }
+
+        .guess-slots {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .feedback-slots {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            width: 30px;
+            margin-left: 10px;
+        }
+
+        /* --- Current Attempt Area --- */
+        #current-attempt-area {
+            background: #fff;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .slot {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--slot-bg);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .slot.filled {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transform: scale(1.05);
+        }
+
+        /* --- Controls --- */
+        #controls {
+            background: #fff;
+            padding: 10px 15px 20px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .color-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .color-btn:active { transform: scale(0.9); }
+
+        .action-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100px; /* Match height of 2 rows of colors roughly */
+            justify-content: center;
+        }
+
+        .action-btn {
+            width: 70px;
+            height: 45px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            transition: opacity 0.2s;
+        }
+        .action-btn:active { opacity: 0.8; }
+        .action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .btn-check { background-color: var(--success-btn); }
+        .btn-remove { background-color: var(--danger-btn); }
+
+        /* --- New Game Button --- */
+        #new-game-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-btn);
+            color: white;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        #new-game-btn:active { background-color: #357abd; }
+
+        /* --- Modal --- */
+        #modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-title { font-size: 1.5rem; margin-bottom: 10px; color: var(--text-color); }
+        .modal-text { margin-bottom: 20px; color: #666; }
+        .modal-secret {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .secret-dot {
+            width: 30px; height: 30px; border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .modal-btn {
+            background: var(--primary-btn);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Peg Styles */
+        .peg { width: 10px; height: 10px; border-radius: 50%; }
+        .peg.black { background-color: #333; box-shadow: inset 0 1px 2px rgba(255,255,255,0.3); }
+        .peg.white { background-color: #fff; border: 1px solid #ccc; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
+        .peg.empty { background-color: transparent; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Mastermind</h1>
+    </header>
+
+    <!-- Game Board: History of guesses -->
+    <div id="game-board">
+        <!-- History rows will be injected here -->
+    </div>
+
+    <!-- Current Attempt Display -->
+    <div id="current-attempt-area">
+        <div class="slot" id="slot-0"></div>
+        <div class="slot" id="slot-1"></div>
+        <div class="slot" id="slot-2"></div>
+        <div class="slot" id="slot-3"></div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+        <div class="color-grid">
+            <button class="color-btn" style="background: var(--c-red)" onclick="addColor('red')"></button>
+            <button class="color-btn" style="background: var(--c-blue)" onclick="addColor('blue')"></button>
+            <button class="color-btn" style="background: var(--c-green)" onclick="addColor('green')"></button>
+            <button class="color-btn" style="background: var(--c-yellow)" onclick="addColor('yellow')"></button>
+            <button class="color-btn" style="background: var(--c-purple)" onclick="addColor('purple')"></button>
+            <button class="color-btn" style="background: var(--c-orange)" onclick="addColor('orange')"></button>
+        </div>
+        <div class="action-grid">
+            <button class="action-btn btn-check" onclick="checkGuess()">ПРОВЕРИТЬ</button>
+            <button class="action-btn btn-remove" onclick="removeColor()">УБРАТЬ</button>
+        </div>
+    </div>
+
+    <button id="new-game-btn" onclick="initGame()">Новая игра</button>
+
+    <!-- Game Over Modal -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title">Победа!</div>
+            <div class="modal-text" id="modal-msg">Вы угадали код за 5 попыток.</div>
+            <div class="modal-secret" id="modal-secret-display"></div>
+            <button class="modal-btn" onclick="initGame()">Играть снова</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const COLORS = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+        const CODE_LENGTH = 4;
+        let secretCode = [];
+        let currentGuess = [];
+        let attemptCount = 0;
+        let isGameOver = false;
+
+        // DOM Elements
+        const gameBoard = document.getElementById('game-board');
+        const slots = [
+            document.getElementById('slot-0'),
+            document.getElementById('slot-1'),
+            document.getElementById('slot-2'),
+            document.getElementById('slot-3')
+        ];
+        const modal = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMsg = document.getElementById('modal-msg');
+        const modalSecretDisplay = document.getElementById('modal-secret-display');
+
+        // Initialize Game
+        function initGame() {
+            secretCode = generateCode();
+            currentGuess = [];
+            attemptCount = 0;
+            isGameOver = false;
+            gameBoard.innerHTML = '';
+            modal.style.display = 'none';
+            updateCurrentAttemptUI();
+            console.log("Secret Code (for debugging):", secretCode);
+        }
+
+        // Generate Random Code
+        function generateCode() {
+            const code = [];
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+                code.push(randomColor);
+            }
+            return code;
+        }
+
+        // Add Color to Current Guess
+        function addColor(color) {
+            if (isGameOver) return;
+            if (currentGuess.length < CODE_LENGTH) {
+                currentGuess.push(color);
+                updateCurrentAttemptUI();
+            }
+        }
+
+        // Remove Last Color
+        function removeColor() {
+            if (isGameOver) return;
+            if (currentGuess.length > 0) {
+                currentGuess.pop();
+                updateCurrentAttemptUI();
+            }
+        }
+
+        // Update UI for Current Attempt Slots
+        function updateCurrentAttemptUI() {
+            slots.forEach((slot, index) => {
+                slot.className = 'slot'; // Reset classes
+                slot.style.background = ''; // Reset inline style
+                
+                if (index < currentGuess.length) {
+                    const color = currentGuess[index];
+                    slot.classList.add('filled');
+                    slot.style.background = `var(--c-${color})`;
+                }
+            });
+        }
+
+        // Check Guess Logic
+        function checkGuess() {
+            if (isGameOver) return;
+            if (currentGuess.length !== CODE_LENGTH) {
+                alert("Заполните все 4 цвета!");
+                return;
+            }
+
+            attemptCount++;
+            const feedback = calculateFeedback(currentGuess, secretCode);
+            addHistoryRow(currentGuess, feedback, attemptCount);
+            
+            // Check Win
+            if (feedback.black === CODE_LENGTH) {
+                endGame(true);
+            } else {
+                // Reset current guess for next turn
+                currentGuess = [];
+                updateCurrentAttemptUI();
+                // Scroll to bottom of board
+                gameBoard.scrollTop = gameBoard.scrollHeight;
+            }
+        }
+
+        // Calculate Black and White Pegs
+        function calculateFeedback(guess, code) {
+            let black = 0;
+            let white = 0;
+            
+            // Create copies to mark used positions
+            const codeCopy = [...code];
+            const guessCopy = [...guess];
+            
+            // 1. Check Blacks (Correct Color, Correct Position)
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                if (guessCopy[i] === codeCopy[i]) {
+                    black++;
+                    codeCopy[i] = null; // Mark as used
+                    guessCopy[i] = null; // Mark as used
+                }
+            }
+
+            // 2. Check Whites (Correct Color, Wrong Position)
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                if (guessCopy[i] !== null) { // If not already matched as black
+                    const foundIndex = codeCopy.indexOf(guessCopy[i]);
+                    if (foundIndex !== -1) {
+                        white++;
+                        codeCopy[foundIndex] = null; // Mark as used
+                    }
+                }
+            }
+
+            return { black, white };
+        }
+
+        // Add Row to History Board
+        function addHistoryRow(guess, feedback, attemptNum) {
+            const row = document.createElement('div');
+            row.className = 'history-row';
+
+            // Attempt Number
+            const numDiv = document.createElement('div');
+            numDiv.className = 'attempt-number';
+            numDiv.textContent = attemptNum;
+            row.appendChild(numDiv);
+
+            // Guess Slots
+            const guessDiv = document.createElement('div');
+            guessDiv.className = 'guess-slots';
+            guess.forEach(color => {
+                const dot = document.createElement('div');
+                dot.className = 'slot';
+                dot.style.width = '30px';
+                dot.style.height = '30px';
+                dot.style.background = `var(--c-${color})`;
+                dot.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                guessDiv.appendChild(dot);
+            });
+            row.appendChild(guessDiv);
+
+            // Feedback Slots (2x2 grid)
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'feedback-slots';
+            
+            // Add Black Pegs
+            for (let i = 0; i < feedback.black; i++) {
+                const peg = document.createElement('div');
+                peg.className = 'peg black';
+                feedbackDiv.appendChild(peg);
+            }
+            // Add White Pegs
+            for (let i = 0; i < feedback.white; i++) {
+                const peg = document.createElement('div');
+                peg.className = 'peg white';
+                feedbackDiv.appendChild(peg);
+            }
+            // Fill remaining with empty
+            const totalPegs = feedback.black + feedback.white;
+            for (let i = totalPegs; i < 4; i++) {
+                const peg = document.createElement('div');
+                peg.className = 'peg empty';
+                feedbackDiv.appendChild(peg);
+            }
+            
+            row.appendChild(feedbackDiv);
+            gameBoard.appendChild(row);
+        }
+
+        // End Game
+        function endGame(win) {
+            isGameOver = true;
+            modal.style.display = 'flex';
+            
+            if (win) {
+                modalTitle.textContent = "Победа!";
+                modalTitle.style.color = "var(--success-btn)";
+                modalMsg.textContent = `Вы угадали код за ${attemptCount} попыток!`;
+            } else {
+                // Usually Mastermind has a limit (e.g., 10), but prompt didn't specify limit logic, 
+                // just "Check" button. Assuming infinite attempts or manual stop.
+                // If we wanted a loss condition, we'd check attemptCount > MAX_ATTEMPTS here.
+                modalTitle.textContent = "Игра окончена";
+                modalMsg.textContent = "Правильная комбинация:";
+            }
+
+            // Show Secret Code in Modal
+            modalSecretDisplay.innerHTML = '';
+            secretCode.forEach(color => {
+                const dot = document.createElement('div');
+                dot.className = 'secret-dot';
+                dot.style.background = `var(--c-${color})`;
+                modalSecretDisplay.appendChild(dot);
+            });
+        }
+
+        // Start game on load
+        initGame();
+
+    </script>
+</body>
+</html>

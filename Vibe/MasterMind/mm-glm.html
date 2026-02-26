@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mastermind</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --bg-secondary: #131a24;
+      --fg: #e8eef4;
+      --muted: #5a6a7a;
+      --accent: #00d4aa;
+      --accent-dim: #00d4aa33;
+      --card: #1a222e;
+      --border: #2a3644;
+      --success: #22c55e;
+      --game-colors: #e63946, #4361ee, #2a9d8f, #f4a261, #9b5de5, #f72585;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      position: relative;
+    }
+
+    /* Background atmosphere */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, var(--accent-dim) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, #4361ee22 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header */
+    .header {
+      padding: 16px 20px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--fg) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header .subtitle {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    /* Game Board */
+    .game-board {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 1;
+      min-height: 200px;
+      max-height: calc(100dvh - 340px);
+    }
+
+    .attempts-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .attempt-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideIn 0.4s ease forwards;
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .attempt-number {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 20px;
+    }
+
+    .attempt-colors {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .attempt-slot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      transition: transform 0.2s ease;
+    }
+
+    .attempt-slot.filled {
+      animation: popIn 0.3s ease forwards;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .attempt-result {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      max-width: 48px;
+    }
+
+    .result-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .result-dot.black {
+      background: #1a1a1a;
+      box-shadow: 0 0 4px rgba(0,0,0,0.5);
+    }
+
+    .result-dot.white {
+      background: #ffffff;
+      box-shadow: 0 0 4px rgba(255,255,255,0.3);
+    }
+
+    /* Current Attempt */
+    .current-attempt {
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .current-attempt-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .current-slots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .current-slot {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 3px solid var(--border);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .current-slot.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-dim);
+    }
+
+    .current-slot.filled {
+      animation: popIn 0.3s ease forwards;
+    }
+
+    /* Control Panel */
+    .control-panel {
+      padding: 16px;
+      background: var(--bg-secondary);
+      position: relative;
+      z-index: 1;
+    }
+
+    .controls-wrapper {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .color-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .color-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .color-btn:active {
+      transform: scale(0.95);
+    }
+
+    .color-btn::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .color-btn:hover::after {
+      border-color: var(--fg);
+    }
+
+    .color-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    /* Colors */
+    .color-btn[data-color="0"] { background: #e63946; }
+    .color-btn[data-color="1"] { background: #4361ee; }
+    .color-btn[data-color="2"] { background: #2a9d8f; }
+    .color-btn[data-color="3"] { background: #f4a261; }
+    .color-btn[data-color="4"] { background: #9b5de5; }
+    .color-btn[data-color="5"] { background: #f72585; }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .action-btn {
+      padding: 14px 20px;
+      border-radius: 10px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .action-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .check-btn {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .check-btn:not(:disabled):hover {
+      background: #00eebb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px var(--accent-dim);
+    }
+
+    .check-btn:not(:disabled):active {
+      transform: translateY(0);
+    }
+
+    .clear-btn {
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .clear-btn:not(:disabled):hover {
+      background: var(--border);
+    }
+
+    /* New Game Button */
+    .new-game-wrapper {
+      padding: 12px 16px 20px;
+      background: var(--bg-secondary);
+      position: relative;
+      z-index: 1;
+    }
+
+    .new-game-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: transparent;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .new-game-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .new-game-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+      border: 1px solid var(--border);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal h2 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+
+    .modal .stats {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .modal .stats span {
+      color: var(--fg);
+      font-weight: 700;
+    }
+
+    .modal .combination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .modal .combination-slot {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+    }
+
+    .modal .close-btn {
+      padding: 12px 32px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal .close-btn:hover {
+      background: #00eebb;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state p {
+      font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (min-width: 480px) {
+      .attempt-slot {
+        width: 44px;
+        height: 44px;
+      }
+
+      .current-slot {
+        width: 56px;
+        height: 56px;
+      }
+
+      .color-btn {
+        width: 60px;
+        height: 60px;
+      }
+
+      .action-btn {
+        padding: 16px 24px;
+      }
+    }
+
+    @media (max-height: 700px) {
+      .header {
+        padding: 12px 16px;
+      }
+
+      .header h1 {
+        font-size: 1.2rem;
+      }
+
+      .current-attempt {
+        padding: 12px;
+      }
+
+      .current-slot {
+        width: 42px;
+        height: 42px;
+      }
+
+      .color-btn {
+        width: 46px;
+        height: 46px;
+      }
+
+      .action-btn {
+        padding: 12px 16px;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Mastermind</h1>
+    <p class="subtitle">Угадай комбинацию из 4 цветов</p>
+  </header>
+
+  <main class="game-board" id="gameBoard">
+    <div class="attempts-container" id="attemptsContainer">
+      <div class="empty-state" id="emptyState">
+        <p>Сделайте первую попытку</p>
+      </div>
+    </div>
+  </main>
+
+  <section class="current-attempt">
+    <p class="current-attempt-label">Ваша попытка</p>
+    <div class="current-slots" id="currentSlots">
+      <div class="current-slot" data-index="0"></div>
+      <div class="current-slot" data-index="1"></div>
+      <div class="current-slot" data-index="2"></div>
+      <div class="current-slot" data-index="3"></div>
+    </div>
+  </section>
+
+  <section class="control-panel">
+    <div class="controls-wrapper">
+      <div class="color-buttons" id="colorButtons">
+        <button class="color-btn" data-color="0" aria-label="Красный"></button>
+        <button class="color-btn" data-color="1" aria-label="Синий"></button>
+        <button class="color-btn" data-color="2" aria-label="Зелёный"></button>
+        <button class="color-btn" data-color="3" aria-label="Оранжевый"></button>
+        <button class="color-btn" data-color="4" aria-label="Фиолетовый"></button>
+        <button class="color-btn" data-color="5" aria-label="Розовый"></button>
+      </div>
+      <div class="action-buttons">
+        <button class="action-btn check-btn" id="checkBtn" disabled>Проверить</button>
+        <button class="action-btn clear-btn" id="clearBtn" disabled>Убрать</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="new-game-wrapper">
+    <button class="new-game-btn" id="newGameBtn">Новая игра</button>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2 id="modalTitle">Победа!</h2>
+      <p class="stats" id="modalStats">Вы угадали за <span>3</span> попыток</p>
+      <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 12px;">Правильная комбинация:</p>
+      <div class="combination" id="modalCombination"></div>
+      <button class="close-btn" id="modalCloseBtn">Новая игра</button>
+    </div>
+  </div>
+
+  <script>
+    // Game colors
+    const COLORS = [
+      '#e63946', // red
+      '#4361ee', // blue
+      '#2a9d8f', // green
+      '#f4a261', // orange
+      '#9b5de5', // purple
+      '#f72585'  // pink
+    ];
+
+    // Game state
+    let secretCode = [];
+    let currentAttempt = [];
+    let attempts = [];
+    let gameOver = false;
+    const MAX_ATTEMPTS = 10;
+
+    // DOM Elements
+    const gameBoard = document.getElementById('gameBoard');
+    const attemptsContainer = document.getElementById('attemptsContainer');
+    const emptyState = document.getElementById('emptyState');
+    const currentSlots = document.querySelectorAll('.current-slot');
+    const colorButtons = document.querySelectorAll('.color-btn');
+    const checkBtn = document.getElementById('checkBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalStats = document.getElementById('modalStats');
+    const modalCombination = document.getElementById('modalCombination');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+    // Generate secret code
+    function generateSecretCode() {
+      secretCode = [];
+      for (let i = 0; i < 4; i++) {
+        secretCode.push(Math.floor(Math.random() * 6));
+      }
+    }
+
+    // Update current attempt display
+    function updateCurrentAttemptDisplay() {
+      currentSlots.forEach((slot, index) => {
+        if (index < currentAttempt.length) {
+          slot.style.background = COLORS[currentAttempt[index]];
+          slot.classList.add('filled');
+        } else {
+          slot.style.background = '';
+          slot.classList.remove('filled');
+        }
+        
+        if (index === currentAttempt.length && !gameOver) {
+          slot.classList.add('active');
+        } else {
+          slot.classList.remove('active');
+        }
+      });
+
+      checkBtn.disabled = currentAttempt.length !== 4 || gameOver;
+      clearBtn.disabled = currentAttempt.length === 0 || gameOver;
+    }
+
+    // Calculate result
+    function calculateResult(guess) {
+      let black = 0;
+      let white = 0;
+      const secretCopy = [...secretCode];
+      const guessCopy = [...guess];
+
+      // First pass: find exact matches (black)
+      for (let i = 0; i < 4; i++) {
+        if (guessCopy[i] === secretCopy[i]) {
+          black++;
+          secretCopy[i] = -1;
+          guessCopy[i] = -2;
+        }
+      }
+
+      // Second pass: find color matches (white)
+      for (let i = 0; i < 4; i++) {
+        if (guessCopy[i] >= 0) {
+          const index = secretCopy.indexOf(guessCopy[i]);
+          if (index !== -1) {
+            white++;
+            secretCopy[index] = -1;
+          }
+        }
+      }
+
+      return { black, white };
+    }
+
+    // Add attempt to board
+    function addAttemptToBoard(guess, attemptNumber) {
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+
+      const result = calculateResult(guess);
+      
+      const row = document.createElement('div');
+      row.className = 'attempt-row';
+      row.style.animationDelay = '0.1s';
+
+      // Number
+      const number = document.createElement('span');
+      number.className = 'attempt-number';
+      number.textContent = attemptNumber;
+
+      // Colors
+      const colorsDiv = document.createElement('div');
+      colorsDiv.className = 'attempt-colors';
+      guess.forEach((colorIndex, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'attempt-slot filled';
+        slot.style.background = COLORS[colorIndex];
+        slot.style.animationDelay = `${i * 0.1}s`;
+        colorsDiv.appendChild(slot);
+      });
+
+      // Result
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'attempt-result';
+      
+      for (let i = 0; i < result.black; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'result-dot black';
+        resultDiv.appendChild(dot);
+      }
+      for (let i = 0; i < result.white; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'result-dot white';
+        resultDiv.appendChild(dot);
+      }
+      
+      // Fill remaining with empty dots
+      for (let i = result.black + result.white; i < 4; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'result-dot';
+        resultDiv.appendChild(dot);
+      }
+
+      row.appendChild(number);
+      row.appendChild(colorsDiv);
+      row.appendChild(resultDiv);
+
+      attemptsContainer.appendChild(row);
+
+      // Scroll to bottom
+      gameBoard.scrollTop = gameBoard.scrollHeight;
+
+      return result;
+    }
+
+    // Show modal
+    function showModal(won, attemptCount) {
+      modalTitle.textContent = won ? 'Победа!' : 'Игра окончена';
+      modalTitle.style.color = won ? 'var(--accent)' : '#e63946';
+      modalStats.innerHTML = won 
+        ? `Вы угадали за <span>${attemptCount}</span> попыт${attemptCount === 1 ? 'ку' : attemptCount < 5 ? 'ки' : 'ок'}`
+        : `Не удалось угадать за ${MAX_ATTEMPTS} попыток`;
+
+      modalCombination.innerHTML = '';
+      secretCode.forEach(colorIndex => {
+        const slot = document.createElement('div');
+        slot.className = 'combination-slot';
+        slot.style.background = COLORS[colorIndex];
+        modalCombination.appendChild(slot);
+      });
+
+      modalOverlay.classList.add('active');
+    }
+
+    // Hide modal
+    function hideModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    // Handle color selection
+    function handleColorSelect(colorIndex) {
+      if (gameOver || currentAttempt.length >= 4) return;
+      
+      currentAttempt.push(colorIndex);
+      updateCurrentAttemptDisplay();
+    }
+
+    // Handle clear
+    function handleClear() {
+      if (currentAttempt.length > 0) {
+        currentAttempt.pop();
+        updateCurrentAttemptDisplay();
+      }
+    }
+
+    // Handle check
+    function handleCheck() {
+      if (currentAttempt.length !== 4 || gameOver) return;
+
+      const attemptNumber = attempts.length + 1;
+      const result = addAttemptToBoard(currentAttempt, attemptNumber);
+      
+      attempts.push([...currentAttempt]);
+
+      if (result.black === 4) {
+        gameOver = true;
+        setTimeout(() => showModal(true, attemptNumber), 500);
+      } else if (attempts.length >= MAX_ATTEMPTS) {
+        gameOver = true;
+        setTimeout(() => showModal(false, MAX_ATTEMPTS), 500);
+      }
+
+      currentAttempt = [];
+      updateCurrentAttemptDisplay();
+    }
+
+    // Reset game
+    function resetGame() {
+      hideModal();
+      secretCode = [];
+      currentAttempt = [];
+      attempts = [];
+      gameOver = false;
+
+      attemptsContainer.innerHTML = '';
+      const newEmptyState = document.createElement('div');
+      newEmptyState.className = 'empty-state';
+      newEmptyState.id = 'emptyState';
+      newEmptyState.innerHTML = '<p>Сделайте первую попытку</p>';
+      attemptsContainer.appendChild(newEmptyState);
+
+      generateSecretCode();
+      updateCurrentAttemptDisplay();
+    }
+
+    // Event listeners
+    colorButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const colorIndex = parseInt(btn.dataset.color);
+        handleColorSelect(colorIndex);
+      });
+    });
+
+    clearBtn.addEventListener('click', handleClear);
+    checkBtn.addEventListener('click', handleCheck);
+    newGameBtn.addEventListener('click', resetGame);
+    modalCloseBtn.addEventListener('click', resetGame);
+
+    // Close modal on overlay click
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        hideModal();
+      }
+    });
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        hideModal();
+      }
+      
+      // Number keys 1-6 for colors
+      if (e.key >= '1' && e.key <= '6' && !gameOver) {
+        handleColorSelect(parseInt(e.key) - 1);
+      }
+      
+      // Enter to check
+      if (e.key === 'Enter' && currentAttempt.length === 4 && !gameOver) {
+        handleCheck();
+      }
+      
+      // Backspace to clear
+      if (e.key === 'Backspace' && currentAttempt.length > 0 && !gameOver) {
+        handleClear();
+      }
+    });
+
+    // Initialize game
+    generateSecretCode();
+    updateCurrentAttemptDisplay();
+  </script>
+</body>
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Mastermind · Угадай цвета</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none; /* запрет выделения на мобильных */
+            -webkit-tap-highlight-color: transparent;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #1e2b3a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            margin: 0;
+        }
+
+        .game {
+            background: #0f1a24;
+            border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+            width: 100%;
+            max-width: 440px;
+            padding: 20px 16px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            border: 2px solid #3a4c5e;
+        }
+
+        /* Игровое поле (прошлые попытки) */
+        .board {
+            background: #1d2c3a;
+            border-radius: 28px;
+            padding: 16px 12px;
+            min-height: 210px;
+            max-height: 340px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;  /* прижимаем строки к низу */
+            gap: 10px;
+            border: 1px solid #3f5567;
+            box-shadow: inset 0 3px 8px rgba(0,0,0,0.5);
+        }
+
+        /* Одна строка попытки */
+        .attempt-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #14222e;
+            padding: 8px 10px;
+            border-radius: 40px;
+            border: 1px solid #3e5b72;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .attempt-number {
+            color: #c0d4e6;
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 32px;
+            text-align: center;
+            background: #263e52;
+            border-radius: 30px;
+            padding: 4px 0;
+            margin-right: 6px;
+            border: 1px solid #4d708b;
+        }
+
+        .colors-row {
+            display: flex;
+            gap: 6px;
+            flex: 2;
+            justify-content: center;
+        }
+
+        .result-row {
+            display: flex;
+            gap: 5px;
+            margin-left: 8px;
+            min-width: 70px;
+            justify-content: flex-end;
+        }
+
+        /* общий стиль для кружков */
+        .circle {
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .color-circle {
+            width: 40px;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 3px 6px black;
+            transition: transform 0.1s ease;
+        }
+
+        .color-circle.small {
+            width: 28px;
+            border-width: 2px;
+        }
+
+        .result-circle {
+            width: 22px;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            border: 2px solid rgba(0,0,0,0.5);
+            background: #2d4051;
+        }
+
+        .result-circle.black {
+            background: #111111;
+            border-color: #888;
+        }
+
+        .result-circle.white {
+            background: #f0f0f0;
+            border-color: #333;
+        }
+
+        .result-circle.empty {
+            background: #405a70;
+            border-color: #1f2f3c;
+            opacity: 0.7;
+        }
+
+        /* Текущая попытка */
+        .current-attempt {
+            background: #1d2c3a;
+            border-radius: 50px;
+            padding: 14px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            border: 2px solid #4f708b;
+            box-shadow: 0 4px 0 #0b141c;
+        }
+
+        .current-slots {
+            display: flex;
+            gap: 12px;
+        }
+
+        .slot {
+            width: 48px;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            background: #293e51;
+            border: 3px solid #56718b;
+            box-shadow: inset 0 -3px 0 #10212b;
+            transition: 0.1s;
+        }
+
+        .slot.filled {
+            border-color: white;
+            box-shadow: 0 0 10px #9fc5ff;
+        }
+
+        /* Панель управления */
+        .control-panel {
+            background: #13212e;
+            border-radius: 36px;
+            padding: 18px 12px;
+            border: 2px solid #3d5a72;
+            box-shadow: 0 6px 0 #0b141c;
+        }
+
+        .panel-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .colors-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            flex: 2;
+            min-width: 170px;
+            justify-items: center;
+        }
+
+        .color-btn {
+            width: 55px;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            border: 3px solid rgba(255,255,255,0.5);
+            background: red; /* будет переопределено инлайн-стилем */
+            box-shadow: 0 5px 0 #0d1b26, 0 6px 12px black;
+            transition: all 0.05s linear;
+            cursor: pointer;
+        }
+
+        .color-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #0d1b26, 0 6px 12px black;
+        }
+
+        .action-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 100px;
+        }
+
+        .action-btn {
+            background: #2d4b63;
+            border: none;
+            border-radius: 40px;
+            padding: 14px 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 0 #10212b;
+            box-shadow: 0 5px 0 #102433, 0 4px 10px black;
+            cursor: pointer;
+            transition: 0.05s linear;
+            border: 1px solid #608aa8;
+            letter-spacing: 0.5px;
+        }
+
+        .action-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #102433, 0 4px 10px black;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.45;
+            transform: none;
+            box-shadow: 0 5px 0 #102433;
+            pointer-events: none;
+        }
+
+        .new-game-btn {
+            background: #4e3f50;
+            border: none;
+            border-radius: 40px;
+            padding: 16px 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #f3dffc;
+            text-shadow: 0 2px 0 #2b1f2e;
+            box-shadow: 0 6px 0 #2f2533, 0 6px 12px black;
+            cursor: pointer;
+            transition: 0.05s linear;
+            width: 100%;
+            margin-top: 12px;
+            border: 2px solid #8a6d94;
+            letter-spacing: 1px;
+        }
+
+        .new-game-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 1px 0 #2f2533, 0 6px 12px black;
+        }
+
+        /* Адаптация для очень маленьких экранов */
+        @media (max-width: 380px) {
+            .color-btn { width: 48px; }
+            .slot { width: 42px; }
+            .color-circle.small { width: 24px; }
+            .result-circle { width: 20px; }
+            .action-btn { font-size: 1rem; padding: 12px 4px; }
+        }
+    </style>
+</head>
+<body>
+<div class="game">
+    <!-- Игровое поле (прошлые попытки) -->
+    <div class="board" id="board"></div>
+
+    <!-- Текущая попытка -->
+    <div class="current-attempt" id="currentAttempt">
+        <div class="current-slots" id="currentSlots">
+            <!-- 4 слота будут заполнены динамически -->
+        </div>
+    </div>
+
+    <!-- Панель управления -->
+    <div class="control-panel">
+        <div class="panel-row">
+            <!-- Сетка цветов 3x2 -->
+            <div class="colors-grid" id="colorsGrid"></div>
+
+            <!-- Кнопки проверить / убрать -->
+            <div class="action-btns">
+                <button class="action-btn" id="checkBtn">✔️<br>проверить</button>
+                <button class="action-btn" id="undoBtn">↩️<br>убрать</button>
+            </div>
+        </div>
+        <!-- Кнопка новой игры (отдельно снизу) -->
+        <button class="new-game-btn" id="newGameBtn">🔄 новая игра</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- НАСТРОЙКИ ----------
+        const COLORS = [
+            { name: 'красный', code: '#e74c3c' },   // красный
+            { name: 'синий', code: '#3498db' },     // синий
+            { name: 'зеленый', code: '#2ecc71' },   // зелёный
+            { name: 'желтый', code: '#f1c40f' },    // жёлтый
+            { name: 'фиолетовый', code: '#9b59b6' },// фиолетовый
+            { name: 'оранжевый', code: '#e67e22' }  // оранжевый
+        ];
+
+        // ---------- СОСТОЯНИЕ ----------
+        let secretCombo = [];            // массив из 4 цветов (строковые коды)
+        let attempts = [];               // массив объектов { colors, black, white }
+        let currentAttempt = [];          // текущий ввод (до 4 цветов)
+        let gameOver = false;
+
+        // DOM-элементы
+        const boardEl = document.getElementById('board');
+        const currentSlotsEl = document.getElementById('currentSlots');
+        const colorsGridEl = document.getElementById('colorsGrid');
+        const checkBtn = document.getElementById('checkBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const newGameBtn = document.getElementById('newGameBtn');
+
+        // ---------- ИНИЦИАЛИЗАЦИЯ ЦВЕТНОЙ ПАНЕЛИ (6 КРУГОВ) ----------
+        function buildColorButtons() {
+            colorsGridEl.innerHTML = '';
+            COLORS.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'color-btn';
+                btn.style.backgroundColor = c.code;
+                btn.setAttribute('aria-label', c.name);
+                btn.dataset.color = c.code;
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!gameOver) addColor(c.code);
+                });
+                colorsGridEl.appendChild(btn);
+            });
+        }
+
+        // ---------- ОТОБРАЖЕНИЕ ТЕКУЩЕЙ ПОПЫТКИ (4 КРУГА) ----------
+        function renderCurrentAttempt() {
+            currentSlotsEl.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                if (i < currentAttempt.length) {
+                    slot.style.backgroundColor = currentAttempt[i];
+                    slot.classList.add('filled');
+                } else {
+                    slot.style.backgroundColor = '#293e51';
+                    slot.classList.remove('filled');
+                }
+                currentSlotsEl.appendChild(slot);
+            }
+        }
+
+        // ---------- ФУНКЦИЯ ПОДСЧЁТА ЧЁРНЫХ/БЕЛЫХ ----------
+        function evaluate(guess, secret) {
+            let black = 0;
+            // подсчёт чёрных (точное совпадение)
+            for (let i = 0; i < 4; i++) {
+                if (guess[i] === secret[i]) black++;
+            }
+
+            // подсчёт белых (цвет есть, но не на своём месте)
+            // для этого считаем общее количество совпадений по цветам без учёта позиций
+            const guessCount = {};
+            const secretCount = {};
+            for (let i = 0; i < 4; i++) {
+                const g = guess[i];
+                const s = secret[i];
+                guessCount[g] = (guessCount[g] || 0) + 1;
+                secretCount[s] = (secretCount[s] || 0) + 1;
+            }
+
+            let totalMatches = 0;
+            for (let color in guessCount) {
+                if (secretCount[color]) {
+                    totalMatches += Math.min(guessCount[color], secretCount[color]);
+                }
+            }
+
+            const white = totalMatches - black; // белые = все совпадающие минус точные
+            return { black, white };
+        }
+
+        // ---------- ОТРИСОВКА ПОЛЯ (ВСЕ ПОПЫТКИ) ----------
+        function renderBoard() {
+            boardEl.innerHTML = '';
+
+            // Проходим по массиву attempts (от первой к последней)
+            attempts.forEach((attempt, idx) => {
+                const row = document.createElement('div');
+                row.className = 'attempt-row';
+
+                // Номер попытки
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'attempt-number';
+                numberSpan.textContent = idx + 1;
+                row.appendChild(numberSpan);
+
+                // Блок цветов попытки (4 круга)
+                const colorsRow = document.createElement('div');
+                colorsRow.className = 'colors-row';
+                attempt.colors.forEach(col => {
+                    const circle = document.createElement('div');
+                    circle.className = 'color-circle small';
+                    circle.style.backgroundColor = col;
+                    colorsRow.appendChild(circle);
+                });
+                row.appendChild(colorsRow);
+
+                // Блок результата (черные/белые кружки)
+                const resultRow = document.createElement('div');
+                resultRow.className = 'result-row';
+
+                const blackCount = attempt.black;
+                const whiteCount = attempt.white;
+
+                for (let i = 0; i < 4; i++) {
+                    const resCircle = document.createElement('div');
+                    resCircle.className = 'result-circle';
+                    if (i < blackCount) {
+                        resCircle.classList.add('black');
+                    } else if (i < blackCount + whiteCount) {
+                        resCircle.classList.add('white');
+                    } else {
+                        resCircle.classList.add('empty');
+                    }
+                    resultRow.appendChild(resCircle);
+                }
+                row.appendChild(resultRow);
+                boardEl.appendChild(row);
+            });
+        }
+
+        // ---------- ДОБАВЛЕНИЕ ЦВЕТА В ТЕКУЩУЮ ПОПЫТКУ ----------
+        function addColor(colorCode) {
+            if (currentAttempt.length < 4) {
+                currentAttempt.push(colorCode);
+                renderCurrentAttempt();
+            }
+        }
+
+        // ---------- УДАЛЕНИЕ ПОСЛЕДНЕГО ЦВЕТА ----------
+        function undoLast() {
+            if (currentAttempt.length > 0) {
+                currentAttempt.pop();
+                renderCurrentAttempt();
+            }
+        }
+
+        // ---------- ПРОВЕРКА ПОПЫТКИ ----------
+        function checkAttempt() {
+            if (gameOver) return;
+            if (currentAttempt.length !== 4) return; // только полная попытка
+
+            const { black, white } = evaluate(currentAttempt, secretCombo);
+
+            // Добавляем попытку в историю
+            attempts.push({
+                colors: [...currentAttempt],
+                black: black,
+                white: white
+            });
+
+            // Проверка победы
+            if (black === 4) {
+                gameOver = true;
+                const comboString = secretCombo.map(code => {
+                    const colorObj = COLORS.find(c => c.code === code);
+                    return colorObj ? colorObj.name : code;
+                }).join(', ');
+                alert(`🎉 Победа! Вы угадали комбинацию за ${attempts.length} попыток.\nПравильная комбинация: ${comboString}`);
+            }
+
+            // Очистить текущую попытку
+            currentAttempt = [];
+            renderCurrentAttempt();
+            renderBoard(); // перерисовываем поле (строки прижмутся к низу благодаря flex-end)
+        }
+
+        // ---------- НОВАЯ ИГРА ----------
+        function newGame() {
+            // Генерация секретной комбинации (4 цвета, могут повторяться)
+            secretCombo = [];
+            for (let i = 0; i < 4; i++) {
+                const randomIndex = Math.floor(Math.random() * COLORS.length);
+                secretCombo.push(COLORS[randomIndex].code);
+            }
+
+            attempts = [];
+            currentAttempt = [];
+            gameOver = false;
+            renderBoard();
+            renderCurrentAttempt();
+        }
+
+        // ---------- БЛОКИРОВКА КНОПОК ПРИ GAME OVER (ДЛЯ УДОБСТВА) ----------
+        // Но мы просто проверяем gameOver внутри add/remove, поэтому кнопки остаются активными,
+        // но ничего не делают. Можно деактивировать визуально, но это необязательно.
+        // По желанию можно добавит отключение через класс, но оставим логику в обработчиках.
+
+        // ---------- ПОДПИСКА НА СОБЫТИЯ ----------
+        checkBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            checkAttempt();
+        });
+
+        undoBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!gameOver) undoLast();
+        });
+
+        newGameBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            newGame();
+        });
+
+        // ---------- ЗАПУСК ПРИЛОЖЕНИЯ ----------
+        function initGame() {
+            buildColorButtons();
+            newGame(); // генерирует комбинацию и обновляет отображение
+        }
+
+        initGame();
+
+        // Небольшой хак для мобильной прокрутки внутри board (чтоб не тащить всё окно)
+        boardEl.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+
+    })();
+</script>
+</body>
+</html>
