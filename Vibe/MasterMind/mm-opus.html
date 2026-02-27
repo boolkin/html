@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mastermind</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 8px 0 4px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            letter-spacing: 3px;
+            color: #e94560;
+            text-transform: uppercase;
+        }
+
+        /* Secret row */
+        .secret-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 6px 0 8px;
+            flex-shrink: 0;
+        }
+
+        .secret-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #16213e;
+            border: 2px dashed #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .secret-slot.revealed {
+            border: 3px solid #fff;
+        }
+
+        /* Game board */
+        .board-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin: 0 8px;
+            border: 2px solid #16213e;
+            border-radius: 12px;
+            background: #0f3460;
+            position: relative;
+            min-height: 0;
+        }
+
+        .board-inner {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 100%;
+            padding: 8px 4px;
+        }
+
+        .attempt-row {
+            display: flex;
+            align-items: center;
+            padding: 5px 6px;
+            gap: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            min-height: 52px;
+        }
+
+        .attempt-row:last-child {
+            border-bottom: none;
+        }
+
+        .attempt-row.active {
+            background: rgba(233, 69, 96, 0.12);
+            border-radius: 10px;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .attempt-num {
+            width: 22px;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .attempt-colors {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .attempt-slot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.15);
+            transition: all 0.15s ease;
+        }
+
+        .attempt-slot.filled {
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .attempt-slot.pulse {
+            animation: pulse 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Hints (pegs) */
+        .hint-pegs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px;
+            margin-left: auto;
+            flex-shrink: 0;
+            width: 36px;
+        }
+
+        .hint-peg {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            justify-self: center;
+        }
+
+        .hint-peg.black {
+            background: #111;
+            border: 2px solid #fff;
+            box-shadow: 0 0 4px rgba(255,255,255,0.5);
+        }
+
+        .hint-peg.white {
+            background: #fff;
+            box-shadow: 0 0 4px rgba(255,255,255,0.3);
+        }
+
+        /* Controls */
+        .controls {
+            flex-shrink: 0;
+            padding: 8px 10px 6px;
+            background: #16213e;
+            border-top: 2px solid #0f3460;
+        }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .color-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .color-btn:active {
+            transform: scale(0.9);
+            border-color: #fff;
+        }
+
+        .action-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.15s ease;
+            min-width: 90px;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-check {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .btn-check:disabled {
+            background: #555;
+            color: #888;
+        }
+
+        .btn-undo {
+            background: #533483;
+            color: #fff;
+        }
+
+        .btn-undo:disabled {
+            background: #444;
+            color: #777;
+        }
+
+        /* Bottom bar */
+        .bottom-bar {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 6px 10px 10px;
+            background: #16213e;
+        }
+
+        .bottom-btn {
+            padding: 10px 20px;
+            border: 2px solid #e94560;
+            background: transparent;
+            color: #e94560;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.15s ease;
+        }
+
+        .bottom-btn:active {
+            background: #e94560;
+            color: #fff;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: #16213e;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid #e94560;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            color: #e94560;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+
+        .modal p {
+            margin-bottom: 12px;
+            line-height: 1.5;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .modal .combo-display {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .modal .combo-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+        }
+
+        .modal-close-btn {
+            margin-top: 16px;
+            padding: 12px 32px;
+            background: #e94560;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .help-text {
+            text-align: left;
+        }
+
+        .help-text .legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 6px 0;
+        }
+
+        .legend-peg {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .legend-peg.black-peg {
+            background: #111;
+            border: 2px solid #fff;
+        }
+
+        .legend-peg.white-peg {
+            background: #fff;
+        }
+
+        /* Win animation */
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1) rotate(-3deg); }
+            50% { transform: scale(1.15) rotate(3deg); }
+            75% { transform: scale(1.1) rotate(-2deg); }
+            100% { transform: scale(1); }
+        }
+
+        .celebrate {
+            animation: celebrate 0.6s ease;
+        }
+
+        /* Scrollbar styling */
+        .board-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .board-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+        }
+
+        .board-container::-webkit-scrollbar-thumb {
+            background: rgba(233, 69, 96, 0.5);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Mastermind</h1>
+    </div>
+
+    <!-- Secret combination -->
+    <div class="secret-row" id="secretRow"></div>
+
+    <!-- Game board -->
+    <div class="board-container" id="boardContainer">
+        <div class="board-inner" id="boardInner"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <div class="color-row">
+            <div class="color-btn" style="background:#e74c3c" data-color="0" onclick="addColor(0)"></div>
+            <div class="color-btn" style="background:#3498db" data-color="1" onclick="addColor(1)"></div>
+            <div class="color-btn" style="background:#2ecc71" data-color="2" onclick="addColor(2)"></div>
+            <button class="action-btn btn-check" id="btnCheck" disabled onclick="checkGuess()">Проверить</button>
+        </div>
+        <div class="color-row">
+            <div class="color-btn" style="background:#f1c40f" data-color="3" onclick="addColor(3)"></div>
+            <div class="color-btn" style="background:#9b59b6" data-color="4" onclick="addColor(4)"></div>
+            <div class="color-btn" style="background:#e67e22" data-color="5" onclick="addColor(5)"></div>
+            <button class="action-btn btn-undo" id="btnUndo" disabled onclick="undoColor()">Убрать</button>
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <button class="bottom-btn" onclick="newGame()">Новая игра</button>
+        <button class="bottom-btn" onclick="showHelp()">Помощь</button>
+    </div>
+
+    <!-- Win Modal -->
+    <div class="modal-overlay" id="winModal">
+        <div class="modal celebrate">
+            <h2 id="modalTitle">🎉 Победа!</h2>
+            <p id="modalText"></p>
+            <div class="combo-display" id="modalCombo"></div>
+            <button class="modal-close-btn" onclick="closeModal('winModal')">OK</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div class="modal-overlay" id="loseModal">
+        <div class="modal">
+            <h2>😔 Проигрыш</h2>
+            <p>Попытки закончились! Правильная комбинация:</p>
+            <div class="combo-display" id="loseCombo"></div>
+            <button class="modal-close-btn" onclick="closeModal('loseModal')">Новая игра</button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal">
+            <h2>📖 Как играть</h2>
+            <div class="help-text">
+                <p>Компьютер загадывает секретную комбинацию из <strong>4 цветов</strong> (из 6 возможных). Цвета могут повторяться.</p>
+                <p>Ваша задача — угадать комбинацию за <strong>12 попыток</strong>.</p>
+                <p><strong>Нажимайте</strong> на цветные круги, чтобы составить комбинацию из 4 цветов, затем нажмите <strong>«Проверить»</strong>.</p>
+                <p>После проверки справа появятся подсказки:</p>
+                <div class="legend">
+                    <div class="legend-peg black-peg"></div>
+                    <span>— правильный цвет на правильном месте</span>
+                </div>
+                <div class="legend">
+                    <div class="legend-peg white-peg"></div>
+                    <span>— правильный цвет, но не на своём месте</span>
+                </div>
+                <p>Подсказки отображаются в случайном порядке — они не соответствуют позициям цветов.</p>
+                <p>Кнопка <strong>«Убрать»</strong> удаляет последний добавленный цвет.</p>
+            </div>
+            <button class="modal-close-btn" onclick="closeModal('helpModal')">Понятно!</button>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22'];
+        const CODE_LENGTH = 4;
+        const MAX_ATTEMPTS = 12;
+
+        let secret = [];
+        let attempts = [];
+        let currentGuess = [];
+        let currentAttempt = 0;
+        let gameOver = false;
+
+        function generateSecret() {
+            const s = [];
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                s.push(Math.floor(Math.random() * COLORS.length));
+            }
+            return s;
+        }
+
+        function renderSecretRow() {
+            const row = document.getElementById('secretRow');
+            row.innerHTML = '';
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'secret-slot';
+                slot.textContent = '?';
+                slot.id = 'secret-' + i;
+                row.appendChild(slot);
+            }
+        }
+
+        function revealSecret() {
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const slot = document.getElementById('secret-' + i);
+                slot.textContent = '';
+                slot.style.background = COLORS[secret[i]];
+                slot.classList.add('revealed');
+            }
+        }
+
+        function renderBoard() {
+            const inner = document.getElementById('boardInner');
+            inner.innerHTML = '';
+
+            // Render all completed attempts
+            for (let a = 0; a < attempts.length; a++) {
+                inner.appendChild(createAttemptRow(a, attempts[a].guess, attempts[a].hints, false));
+            }
+
+            // Render current active row if game not over
+            if (!gameOver && currentAttempt < MAX_ATTEMPTS) {
+                inner.appendChild(createAttemptRow(currentAttempt, currentGuess, null, true));
+            }
+
+            scrollToBottom();
+        }
+
+        function createAttemptRow(index, colors, hints, isActive) {
+            const row = document.createElement('div');
+            row.className = 'attempt-row' + (isActive ? ' active' : '');
+
+            const num = document.createElement('div');
+            num.className = 'attempt-num';
+            num.textContent = (index + 1);
+            row.appendChild(num);
+
+            const colorsDiv = document.createElement('div');
+            colorsDiv.className = 'attempt-colors';
+
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'attempt-slot';
+                if (colors && i < colors.length) {
+                    slot.style.background = COLORS[colors[i]];
+                    slot.classList.add('filled');
+                }
+                colorsDiv.appendChild(slot);
+            }
+            row.appendChild(colorsDiv);
+
+            const hintsDiv = document.createElement('div');
+            hintsDiv.className = 'hint-pegs';
+
+            if (hints) {
+                // hints = { blacks, whites }
+                const pegs = [];
+                for (let i = 0; i < hints.blacks; i++) pegs.push('black');
+                for (let i = 0; i < hints.whites; i++) pegs.push('white');
+                while (pegs.length < CODE_LENGTH) pegs.push('empty');
+
+                for (let i = 0; i < CODE_LENGTH; i++) {
+                    const peg = document.createElement('div');
+                    peg.className = 'hint-peg';
+                    if (pegs[i] === 'black') peg.classList.add('black');
+                    if (pegs[i] === 'white') peg.classList.add('white');
+                    hintsDiv.appendChild(peg);
+                }
+            } else {
+                for (let i = 0; i < CODE_LENGTH; i++) {
+                    const peg = document.createElement('div');
+                    peg.className = 'hint-peg';
+                    hintsDiv.appendChild(peg);
+                }
+            }
+            row.appendChild(hintsDiv);
+
+            return row;
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('boardContainer');
+            requestAnimationFrame(() => {
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        function addColor(colorIndex) {
+            if (gameOver || currentGuess.length >= CODE_LENGTH) return;
+
+            currentGuess.push(colorIndex);
+            renderBoard();
+            updateButtons();
+
+            // Animate last added slot
+            const activeRow = document.querySelector('.attempt-row.active');
+            if (activeRow) {
+                const slots = activeRow.querySelectorAll('.attempt-slot');
+                const lastFilled = slots[currentGuess.length - 1];
+                if (lastFilled) {
+                    lastFilled.classList.add('pulse');
+                }
+            }
+        }
+
+        function undoColor() {
+            if (gameOver || currentGuess.length === 0) return;
+            currentGuess.pop();
+            renderBoard();
+            updateButtons();
+        }
+
+        function updateButtons() {
+            document.getElementById('btnCheck').disabled = (currentGuess.length !== CODE_LENGTH || gameOver);
+            document.getElementById('btnUndo').disabled = (currentGuess.length === 0 || gameOver);
+        }
+
+        function evaluate(guess, secret) {
+            let blacks = 0;
+            let whites = 0;
+            const secretCopy = [...secret];
+            const guessCopy = [...guess];
+
+            // Count blacks (exact matches)
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                if (guessCopy[i] === secretCopy[i]) {
+                    blacks++;
+                    secretCopy[i] = -1;
+                    guessCopy[i] = -2;
+                }
+            }
+
+            // Count whites (color exists but wrong position)
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                if (guessCopy[i] === -2) continue;
+                const idx = secretCopy.indexOf(guessCopy[i]);
+                if (idx !== -1) {
+                    whites++;
+                    secretCopy[idx] = -1;
+                }
+            }
+
+            return { blacks, whites };
+        }
+
+        function checkGuess() {
+            if (currentGuess.length !== CODE_LENGTH || gameOver) return;
+
+            const hints = evaluate(currentGuess, secret);
+
+            attempts.push({
+                guess: [...currentGuess],
+                hints: hints
+            });
+
+            currentAttempt++;
+            currentGuess = [];
+
+            if (hints.blacks === CODE_LENGTH) {
+                // Win!
+                gameOver = true;
+                renderBoard();
+                revealSecret();
+                updateButtons();
+
+                setTimeout(() => {
+                    showWinModal(currentAttempt);
+                }, 400);
+                return;
+            }
+
+            if (currentAttempt >= MAX_ATTEMPTS) {
+                // Lose
+                gameOver = true;
+                renderBoard();
+                revealSecret();
+                updateButtons();
+
+                setTimeout(() => {
+                    showLoseModal();
+                }, 400);
+                return;
+            }
+
+            renderBoard();
+            updateButtons();
+        }
+
+        function showWinModal(numAttempts) {
+            const modal = document.getElementById('winModal');
+            const text = document.getElementById('modalText');
+            const combo = document.getElementById('modalCombo');
+
+            const word = getAttemptsWord(numAttempts);
+            text.textContent = `Вы угадали за ${numAttempts} ${word}! Правильная комбинация:`;
+
+            combo.innerHTML = '';
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const c = document.createElement('div');
+                c.className = 'combo-circle';
+                c.style.background = COLORS[secret[i]];
+                combo.appendChild(c);
+            }
+
+            modal.classList.add('show');
+        }
+
+        function showLoseModal() {
+            const combo = document.getElementById('loseCombo');
+            combo.innerHTML = '';
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const c = document.createElement('div');
+                c.className = 'combo-circle';
+                c.style.background = COLORS[secret[i]];
+                combo.appendChild(c);
+            }
+            document.getElementById('loseModal').classList.add('show');
+        }
+
+        function getAttemptsWord(n) {
+            if (n === 1) return 'попытку';
+            if (n >= 2 && n <= 4) return 'попытки';
+            return 'попыток';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+            if (id === 'loseModal') {
+                newGame();
+            }
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        function newGame() {
+            secret = generateSecret();
+            attempts = [];
+            currentGuess = [];
+            currentAttempt = 0;
+            gameOver = false;
+
+            renderSecretRow();
+            renderBoard();
+            updateButtons();
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    const id = overlay.id;
+                    closeModal(id);
+                }
+            });
+        });
+
+        // Init
+        newGame();
+    </script>
+</body>
+</html>
