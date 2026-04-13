@@ -76,3 +76,5 @@ microgpt - https://boolkin.github.io/html/Vibe/microgpt/
 Regex - редактирование текста при помощи регулярок - https://boolkin.github.io/html/Vibe/Regex.html  
 
 Генератор имен и кличек - https://boolkin.github.io/html/Vibe/namesGen.html  
+
+Сравнение текстов онлайн - https://boolkin.github.io/html/Vibe/textcompare/

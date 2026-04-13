@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Text Compare</title>
+        <script src="diff_match_patch.js"></script>
+        <style>
+            body {
+                font-family: "Segoe UI", sans-serif;
+                background: #f4f7f6;
+                padding: 20px;
+            }
+            .diff-table {
+                width: 100%;
+                display: table;
+                background: white;
+                border: 1px solid #ccc;
+                font-family: monospace;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+            .diff-row {
+                display: table-row;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .num {
+                display: table-cell;
+                width: 35px;
+                padding: 5px;
+                text-align: right;
+                color: #999;
+                border-right: 1px solid #eee;
+                background: #fafafa;
+                font-size: 12px;
+            }
+            .pane {
+                display: table-cell;
+                padding: 5px 10px;
+                white-space: pre-wrap;
+                vertical-align: top;
+                word-break: break-all;
+                border-right: 1px solid #eee;
+            }
+            .row-del {
+                background: #ffeef0;
+            }
+            .row-ins {
+                background: #e6ffed;
+            }
+            .row-diff {
+                background: #fffdef;
+            }
+            del {
+                background: #fdb8c0;
+                text-decoration: none;
+            }
+            ins {
+                background: #acf2bd;
+                text-decoration: none;
+            }
+            .empty {
+                background: #fafafa;
+            }
+            .input-wrapper {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+                /* Убираем жесткую высоту height: 120px */
+                min-height: 100px;
+            }
+
+            textarea {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-family: monospace;
+                /* Разрешаем менять размер только по вертикали, чтобы не ломать верстку */
+                resize: vertical;
+                min-height: 100px;
+            }
+
+            /* Кнопка теперь всегда будет под полями */
+            .controls {
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="input-wrapper">
+            <textarea id="input1" style="flex: 1"></textarea>
+            <textarea id="input2" style="flex: 1"></textarea>
+        </div>
+        <div class="controls">
+            <button
+                onclick="runCompare()"
+                style="
+                    padding: 10px 25px;
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                "
+            >
+                Сравнить с выравниванием
+            </button>
+        </div>
+        <div id="output" class="diff-table"></div>
+
+        <script>
+            const dmp = new diff_match_patch();
+
+            function runCompare() {
+                const text1 = document.getElementById("input1").value;
+                const text2 = document.getElementById("input2").value;
+                const container = document.getElementById("output");
+                container.innerHTML = "";
+
+                const a = dmp.diff_linesToChars_(text1, text2);
+                const diffs = dmp.diff_main(a.chars1, a.chars2, false);
+
+                let lineL = 1,
+                    lineR = 1;
+                let leftBuffer = [],
+                    rightBuffer = [];
+
+                function flush() {
+                    // Пытаемся сопоставить строки из буферов по схожести
+                    while (leftBuffer.length > 0 || rightBuffer.length > 0) {
+                        let lText = leftBuffer[0] || "";
+                        let rText = "";
+                        let bestMatchIdx = -1;
+                        let maxRatio = 0.3; // Порог схожести (30%)
+
+                        // Ищем в правой части самую похожую строку для текущей левой
+                        if (leftBuffer.length > 0) {
+                            for (let j = 0; j < rightBuffer.length; j++) {
+                                let ratio = getSimilarity(lText, rightBuffer[j]);
+                                if (ratio > maxRatio) {
+                                    maxRatio = ratio;
+                                    bestMatchIdx = j;
+                                }
+                            }
+                        }
+
+                        if (bestMatchIdx !== -1) {
+                            // Нашли пару! Выводим все новые строки справа до этого момента как "вставки"
+                            for (let i = 0; i < bestMatchIdx; i++) {
+                                renderRow("", lineR++, "", rightBuffer.shift(), "row-ins");
+                            }
+                            // Выводим саму пару с подсветкой внутри
+                            renderPair(lineL++, lineR++, leftBuffer.shift(), rightBuffer.shift());
+                        } else if (leftBuffer.length > 0) {
+                            // Нет пары для левой строки - это удаление
+                            renderRow(lineL++, "", leftBuffer.shift(), "", "row-del");
+                        } else if (rightBuffer.length > 0) {
+                            // Остались только строки справа - это вставки
+                            renderRow("", lineR++, "", rightBuffer.shift(), "row-ins");
+                        }
+                    }
+                }
+
+                diffs.forEach((part) => {
+                    const lines = part[1].split("").map((c) => a.lineArray[c.charCodeAt(0)].replace(/\n$/, ""));
+                    if (part[0] === 0) {
+                        flush();
+                        lines.forEach((line) => renderRow(lineL++, lineR++, line, line));
+                    } else if (part[0] === -1) {
+                        leftBuffer.push(...lines);
+                    } else {
+                        rightBuffer.push(...lines);
+                    }
+                });
+                flush();
+            }
+
+            function getSimilarity(s1, s2) {
+                if (!s1 || !s2) return 0;
+                const diff = dmp.diff_main(s1, s2);
+                let common = 0;
+                diff.forEach((p) => {
+                    if (p[0] === 0) common += p[1].length;
+                });
+                return (common * 2) / (s1.length + s2.length);
+            }
+
+            function renderPair(nL, nR, txtL, txtR) {
+                const inner = dmp.diff_main(txtL, txtR);
+                dmp.diff_cleanupSemantic(inner);
+                let hL = "",
+                    hR = "";
+                inner.forEach((p) => {
+                    const t = esc(p[1]);
+                    if (p[0] === 0) {
+                        hL += t;
+                        hR += t;
+                    } else if (p[0] === -1) hL += `<del>${t}</del>`;
+                    else hR += `<ins>${t}</ins>`;
+                });
+                renderRow(nL, nR, hL, hR, "row-diff", true);
+            }
+
+            function renderRow(nL, nR, txtL, txtR, cls = "", isHtml = false) {
+                const row = document.createElement("div");
+                row.className = "diff-row " + cls;
+                row.innerHTML = `
+                <div class="num">${nL}</div><div class="pane ${!txtL ? "empty" : ""}">${isHtml ? txtL : esc(txtL)}</div>
+                <div class="num">${nR}</div><div class="pane ${!txtR ? "empty" : ""}">${isHtml ? txtR : esc(txtR)}</div>`;
+                document.getElementById("output").appendChild(row);
+            }
+
+            function esc(t) {
+                return t ? t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+            }
+        </script>
+    </body>
+</html>
