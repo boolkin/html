@@ -1,0 +1,672 @@
+{
+  "tableName": "Sie_G120_En",
+  "tableAlias": "Sie_G120_En",
+  "columns": [
+    {
+      "original": "id",
+      "alias": "id"
+    },
+    {
+      "original": "Code",
+      "alias": "Code"
+    },
+    {
+      "original": "Cause",
+      "alias": "Cause"
+    },
+    {
+      "original": "Action",
+      "alias": "Action"
+    }
+  ],
+  "data": [
+    {
+      "id": 1,
+      "Code": "F01000",
+      "Cause": "Software error in the CU",
+      "Action": "Replace CU."
+    },
+    {
+      "id": 2,
+      "Code": "F01001",
+      "Cause": "Floating point exception",
+      "Action": "Switch off CU and switch on again."
+    },
+    {
+      "id": 3,
+      "Code": "F01015",
+      "Cause": "Software error in the CU",
+      "Action": "Upgrade firmware or contact technical support."
+    },
+    {
+      "id": 4,
+      "Code": "F01018",
+      "Cause": "Power-up aborted more than once",
+      "Action": "1. Switch the module off and on again.\n2. After this fault has been output, the module is powered up with the\nfactory settings.\n3. Recommission the converter."
+    },
+    {
+      "id": 5,
+      "Code": "F01033",
+      "Cause": "Switching over units: Reference pa‐\nrameter value invalid",
+      "Action": "Set the value of the reference parameter not equal to 0.0 (p0304, p0305,\np0310, p0596, p2000, p2001, p2002, p2003, r2004)."
+    },
+    {
+      "id": 6,
+      "Code": "F01034",
+      "Cause": "Switching over units: Calculation of\nthe parameter values after refer‐\nence value change unsuccessful",
+      "Action": "Select the value of the reference parameter so that the parameters involved\ncan be calculated in the per unit notation (p0304, p0305, p0310, p0596,\np2000, p2001, p2002, p2003, r2004)."
+    },
+    {
+      "id": 7,
+      "Code": "F01040",
+      "Cause": "Parameters must be saved",
+      "Action": "Save parameters (p0971).\nSwitch CU off and on again."
+    },
+    {
+      "id": 8,
+      "Code": "F01044",
+      "Cause": "Error loading data from memory\ncard",
+      "Action": "Replace memory card or CU."
+    },
+    {
+      "id": 9,
+      "Code": "F01054",
+      "Cause": "System limit exceeded",
+      "Action": ""
+    },
+    {
+      "id": 10,
+      "Code": "F01122",
+      "Cause": "Frequency at the probe input too\nhigh",
+      "Action": "Reduce the frequency of the pulses at the probe input."
+    },
+    {
+      "id": 11,
+      "Code": "F01205",
+      "Cause": "CU: Time slice overflow",
+      "Action": "Contact technical support."
+    },
+    {
+      "id": 12,
+      "Code": "F01250",
+      "Cause": "CU hardware fault",
+      "Action": "Replace CU."
+    },
+    {
+      "id": 13,
+      "Code": "F01303",
+      "Cause": "The DRIVE-CLiQ does not support\nthe requested function",
+      "Action": "A function requested by the Control Unit is not supported by a DRIVE-CLiQ\ncomponent."
+    },
+    {
+      "id": 14,
+      "Code": "F01512",
+      "Cause": "An attempt has been made to estab‐\nlish a conversion factor for scaling\nwhich does not exist",
+      "Action": "Create scaling or check transfer value."
+    },
+    {
+      "id": 15,
+      "Code": "F01600",
+      "Cause": "STOP A initiated",
+      "Action": "Select STO and then deselect again."
+    },
+    {
+      "id": 16,
+      "Code": "F01625",
+      "Cause": "Sign-of-life error in the Safety data",
+      "Action": "• Check the electrical cabinet design and cable routing for EMC compli‐\nance.\n• Check whether an impermissible voltage is connected at one of the dig‐\nital outputs.\n• Check whether a digital output is loaded with an impermissible current.\n• Check whether additional faults exist and perform diagnostics if appli‐\ncable.\n• Select STO safety function and then deselect again.\n• Switch off the converter power supply and switch it on again."
+    },
+    {
+      "id": 17,
+      "Code": "F01650",
+      "Cause": "Acceptance test required",
+      "Action": "Carry out an acceptance test and create test certificate.\nSwitch off the Control Unit and switch on again."
+    },
+    {
+      "id": 18,
+      "Code": "F01659",
+      "Cause": "Write task for parameter rejected",
+      "Action": "Cause: The converter should be reset to the factory setting. However, it is not\npermissible to reset the safety functions as the safety functions are currently\nenabled. Remedy with operator panel:\np0010 = 30 - Parameter reset\np9761 = …  -Enter password for the safety functions.\np0970 = 5  - \"Reset start safety parameter\".\nThe converter sets p0970 = 5 once it has reset the parameters.\nThen reset the converter to the factory setting again"
+    },
+    {
+      "id": 19,
+      "Code": "F01662",
+      "Cause": "Error, internal communications",
+      "Action": "• Check the electrical cabinet design and cable routing for EMC compli‐\nance.\n• Check whether an impermissible voltage is connected at one of the dig‐\nital outputs.\n• Check whether a digital output is loaded with an impermissible current.\nIf the checks are unsuccessful:\n• Switch off the converter power supply and switch it on again\n• Upgrade the firmware\n• Contact technical support"
+    },
+    {
+      "id": 20,
+      "Code": "F01800",
+      "Cause": "DRIVE-CLiQ: Incorrect hardware/\nconfiguration",
+      "Action": "A DRIVE-CLiQ connection error has occurred.\nCheck the DRIVE-CLiQ cables at the Control Unit.\nAlarms, faults and system messages"
+    },
+    {
+      "id": 21,
+      "Code": "F03505",
+      "Cause": "Analog input, wire break",
+      "Action": "Check the wiring for interruptions.\nCheck the level of the injected signal.\nThe input current measured by the analog input can be read out in r0752."
+    },
+    {
+      "id": 22,
+      "Code": "F07011",
+      "Cause": "Motor overtemperature",
+      "Action": "Reduce the motor load.\nCheck ambient temperature.\nCheck the wiring and connection of the sensor."
+    },
+    {
+      "id": 23,
+      "Code": "F07016",
+      "Cause": "Motor temperature sensor fault",
+      "Action": "Make sure that the sensor is connected correctly.\nCheck the parameterization (p0601).\nDeactivate the motor temperature sensor fault evaluation (p0607 = 0)."
+    },
+    {
+      "id": 24,
+      "Code": "F07086\nF07088",
+      "Cause": "Switching over units: Parameter lim‐\nit violation",
+      "Action": "Check the adapted parameter values and if required correct."
+    },
+    {
+      "id": 25,
+      "Code": "F07320",
+      "Cause": "Automatic restart aborted",
+      "Action": "Increase the number of restart attempts (p1211). The current number of\nstart attempts is shown in r1214.\nIncrease the wait time in p1212 and/or monitoring time in p1213.\nConnect an ON command (p0840).\nIncrease the monitoring time of the power unit or switch off (p0857).\nReduce the wait time for resetting the fault counter p1213[1] so that fewer\nfaults are registered in the time interval."
+    },
+    {
+      "id": 26,
+      "Code": "F07330",
+      "Cause": "Search current measured too low",
+      "Action": "Increase the search current (p1202), check the motor connection."
+    },
+    {
+      "id": 27,
+      "Code": "F07404",
+      "Cause": "DC-link voltage monitoring VDCmax",
+      "Action": "The DC-link voltage monitoring p1284 has responded.\nCheck the following:\n• Line voltage\n• Braking resistor\n• Device supply voltage (p210)\nIncrease the DC-link voltage threshold (p1284)."
+    },
+    {
+      "id": 28,
+      "Code": "F07412",
+      "Cause": "Commutation angle incorrect (mo‐\ntor model)",
+      "Action": "An incorrect commutation angle can result in positive feedback in the speed\ncontroller.\nCheck the motor phase sequence (wiring, p1820).\nAdjust the encoder.\nReplace the encoder.\nCarry out motor data identification.\nCarry out pole position identification."
+    },
+    {
+      "id": 29,
+      "Code": "F07413",
+      "Cause": "Commutation angle incorrect (pole\nposition identification)",
+      "Action": "An incorrect commutation angle can result in positive feedback in the speed\ncontroller.\nCheck the motor phase sequence (wiring, p1820).\nAdjust the encoder.\nReplace the encoder.\nCarry out pole position identification."
+    },
+    {
+      "id": 30,
+      "Code": "F07426",
+      "Cause": "Technology controller actual value\nlimited",
+      "Action": "• Adapt the limits to the signal level (p2267, p2268).\n• Check the actual value scaling (p2264)."
+    },
+    {
+      "id": 31,
+      "Code": "F07801",
+      "Cause": "Motor overcurrent",
+      "Action": "Check current limits (p0640).\nVector control: Check current controller (p1715, p1717).\nU/f control: Check the current limiting controller (p1340 … p1346).\nIncrease the acceleration ramp (p1120) or reduce the load.\nCheck the motor and motor cables for short-circuit and ground fault.\nCheck the motor regarding the star/delta connection and rating plate pa‐\nrameterization.\nCheck power unit / motor combination.\nSelect the flying restart function (p1200) if switched to rotating motor."
+    },
+    {
+      "id": 32,
+      "Code": "F07807",
+      "Cause": "Short circuit detected",
+      "Action": "• Check the converter connection on the motor side for any phase-phase\nshort-circuit.\n• Rule out that line and motor cables have been interchanged."
+    },
+    {
+      "id": 33,
+      "Code": "F07860\nF07861\nF07862",
+      "Cause": "External fault 1 … 3",
+      "Action": "Remove the external causes for this fault."
+    },
+    {
+      "id": 34,
+      "Code": "F07900",
+      "Cause": "Motor blocked",
+      "Action": "Check that the motor can run freely.\nCheck the torque limits (r1538 and r1539).\nCheck the parameters of the \"Motor blocked\" message (p2175, p2177)."
+    },
+    {
+      "id": 35,
+      "Code": "F07901",
+      "Cause": "Motor overspeed",
+      "Action": "Activate the precontrol for the speed limiting controller (p1401 bit 7 = 1).\nIncrease the hysteresis for overspeed signal p2162."
+    },
+    {
+      "id": 36,
+      "Code": "F07902",
+      "Cause": "Motor stalled",
+      "Action": "Check whether the motor data has been set correctly and perform a motor\nidentification.\nCheck the current limits (p0640, r0067, r0289). If the current limits are too\nlow, the drive cannot be magnetized.\nCheck whether motor cables are disconnected during operation."
+    },
+    {
+      "id": 37,
+      "Code": "F07905",
+      "Cause": "External armature short-circuit:\n\"Open\" contactor feedback signal\nmissing",
+      "Action": "When opening, the contactor feedback signal (p1235) did not signal \"open\"\n(r1239.1 = 0) within the monitoring time (p1236).\nCheck the following:\n• Has the contactor feedback signal been incorrectly connected (p1235)?\n• Contactor feedback signal logic (r1239.1 = 1: \"Closed\", r1239.1 = 0:\n\"Open\").\nIncrease the monitoring time (p1236)."
+    },
+    {
+      "id": 38,
+      "Code": "F07909",
+      "Cause": "Internal voltage protection: Deacti‐\nvation only active after POWER ON",
+      "Action": "The converter has activated the \"Internal voltage protection\" function\n(p1231 = 3). Deactivation of the internal voltage protection (p1231 not\nequal to 3) only becomes active after POWER ON."
+    },
+    {
+      "id": 39,
+      "Code": "F07923",
+      "Cause": "Torque/speed too low",
+      "Action": "• Check the connection between the motor and the load.\n• Adapt the parameterization corresponding to the load."
+    },
+    {
+      "id": 40,
+      "Code": "F07924",
+      "Cause": "Torque/speed too high",
+      "Action": ""
+    },
+    {
+      "id": 41,
+      "Code": "F7966",
+      "Cause": "Check commutation angle",
+      "Action": "Carry out pole position identification."
+    },
+    {
+      "id": 42,
+      "Code": "F7969",
+      "Cause": "Pole position identification incorrect",
+      "Action": "An error has occurred during the pole position identification.\nCheck the following:\n• Motor connection\n• Motor data"
+    },
+    {
+      "id": 43,
+      "Code": "F07995",
+      "Cause": "Pole position identification unsuc‐\ncessful",
+      "Action": "An error has occurred during the pole position identification.\nCheck the following:\n• Motor connection\n• Motor data"
+    },
+    {
+      "id": 44,
+      "Code": "F08501",
+      "Cause": "Setpoint timeout",
+      "Action": "• Check the PROFINET connection.\n• Set the controller to RUN mode.\n• If the fault occurs repeatedly, check the monitoring time set p2044."
+    },
+    {
+      "id": 45,
+      "Code": "F08502",
+      "Cause": "Monitoring time, sign-of-life expired",
+      "Action": "• Check the PROFINET connection."
+    },
+    {
+      "id": 46,
+      "Code": "F08510",
+      "Cause": "Send configuration data not valid",
+      "Action": "• Check the PROFINET configuration"
+    },
+    {
+      "id": 47,
+      "Code": "A13000 \nF13010",
+      "Cause": "Licensing is not sufficient \nLicensing is not sufficient",
+      "Action": "You are using functions that require a license, but you don't have the ap‐\npropriate licenses.\nActivating licensed functions (Page 425)\nOptions requiring a license are used in the converter, and the licensing is not\nsufficient."
+    },
+    {
+      "id": 48,
+      "Code": "F13010",
+      "Cause": "Licensing, function module not li‐\ncensed.",
+      "Action": "At least one function module requiring a license is not licensed.\nDeactivate the function module that is not licensed."
+    },
+    {
+      "id": 49,
+      "Code": "F13101",
+      "Cause": "Know-how protection: Copy protec‐\ntion cannot be activated",
+      "Action": "Insert a valid memory card."
+    },
+    {
+      "id": 50,
+      "Code": "F30001",
+      "Cause": "Overcurrent",
+      "Action": "Check the following:\n• Motor data, if required, carry out commissioning\n• Motor connection method (Υ / Δ)\n• U/f operation: Assignment of rated currents of motor and Power Module\n• Line quality\n• Make sure that the line commutating reactor is connected properly\n• Power cable connections\n• Power cables for short-circuit or ground fault\n• Power cable length\n• Line phases\n• Short-circuit at the Control Unit output terminals\nIf this doesn't help:\n• U/f operation: Increase the acceleration ramp\n• Reduce the load\n• Replace the power unit"
+    },
+    {
+      "id": 51,
+      "Code": "F30002",
+      "Cause": "DC-link voltage overvoltage",
+      "Action": "Increase the ramp-down time (p1121).\nSet the rounding times (p1130, p1136).\nActivate the DC-link voltage controller (p1240, p1280).\nCheck the line voltage (p0210).\nCheck the line phases."
+    },
+    {
+      "id": 52,
+      "Code": "F30003",
+      "Cause": "DC-link voltage undervoltage",
+      "Action": "Check the line voltage (p0210)."
+    },
+    {
+      "id": 53,
+      "Code": "F30004 \nF30005 \nF30011",
+      "Cause": "Converter overtemperature \nI2t converter overload \nLine phase failure",
+      "Action": "Check whether the converter fan is running.\nCheck whether the ambient temperature is in the permissible range.\nCheck whether the motor is overloaded.\nReduce the pulse frequency.\nConverter protection using temperature monitoring (Page 391)\nCheck the rated currents of the motor and Power Module.\nReduce the current limit p0640.\nWhen operating with U/f characteristic: Reduce p1341.\nConverter protection using temperature monitoring (Page 391)\nCheck the input fuses of the converter.\nCheck the motor feeder cables."
+    },
+    {
+      "id": 54,
+      "Code": "F30015",
+      "Cause": "Motor cable phase failure",
+      "Action": "Check the motor cables.\nIncrease the ramp-up or ramp-down time (p1120)."
+    },
+    {
+      "id": 55,
+      "Code": "F30021",
+      "Cause": "Ground fault",
+      "Action": "• Check the power cable connections.\n• Check the motor.\n• Check the current transformer.\n• Check the cables and contacts of the brake connection (a wire might be\nbroken)."
+    },
+    {
+      "id": 56,
+      "Code": "F30022",
+      "Cause": "Power Module: Monitoring UCE",
+      "Action": "Check or replace Power Module."
+    },
+    {
+      "id": 57,
+      "Code": "F30027",
+      "Cause": "Time monitoring for DC link pre\ncharging",
+      "Action": "Check the line voltage at the input terminals.\nCheck the line voltage setting (p0210)."
+    },
+    {
+      "id": 58,
+      "Code": "F30024 \nF30035",
+      "Cause": "Overtemperature, thermal model \nOvertemperature, intake air",
+      "Action": "• Adapt the duty cycle.\n• Check whether the fan is running.\n• Check whether the ambient temperature is in the permissible range.\n• Check the motor load.\n• Reduce the pulse frequency.\n• Reduce the current of the DC current braking.\nConverter protection using temperature monitoring (Page 391)\n• Check whether the fan is running.\n• Check the fan filter elements.\n• Check whether the ambient temperature is in the permissible range."
+    },
+    {
+      "id": 59,
+      "Code": "F30036",
+      "Cause": "Overtemperature, inside area",
+      "Action": ""
+    },
+    {
+      "id": 60,
+      "Code": "F30037",
+      "Cause": "Rectifier overtemperature",
+      "Action": "See F30035 and, in addition:\n• Check the motor load.\n• Check the line phases"
+    },
+    {
+      "id": 61,
+      "Code": "F30052",
+      "Cause": "Incorrect Power Module data",
+      "Action": "Replace Power Module or upgrade CU firmware."
+    },
+    {
+      "id": 62,
+      "Code": "F30053",
+      "Cause": "Error in FPGA data",
+      "Action": "Replace the Power Module."
+    },
+    {
+      "id": 63,
+      "Code": "F30059",
+      "Cause": "Internal fan defective",
+      "Action": "Check the internal fan and if required replace."
+    },
+    {
+      "id": 64,
+      "Code": "F30074",
+      "Cause": "Communications error between\nControl Unit and Power Module",
+      "Action": "There is a communications fault between the Control Unit and the Power\nModule. Possible causes:\n• The Control Unit may have been removed or inserted incorrectly.\n• The external 24 V Control Unit power supply has dipped to ≤95% of the\nrated voltage for ≤3 ms"
+    },
+    {
+      "id": 65,
+      "Code": "F30600",
+      "Cause": "STOP A initiated",
+      "Action": "Select STO and then deselect again."
+    },
+    {
+      "id": 66,
+      "Code": "F30662",
+      "Cause": "CU hardware fault",
+      "Action": "Switch CU off and on again, upgrade firmware, or contact technical support."
+    },
+    {
+      "id": 67,
+      "Code": "F30664",
+      "Cause": "CU power up aborted",
+      "Action": "Switch CU off and on again, upgrade firmware, or contact technical support."
+    },
+    {
+      "id": 68,
+      "Code": "F30850",
+      "Cause": "Software fault in the Power Module",
+      "Action": "Replace Power Module or contact technical support."
+    },
+    {
+      "id": 69,
+      "Code": "A01028",
+      "Cause": "Configuration error",
+      "Action": "Explanation: Parameterization on the memory card has been created with a\ndifferent type of module (Article number, MLFB).\nCheck the module parameters and recommission if necessary."
+    },
+    {
+      "id": 70,
+      "Code": "A01053",
+      "Cause": "System overload measured",
+      "Action": "The maximum computing power of the Control Unit was exceeded. The\nfollowing measures reduce the load on the Control Unit:\n• Use only one data record (CDS and DDS)\n• Only use the safety features of the basic functions\n• Deactivate the technology controller\n• Use the simple ramp-function generator rather than the extended ramp\nfunction generator\n• Do not use any free function components\n• Reduce the sampling time of the free function blocks"
+    },
+    {
+      "id": 71,
+      "Code": "A01101 \nF01105",
+      "Cause": "Memory card not available \nCU: Insufficient memory",
+      "Action": "Insert a memory card or deactivate alarm A01101.\nMessage for a memory card that is not inserted (Page 175)\nReduce number of data sets."
+    },
+    {
+      "id": 72,
+      "Code": "A01590",
+      "Cause": "Motor maintenance interval expired",
+      "Action": "Carry out maintenance and reset the maintenance interval (p0651)."
+    },
+    {
+      "id": 73,
+      "Code": "A01666",
+      "Cause": "Static 1 signal at the F-DI for safe ac‐\nknowledgment",
+      "Action": "Set failsafe digital input F-DI to a logical 0 signal."
+    },
+    {
+      "id": 74,
+      "Code": "A01698",
+      "Cause": "Commissioning mode active for\nsafety functions",
+      "Action": "This message is withdrawn after the Safety commissioning has ended."
+    },
+    {
+      "id": 75,
+      "Code": "A01699",
+      "Cause": "Switch-off signal path test required",
+      "Action": "After the next time that the \"STO\" function is deselected, the message is\nwithdrawn and the monitoring time is reset."
+    },
+    {
+      "id": 76,
+      "Code": "A01900",
+      "Cause": "PROFIBUS: Configuration telegram\nfaulty",
+      "Action": "Explanation: A PROFIBUS master is attempting establish a connection with a\nfaulty configuration telegram.\nCheck the bus configuration on the master and device side."
+    },
+    {
+      "id": 77,
+      "Code": "A01910\nF01910",
+      "Cause": "Setpoint timeout",
+      "Action": "The alarm is generated when p2040 ≠ 0 ms and one of the following causes\nis present:\n• The bus connection is interrupted\n• The Modbus master is switched off\n• Communications error (CRC, parity bit, logical error)\n• An excessively low value for the fieldbus monitoring time (p2040)"
+    },
+    {
+      "id": 78,
+      "Code": "A01920",
+      "Cause": "PROFIBUS: Cyclic connection inter‐\nrupt",
+      "Action": "Explanation: The cyclic connection to PROFIBUS master is interrupted.\nEstablish the PROFIBUS connection and activate the PROFIBUS master with\ncyclic operation."
+    },
+    {
+      "id": 79,
+      "Code": "A03520",
+      "Cause": "Temperature sensor fault",
+      "Action": "Check that the sensor is connected correctly."
+    },
+    {
+      "id": 80,
+      "Code": "A05000\nA05001\nA05002\nA05004\nA05006\nF06310",
+      "Cause": "Power Module overtemperature \nSupply voltage (p0210) incorrectly\nset",
+      "Action": "Check the following:\n- Is the ambient temperature within the defined limit values?\n- Are the load conditions and duty cycle configured accordingly?\n- Has the cooling failed?\nConverter protection using temperature monitoring (Page 391)\nCheck the set supply voltage and if required change (p0210).\nCheck the line voltage."
+    },
+    {
+      "id": 81,
+      "Code": "A07012",
+      "Cause": "I2t motor model overtemperature",
+      "Action": "Check and if necessary reduce the motor load.\nCheck the motor's ambient temperature.\nCheck the thermal time constant p0611.\nCheck overtemperature fault threshold p0605."
+    },
+    {
+      "id": 82,
+      "Code": "A07015",
+      "Cause": "Motor temperature sensor alarm",
+      "Action": "Check that the sensor is connected correctly.\nCheck the parameter assignment (p0601)."
+    },
+    {
+      "id": 83,
+      "Code": "A07321",
+      "Cause": "Automatic restart active",
+      "Action": "Explanation: The automatic restart (AR) is active. During voltage recovery\nand/or when remedying the causes of pending faults, the drive is automat‐\nically switched back on."
+    },
+    {
+      "id": 84,
+      "Code": "A07400 \nF07403",
+      "Cause": "DC-link voltage maximum controller\nactive\nLower DC-link voltage threshold\nreached",
+      "Action": "If the controller is not to intervene:\n• Increase the ramp-down time of the ramp-function generator (p1121,\np1135).\n• Deactivate the Vdc_max controller.\nMotor and converter protection by limiting the voltage (Page 399)\nThe DC-link voltage monitoring is active (p1240 = 5, 6) and the lower\nDC-link voltage threshold (p1248) was reached in the \"Operation\" state.\nCheck the following:\n• Line voltage\n• Infeed\nReduce the lower DC-link voltage threshold (p1248)."
+    },
+    {
+      "id": 85,
+      "Code": "A07409",
+      "Cause": "U/f control, current limiting control‐\nler active",
+      "Action": "The alarm automatically disappears after one of the following measures:\n• Increase the current limit (p0640).\n• Reduce the load.\n• Slow down the ramp up to the setpoint speed."
+    },
+    {
+      "id": 86,
+      "Code": "A07805 \nF07806",
+      "Cause": "Drive: Power unit overload I2t \nRegenerative power limit exceeded",
+      "Action": "• Reduce the continuous load.\n• Adapt the load cycle.\n• Check the assignment of rated currents of the motor and power unit.\nConverter protection using temperature monitoring (Page 391)\nIncrease the deceleration ramp.\nReduce the driving load.\nUse a power unit with higher energy recovery capability.\nFor vector control, the regenerative power limit in p1531 can be reduced\nuntil the fault is no longer activated."
+    },
+    {
+      "id": 87,
+      "Code": "A07850\nA07851\nA07852",
+      "Cause": "External alarm 1 … 3",
+      "Action": "The signal for \"external alarm 1\" has been triggered.\nParameters p2112, p2116 and p2117 determine the signal sources for the\nexternal alarm 1… 3.\nRemedy: Remove the causes of these alarms."
+    },
+    {
+      "id": 88,
+      "Code": "A07903",
+      "Cause": "Motor speed deviation",
+      "Action": "Increase p2163 and/or p2166.\nIncrease the torque, current and power limits."
+    },
+    {
+      "id": 89,
+      "Code": "A07904",
+      "Cause": "External armature short-circuit:\n\"Closed\" contactor feedback signal\nmissing",
+      "Action": "When closing, the contactor feedback signal (p1235) did not signal \"closed\"\n(r1239.1 = 1) within the monitoring time (p1236).\nCheck the following:\n• Has the contactor feedback signal been incorrectly connected (p1235)?\n• Contactor feedback signal logic (r1239.1 = 1: \"Closed\", r1239.1 = 0:\n\"Open\").\nIncrease the monitoring time (p1236)."
+    },
+    {
+      "id": 90,
+      "Code": "A07908",
+      "Cause": "Internal armature short-circuit ac‐\ntive",
+      "Action": "The motor is short-circuited via the power semiconductor (r1239.5 = 1)."
+    },
+    {
+      "id": 91,
+      "Code": "A07910",
+      "Cause": "Motor overtemperature",
+      "Action": "Check the motor load.\nCheck the motor's ambient temperature.\nCheck the KTY84 or PT1000 sensor.\nCheck the overtemperatures of the thermal model (p0626 ... p0628)."
+    },
+    {
+      "id": 92,
+      "Code": "A07920",
+      "Cause": "Torque/speed too low",
+      "Action": "The torque deviates from the torque/speed envelope curve.\n• Check the connection between the motor and the load.\n• Adapt the parameterization corresponding to the load."
+    },
+    {
+      "id": 93,
+      "Code": "A07921",
+      "Cause": "Torque/speed too high",
+      "Action": ""
+    },
+    {
+      "id": 94,
+      "Code": "A07922",
+      "Cause": "Torque/speed out of tolerance",
+      "Action": ""
+    },
+    {
+      "id": 95,
+      "Code": "A07927",
+      "Cause": "DC braking active",
+      "Action": "Not required"
+    },
+    {
+      "id": 96,
+      "Code": "A07980",
+      "Cause": "Rotary measurement activated",
+      "Action": "Not required"
+    },
+    {
+      "id": 97,
+      "Code": "A07981",
+      "Cause": "No enabling for rotary measurement",
+      "Action": "Acknowledge pending faults.\nEstablish missing enables (see r00002, r0046)."
+    },
+    {
+      "id": 98,
+      "Code": "A07991",
+      "Cause": "Motor identification activated",
+      "Action": "Switch on the motor and identify the motor data."
+    },
+    {
+      "id": 99,
+      "Code": "A08511",
+      "Cause": "Receive configuration data not valid",
+      "Action": ""
+    },
+    {
+      "id": 100,
+      "Code": "A08526",
+      "Cause": "No cyclic connection",
+      "Action": "• Activate the control with cyclic operation.\n• Check the parameters \"Name of Station\" and \"IP of Station\" (r61000,\nr61001)."
+    },
+    {
+      "id": 101,
+      "Code": "A08565",
+      "Cause": "Consistency error affecting adjusta‐\nble parameters",
+      "Action": "Check the following:\n• IP address, subnet mask or default gateway is not correct.\n• IP address or station name used twice in the network.\n• Station name contains invalid characters."
+    },
+    {
+      "id": 102,
+      "Code": "A08800",
+      "Cause": "PROFIenergy energy-saving mode\nactive",
+      "Action": "The PROFIenergy energy-saving mode is active.\nThe alarm automatically disappears when the energy-saving mode is exited."
+    },
+    {
+      "id": 103,
+      "Code": "A30049",
+      "Cause": "Internal fan defective",
+      "Action": "Check the internal fan and if required replace."
+    },
+    {
+      "id": 104,
+      "Code": "A30502",
+      "Cause": "DC link overvoltage",
+      "Action": "• Check the device supply voltage (p0210).\n• Check the line reactor dimensioning"
+    },
+    {
+      "id": 105,
+      "Code": "A30920",
+      "Cause": "Temperature sensor fault",
+      "Action": "Check that the sensor is connected correctly."
+    },
+    {
+      "id": 106,
+      "Code": "A50001",
+      "Cause": "PROFINET configuration error",
+      "Action": "A PROFINET control is attempting to establish a connection with an incorrect\nconfiguration telegram. Check whether \"Shared Device\" is activated (p8929\n= 2)."
+    },
+    {
+      "id": 107,
+      "Code": "A50010",
+      "Cause": "PROFINET name of station invalid",
+      "Action": "Correct the name of station (p8920) and activate (p8925 = 2)."
+    },
+    {
+      "id": 108,
+      "Code": "A50020",
+      "Cause": "PROFINET: Second control missing",
+      "Action": "\"Shared Device\" is activated (p8929 = 2). However, only the connection to a\nPROFINET control is available."
+    }
+  ]
+}

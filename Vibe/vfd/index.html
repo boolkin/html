@@ -1,815 +1,494 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Поиск в базе данных ошибок</title>
-    <script src="sql-wasm.js"></script>
-    <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-bg: #eff6ff;
-            --text-main: #1f2937;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-            --bg-body: #f3f4f6;
-            --bg-white: #ffffff;
-            --danger-color: #ef4444;
-            --header-height: 60px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a2e">
+<title>Коды ошибок ПЧ</title>
+<link rel="manifest" id="manifest-link">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#252540;--accent:#4a9eff;--accent2:#3a7edf;--text:#e8e8f0;--text2:#a0a0b8;--highlight:#ffcc00;--border:#3a3a55;--err:#ff6b6b;--success:#4ecdc4;--mob:640px}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+/* === HEADER === */
+header{background:var(--bg2);padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{font-size:18px;font-weight:700;color:var(--accent);white-space:nowrap;cursor:pointer;user-select:none;transition:opacity .15s}
+.logo:hover{opacity:.8}
+.logo span{color:var(--text2);font-weight:400;font-size:12px}
+/* Desktop search bar: input + select */
+.search-bar{flex:1;display:flex;gap:6px;max-width:520px;position:relative}
+.search-bar .s-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;fill:var(--text2);z-index:2}
+.search-bar input{width:0;flex:1;padding:8px 12px 8px 32px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;transition:border .2s}
+.search-bar input:focus{border-color:var(--accent)}
+.search-bar .vfd-chip{padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap;appearance:none;display:flex;align-items:center;gap:4px;transition:border .2s}
+.search-bar .vfd-chip:hover{border-color:var(--accent)}
+.search-bar .vfd-chip select{background:transparent;border:none;color:var(--text);font-size:13px;appearance:none;outline:none;cursor:pointer;padding:0;width:auto}
+.search-bar .vfd-chip select option{background:var(--bg2);color:var(--text);padding:6px}
+.search-bar .vfd-chip .arrow{color:var(--text2);font-size:11px}
+/* === LAYOUT === */
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:320px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar-section{padding:6px 8px;border-bottom:1px solid var(--border)}
+.sidebar-section.visible{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.sidebar-section h3{font-size:11px;color:var(--text2);padding:4px 8px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+/* VFD list */
+.vfd-list{overflow-y:auto;padding:2px 0}
+.vfd-item{padding:8px 12px;border-radius:6px;cursor:pointer;margin:1px 0;font-size:14px;transition:background .15s;display:flex;align-items:center;gap:8px}
+.vfd-item:hover{background:var(--bg3)}
+.vfd-item.active{background:var(--accent2);color:#fff}
+.vfd-icon{width:20px;height:20px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
+.vfd-item.active .vfd-icon{background:#fff;color:var(--accent2)}
+/* Search results */
+.results-list{flex:1;overflow-y:auto;padding:2px 0}
+.result-item{padding:8px 12px;border-radius:6px;cursor:pointer;margin:1px 0;transition:background .15s;display:flex;align-items:baseline;gap:8px}
+.result-item:hover{background:var(--bg3)}
+.result-item.active{background:var(--accent2);color:#fff}
+.r-vfd{font-size:11px;color:var(--text2);background:var(--bg3);padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.result-item.active .r-vfd{background:rgba(255,255,255,.2);color:#fff}
+.r-code{font-weight:700;font-size:13px;color:var(--accent);min-width:50px;white-space:pre-line;flex-shrink:0}
+.r-name{font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.result-item.active .r-code,.result-item.active .r-name{color:#fff}
+/* === CONTENT === */
+.content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column}
+.welcome{text-align:center;padding:60px 20px;color:var(--text2)}
+.welcome h2{font-size:22px;color:var(--text);margin-bottom:8px}
+.welcome p{font-size:14px;line-height:1.6}
+/* Table */
+.table-wrap{flex:1;overflow:auto;max-height:calc(100vh - 60px)}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:13px}
+.table-wrap th{background:var(--bg3);padding:10px 12px;text-align:left;font-weight:600;color:var(--accent);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:2;white-space:nowrap}
+.table-wrap td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.table-wrap tr[data-rid]{cursor:pointer;transition:background .15s}
+.table-wrap tr[data-rid]:hover td{background:var(--bg3)}
+.table-wrap tr[data-rid].selected td{background:var(--accent2);color:#fff}
+.table-wrap td:first-child{color:var(--text2);font-weight:600;min-width:30px}
+.table-wrap td:nth-child(2){color:var(--accent);font-weight:700;min-width:100px}
+.table-wrap td:nth-child(3){font-weight:500;min-width:140px}
+td .line{display:block}
+td .line::before{content:'• ';color:var(--accent)}
+/* Detail card */
+.detail-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px}
+.detail-card h2{font-size:18px;color:var(--accent);margin-bottom:4px;white-space:pre-line}
+.d-name{font-size:16px;font-weight:600;margin-bottom:16px;white-space:pre-line}
+.d-section{margin-bottom:16px}
+.d-section h4{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.d-section p{font-size:14px;line-height:1.7;white-space:pre-line}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--bg3);border-radius:20px;font-size:11px;color:var(--text2);margin-bottom:12px}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+/* Misc */
+mark.hl{background:var(--highlight);color:#000;border-radius:2px;padding:0 2px}
+.no-results{padding:20px;text-align:center;color:var(--text2);font-size:13px}
+.empty{padding:40px;text-align:center;color:var(--text2)}
+.offline-badge{position:fixed;top:8px;right:8px;background:var(--err);color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;z-index:999;display:none}
+.offline-badge.show{display:block}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-body);
-            color: var(--text-main);
-            /* Используем dvh для корректной высоты на мобилках */
-            height: 100dvh; 
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* === ВЕРХНЯЯ ПАНЕЛЬ === */
-        .top-bar {
-            background: var(--bg-white);
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border-color);
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 20;
-        }
-
-        .search-wrapper {
-            position: relative;
-            flex: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        .search-wrapper input {
-            width: 100%;
-            padding: 10px 80px 10px 14px; /* Место справа для кнопок */
-            font-size: 16px; /* Чтобы не зумил на iOS */
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: #f9fafb;
-            outline: none;
-            color: var(--text-main);
-        }
-
-        .search-wrapper input:focus {
-            background: white;
-            border-color: var(--primary-color);
-        }
-
-        .search-wrapper input:disabled {
-            background: #eee;
-            color: #aaa;
-        }
-
-        /* Иконки внутри строки поиска */
-        .icon-btn {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #f3f4f6;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .icon-btn:active {
-            background: #e5e7eb;
-            color: var(--primary-color);
-        }
-
-        .icon-btn.help {
-            right: 48px; /* Слева от кнопки фильтров */
-            border-radius: 6px 0 0 6px;
-            border-right: none;
-        }
-        
-        .icon-btn.filter {
-            border-radius: 0 6px 6px 0;
-        }
-
-        /* Информационная панель */
-        .info-panel {
-            background: var(--primary-bg);
-            border-bottom: 1px solid #dbeafe;
-            padding: 10px 16px;
-            font-size: 0.85em;
-            color: #1e40af;
-            display: none;
-            flex-shrink: 0;
-        }
-        .info-panel.show { display: block; }
-
-        /* === ВЫДВИЖНАЯ ПАНЕЛЬ ФИЛЬТРОВ === */
-        .filter-drawer {
-            background: var(--bg-white);
-            border-bottom: 1px solid var(--border-color);
-            flex-shrink: 0;
-            display: none; /* Скрыто по умолчанию */
-            flex-direction: column;
-            max-height: 40vh; /* Максимум 40% высоты экрана */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            z-index: 15;
-        }
-
-        .filter-drawer.open {
-            display: flex;
-            animation: slideDown 0.2s ease-out;
-        }
-
-        .drawer-header {
-            padding: 8px 16px;
-            font-size: 0.8em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            background: #fafafa;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .filters-scroll-area {
-            overflow-y: auto;
-            padding: 12px 16px;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* === ОСНОВНАЯ ОБЛАСТЬ === */
-        .main-container {
-            flex: 1;
-            display: flex;
-            flex-direction: row;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Список результатов */
-        .results-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            border-right: 1px solid var(--border-color);
-            min-width: 0;
-        }
-
-        .results-header {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            padding: 0 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .result-item {
-            padding: 12px;
-            background: var(--bg-white);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-bottom: 8px;
-            cursor: pointer;
-        }
-
-        .result-item.active {
-            border-color: var(--primary-color);
-            background: #f0f7ff;
-        }
-
-        .r-source {
-            font-size: 0.7em;
-            color: #9ca3af;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-
-        .r-code {
-            font-weight: 700;
-            color: var(--text-main);
-            font-size: 0.95em;
-            margin-bottom: 2px;
-        }
-
-        .r-name {
-            font-size: 0.85em;
-            color: var(--text-secondary);
-        }
-
-        /* Детали (справа) */
-        .detail-section {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #fafafa;
-            display: none;
-        }
-
-        .detail-card {
-            background: var(--bg-white);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .detail-field {
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .detail-field:last-child { border: none; }
-
-        .detail-label {
-            font-size: 0.75em;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        .detail-value {
-            font-size: 0.95em;
-            color: var(--text-main);
-            white-space: pre-wrap;
-            line-height: 1.4;
-        }
-
-        .highlight {
-            background-color: #fef08a;
-            color: #854d0e;
-            padding: 1px 3px;
-            border-radius: 3px;
-        }
-
-        /* СТИЛИ ФИЛЬТРОВ */
-        .filter-group { margin-bottom: 12px; }
-        .filter-group:last-child { margin-bottom: 0; }
-
-        .filter-group-title {
-            font-size: 0.8em;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filter-chip {
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.75em;
-            padding: 4px 10px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            background: white;
-            margin-right: 6px;
-            margin-bottom: 6px;
-            cursor: pointer;
-            user-select: none;
-            color: var(--text-secondary);
-        }
-
-        .filter-chip.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .filter-chip.disabled {
-            background: #f3f4f6;
-            color: #9ca3af;
-            border-color: #e5e7eb;
-            text-decoration: line-through;
-            opacity: 0.8;
-        }
-
-        /* СТАТУСНЫЕ СООБЩЕНИЯ */
-        .status-msg {
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            padding: 10px;
-            text-align: center;
-            background: rgba(255,255,255,0.95);
-            z-index: 30;
-            font-size: 0.9em;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: none;
-        }
-        .status-msg.error { color: var(--danger-color); }
-        .status-msg.loading { color: var(--primary-color); }
-
-        /* Мобильная адаптация */
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; }
-            .results-list {
-                width: 100%;
-                border-right: none;
-                flex: 1;
-            }
-            .detail-section {
-                position: absolute;
-                top: 0; left: 0; right: 0; bottom: 0;
-                z-index: 50;
-                transform: translateX(100%);
-                transition: transform 0.2s ease-in-out;
-            }
-            .detail-section.open { transform: translateX(0); display: block; }
-            
-            .back-btn {
-                display: block;
-                margin-bottom: 10px;
-                padding: 8px;
-                background: #eee;
-                border-radius: 4px;
-                text-align: center;
-                cursor: pointer;
-                font-size: 0.9em;
-            }
-        }
-        @media (min-width: 769px) {
-            .back-btn { display: none; }
-            .detail-section { display: block; }
-        }
-
-        .hidden { display: none !important; }
-    </style>
+/* Hide mobile-only elements on desktop */
+.mob-views,.mob-detail{display:none}
+/* === MOBILE VIEW === */
+@media(max-width:640px){
+  /* Header: logo hidden, full search bar */
+  .logo span{display:none}
+  .search-bar{max-width:none;flex:1}
+  .search-bar .vfd-chip{font-size:12px;padding:5px 8px}
+  /* Layout: no sidebar, full content */
+  .main{flex-direction:column}
+  .sidebar{width:100%;max-height:none;border-right:none;border-bottom:none;order:0;display:none}
+  .content{order:1;padding:0}
+  /* Mobile views container */
+  .mob-views{flex:1;overflow-y:auto;position:relative}
+  .mob-view{display:none;flex-direction:column;height:100%}
+  .mob-view.active{display:flex}
+  /* VFD selector as horizontal list */
+  .mob-vfd-bar{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border)}
+  .mob-vfd-btn{padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .15s}
+  .mob-vfd-btn:hover{border-color:var(--accent)}
+  .mob-vfd-btn.active{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  /* Mobile search results */
+  .mob-results{flex:1;overflow-y:auto;padding:4px 0}
+  .mob-result{padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:baseline;gap:8px;transition:background .15s}
+  .mob-result:hover{background:var(--bg3)}
+  .mob-result.active{background:var(--accent2);color:#fff}
+  .mob-result .mr-vfd{font-size:11px;color:var(--text2);background:var(--bg3);padding:2px 6px;border-radius:4px;white-space:nowrap}
+  .mob-result.active .mr-vfd{background:rgba(255,255,255,.2);color:#fff}
+  .mob-result .mr-code{font-weight:700;font-size:14px;color:var(--accent);min-width:50px;white-space:pre-line}
+  .mob-result .mr-name{font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mob-result.active .mr-code,.mob-result.active .mr-name{color:#fff}
+  /* Mobile detail: full screen overlay */
+  .mob-detail{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;overflow-y:auto}
+  .mob-detail.active{display:flex}
+  .mob-detail-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+  .mob-back-btn{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;cursor:pointer;transition:background .15s}
+  .mob-back-btn:hover{background:var(--accent2);color:#fff}
+  .mob-back-btn svg{width:16px;height:16px;fill:currentColor}
+  .mob-detail-body{flex:1;overflow-y:auto;padding:16px}
+  /* Mobile table view */
+  .mob-table-wrap{flex:1;overflow:auto}
+}
+</style>
 </head>
 <body>
+<div class="offline-badge" id="offlineBadge">OFFLINE</div>
+<header>
+<div class="logo" id="logoBtn">ПЧ-Ошибки <span>поиск кодов ошибок</span></div>
+<div class="search-bar">
+<svg class="s-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+<input type="text" id="searchInput" placeholder="Поиск по всем полям..." autocomplete="off">
+<div class="vfd-chip"><select id="vfdSelect"><option value="">Все ПЧ</option></select><span class="arrow">▾</span></div>
+</div>
+</header>
 
-    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
-    <div class="top-bar">
-        <div class="search-wrapper">
-            <input type="text" id="searchInput" placeholder="Поиск..." disabled autocomplete="off">
-            <!-- Кнопки справа -->
-            <button id="helpBtn" class="icon-btn help" title="Справка">?</button>
-            <button id="filterToggleBtn" class="icon-btn filter" title="Фильтры">☰</button>
-        </div>
-    </div>
+<!-- DESKTOP: sidebar + content -->
+<div class="main" id="desktopMain">
+<div class="sidebar" id="sidebar">
+<div class="sidebar-section" id="vfdSection">
+<h3>Преобразователи</h3>
+<div class="vfd-list" id="vfdList"></div>
+</div>
+<div class="sidebar-section" id="resultsSection" style="display:none">
+<h3>Результаты поиска <span id="resultsCount"></span></h3>
+<div class="results-list" id="resultsList"></div>
+</div>
+</div>
+<div class="content" id="contentArea">
+<div class="welcome">
+<h2>Коды ошибок частотных преобразователей</h2>
+<p>Выберите преобразователь из списка или используйте поиск для поиска ошибок по всем полям.</p>
+</div>
+</div>
+</div>
 
-    <!-- ПАНЕЛЬ СПРАВКИ -->
-    <div id="infoPanel" class="info-panel">
-        <strong>Поиск:</strong> Введите слова. Будут найдены записи, содержащие все эти слова.<br>
-        <span id="dbListInfo" style="opacity: 0.8;"></span>
-    </div>
+<!-- MOBILE: views container (hidden on desktop) -->
+<div class="mob-views" id="mobViews" style="display:none">
+<div class="mob-view" id="mobDefault">
+<div class="mob-vfd-bar" id="mobVfdBar"></div>
+<div class="mob-results" id="mobDefaultList"></div>
+</div>
+<div class="mob-view" id="mobSearch">
+<div class="mob-results" id="mobSearchList"></div>
+</div>
+</div>
 
-    <!-- ВЫДВИЖНАЯ ПАНЕЛЬ ФИЛЬТРОВ (Была в футере, теперь здесь) -->
-    <div id="filterDrawer" class="filter-drawer">
-        <div class="drawer-header">
-            <span>Фильтры: Базы и Таблицы</span>
-            <span style="cursor:pointer; font-weight:bold;" id="closeDrawerBtn">✕</span>
-        </div>
-        <div class="filters-scroll-area" id="filtersArea">
-            <!-- Фильтры генерируются JS -->
-        </div>
-    </div>
+<!-- MOBILE: detail overlay -->
+<div class="mob-detail" id="mobDetail">
+<div class="mob-detail-bar">
+<div class="mob-back-btn" id="mobBackBtn">
+<svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+Назад
+</div>
+<span id="mobDetailTitle" style="font-size:14px;color:var(--text2)"></span>
+</div>
+<div class="mob-detail-body" id="mobDetailBody"></div>
+</div>
 
-    <!-- СООБЩЕНИЯ О СТАТУСЕ -->
-    <div id="statusMsg" class="status-msg">Загрузка...</div>
+<script>
+const BASE='';
+let listData=[],vfdCache={},allData=[],currentVfd=null,searchTerm='';
+const $=id=>document.getElementById(id);
+const isMobile=()=>window.innerWidth<=640;
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
-    <div class="main-container">
-        <!-- СПИСОК -->
-        <div class="results-list">
-            <div class="results-header">
-                <span>Результаты</span>
-                <span id="countBadge">0</span>
-            </div>
-            <div id="resultsList"></div>
-        </div>
+async function init(){
+  try{
+    const r=await fetch(BASE+'list.json');
+    listData=await r.json();
+  }catch(e){
+    showMsg('Не удалось загрузить list.json. Запустите через HTTP-сервер.');
+    return;
+  }
+  renderVfdList();
+  populateSelect();
+  await loadAllData();
+  applyLayout();
+  window.addEventListener('resize',applyLayout);
+}
 
-        <!-- ДЕТАЛИ -->
-        <div class="detail-section" id="detailSection">
-            <div class="back-btn" id="backBtn">← Назад к списку</div>
-            <div id="detailContent" class="detail-card">
-                <div style="text-align:center; color:#999; padding: 20px;">Выберите запись</div>
-            </div>
-        </div>
-    </div>
+function showMsg(t){
+  const area=isMobile()?'mobDefaultList':'contentArea';
+  $(area).innerHTML=`<div class="empty">${t}</div>`;
+}
 
-    <script>
-        // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
-        let databases = {};
-        let config = null;
-        let allData = [];
-        let currentResults = [];
-        let enabledDatabases = {}; 
-        let enabledTables = {};     
-        let dbRecordCounts = {};
+/* === LAYOUT SWITCH === */
+function applyLayout(){
+  const mob=isMobile();
+  $('desktopMain').style.display=mob?'none':'flex';
+  $('mobViews').style.display=mob?'flex':'none';
+  if(mob)renderMobile();
+  else renderDesktop();
+}
 
-        // === ИНИЦИАЛИЗАЦИЯ ===
-        document.addEventListener('DOMContentLoaded', async () => {
-            const isConfigOk = await loadConfig();
-            if (!isConfigOk) return;
+function renderDesktop(){
+  if(currentVfd!==null)showVfdTable(currentVfd);
+  else if(!searchTerm)showWelcome();
+  if(searchTerm)doSearch();
+}
 
-            await loadAllDatabases();
-            setupEvents();
-            renderFilters();
-            updateInfo();
-            
-            document.getElementById('searchInput').disabled = false;
-            document.getElementById('searchInput').focus();
-        });
+function renderMobile(){
+  renderMobVfdBar();
+  if(searchTerm)doSearch();
+  else showMobDefaultList();
+}
 
-        // === ЗАГРУЗКА КОНФИГА ===
-        async function loadConfig() {
-            showStatus('Загрузка конфигурации...', 'loading');
-            try {
-                const res = await fetch('config.json');
-                if (!res.ok) throw new Error(res.statusText);
-                config = await res.json();
-                
-                if (!config.databases) throw new Error('Нет списка баз данных');
-                
-                if (!config.maxDisplayResults) config.maxDisplayResults = 30;
-                
-                hideStatus();
-                return true;
-            } catch (e) {
-                showStatus(`Ошибка конфига: ${e.message}`, 'error');
-                return false;
-            }
-        }
+/* === VFD LIST === */
+function renderVfdList(){
+  $('vfdList').innerHTML=listData.map((v,i)=>`<div class="vfd-item" data-idx="${i}"><div class="vfd-icon">ПЧ</div>${v.alias}</div>`).join('');
+  $('vfdList').querySelectorAll('.vfd-item').forEach(el=>{
+    el.addEventListener('click',()=>selectVfd(+el.dataset.idx));
+  });
+}
 
-        // === ЗАГРУЗКА БАЗ ДАННЫХ ===
-        async function loadAllDatabases() {
-            showStatus('Загрузка баз данных...', 'loading');
-            enabledDatabases = {};
-            enabledTables = {};
-            dbRecordCounts = {};
+function renderMobVfdBar(){
+  const bar=$('mobVfdBar');
+  bar.innerHTML=listData.map((v,i)=>`<div class="mob-vfd-btn" data-idx="${i}">${v.alias}</div>`).join('');
+  bar.querySelectorAll('.mob-vfd-btn').forEach(el=>{
+    el.addEventListener('click',()=>selectVfd(+el.dataset.idx));
+  });
+  if(currentVfd!==null)bar.querySelectorAll('.mob-vfd-btn').forEach(el=>el.classList.toggle('active',+el.dataset.idx===currentVfd));
+}
 
-            try {
-                const SQL = await initSqlJs({
-                    locateFile: file => "sql-wasm.wasm"
-                });
+function populateSelect(){
+  const sel=$('vfdSelect');
+  listData.forEach((v,i)=>{
+    const o=document.createElement('option');o.value=i;o.textContent=v.alias;sel.appendChild(o);
+  });
+  sel.addEventListener('change',()=>{
+    if(sel.value===''){currentVfd=null;doSearch();renderMobVfdBar();
+      if(!searchTerm&&!isMobile())showWelcome()}
+    else selectVfd(+sel.value);
+  });
+}
 
-                let totalRec = 0;
+async function selectVfd(idx){
+  currentVfd=idx;
+  $('vfdList').querySelectorAll('.vfd-item').forEach(el=>el.classList.toggle('active',+el.dataset.idx===idx));
+  $('vfdSelect').value=idx;
+  renderMobVfdBar();
+  await loadVfd(idx);
+  doSearch();
+  // If no search term → show full table (desktop) or full list (mobile)
+  if(!searchTerm){
+    if(!isMobile())showVfdTable(idx);
+    if(isMobile())showMobDefaultList();
+  }
+}
 
-                for (const dbConf of config.databases) {
-                    const dbName = dbConf.file || 'unknown';
-                    enabledDatabases[dbName] = true; 
-                    
-                    try {
-                        const dbRes = await fetch(dbConf.url || dbName);
-                        const u8array = new Uint8Array(await dbRes.arrayBuffer());
-                        const db = new SQL.Database(u8array);
-                        
-                        databases[dbName] = { db, tables: {} };
-                        
-                        if (!dbConf.tables) continue;
+/* === DATA LOADING === */
+async function loadAllData(){for(let i=0;i<listData.length;i++)await loadVfd(i)}
 
-                        for (const tblConf of dbConf.tables) {
-                            const tblName = tblConf.name;
-                            const tableKey = `${dbName}.${tblName}`;
-                            enabledTables[tableKey] = true;
+async function loadVfd(idx){
+  if(vfdCache[idx])return;
+  const v=listData[idx];
+  try{const r=await fetch(BASE+v.file);vfdCache[idx]=await r.json()}catch(e){vfdCache[idx]=null}
+}
 
-                            try {
-                                const cols = tblConf.detailColumns.join(', ');
-                                const query = `SELECT ${cols} FROM ${tblName}`;
-                                const stmt = db.exec(query);
-                                
-                                let data = [];
-                                if (stmt.length > 0) {
-                                    const keys = stmt[0].columns;
-                                    data = stmt[0].values.map(row => {
-                                        let obj = {};
-                                        keys.forEach((k, i) => obj[k] = row[i]);
-                                        return obj;
-                                    });
-                                }
-                                databases[dbName].tables[tblName] = data;
-                            } catch (err) {
-                                console.warn(`Ошибка чтения таблицы ${tblName}`, err);
-                            }
-                        }
+function buildAllData(){
+  allData=[];
+  listData.forEach((v,idx)=>{
+    const d=vfdCache[idx];if(!d)return;
+    d.data.forEach(row=>{allData.push({vfdIdx:idx,vfdAlias:v.alias,columns:d.columns,row})});
+  });
+}
 
-                        const count = Object.values(databases[dbName].tables).reduce((a, b) => a + b.length, 0);
-                        dbRecordCounts[dbName] = count;
-                        totalRec += count;
+function getVisibleData(){
+  buildAllData();
+  if(currentVfd!==null)return allData.filter(d=>d.vfdIdx===currentVfd);
+  return allData;
+}
 
-                    } catch (err) {
-                        console.error(`Ошибка загрузки DB ${dbName}`, err);
-                        dbRecordCounts[dbName] = 0;
-                    }
-                }
+/* === DESKTOP VIEWS === */
+function showVfdTable(idx){
+  if(isMobile())return;
+  const d=vfdCache[idx];
+  if(!d){$('contentArea').innerHTML='<div class="empty">Не удалось загрузить данные</div>';return}
+  const cols=d.columns;
+  let h='<div class="table-wrap"><table><thead><tr>';
+  cols.forEach(c=>h+=`<th>${c.alias}</th>`);
+  h+='</tr></thead><tbody>';
+  d.data.forEach(row=>{
+    h+=`<tr data-rid="${row.id}" class="clickable-row">`;
+    cols.forEach(c=>{
+      const val=row[c.original]||'';
+      const lines=String(val).split('\n');
+      const cell=lines.map(l=>l.trim()?`<span class="line">${esc(l)}</span>`:'').join('');
+      h+=`<td>${cell}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  $('contentArea').innerHTML=h;
+  // Make table rows clickable → show detail card
+  $('contentArea').querySelectorAll('tr[data-rid]').forEach(tr=>{
+    tr.addEventListener('click',()=>{showDesktopDetail(idx,+tr.dataset.rid,null);hlTableRow(tr)});
+  });
+}
+function hlTableRow(tr){
+  $('contentArea').querySelectorAll('tr[data-rid]').forEach(r=>r.classList.remove('selected'));
+  tr.classList.add('selected');
+}
 
-                buildGlobalData();
-                hideStatus();
-                showStatus(`Готово: ${totalRec} записей`, 'loading');
-                setTimeout(hideStatus, 1000);
+function showDesktopDetail(vfdIdx,rowId,clickedEl){
+  $('resultsList').querySelectorAll('.result-item').forEach(el=>el.classList.remove('active'));
+  if(clickedEl)clickedEl.classList.add('active');
+  const d=vfdCache[vfdIdx];if(!d)return;
+  const row=d.data.find(r=>r.id===rowId);if(!row)return;
+  const cols=d.columns;
+  let h=`<div class="detail-card"><div class="badge"><span class="dot"></span>${esc(listData[vfdIdx].alias)}</div>`;
+  h+=`<h2>${hl(String(row[cols[1].original]),searchTerm)}</h2>`;
+  h+=`<div class="d-name">${hl(String(row[cols[2].original]),searchTerm)}</div>`;
+  for(let i=3;i<cols.length;i++){
+    h+=`<div class="d-section"><h4>${esc(cols[i].alias)}</h4><p>${hl(String(row[cols[i].original]||''),searchTerm)}</p></div>`;
+  }
+  h+='</div>';
+  $('contentArea').innerHTML=h;
+}
 
-            } catch (e) {
-                showStatus(`Критическая ошибка: ${e.message}`, 'error');
-            }
-        }
+/* === MOBILE VIEWS === */
+function showMobDefaultList(){
+  const list=$('mobDefaultList');
+  if(currentVfd===null){
+    list.innerHTML='<div class="welcome"><h2>Коды ошибок ПЧ</h2><p>Выберите преобразователь или используйте поиск.</p></div>';
+    $('mobDefault').classList.add('active');$('mobSearch').classList.remove('active');
+    return;
+  }
+  const data=getVisibleData();
+  if(!data.length){list.innerHTML='<div class="empty">Нет данных</div>';return}
+  list.innerHTML=data.map(d=>{
+    const code=String(d.row[d.columns[1].original]).split('\n')[0];
+    const name=String(d.row[d.columns[2].original]).split('\n')[0];
+    return `<div class="mob-result" data-vi="${d.vfdIdx}" data-rid="${d.row.id}"><span class="mr-vfd">${esc(d.vfdAlias)}</span><span class="mr-code">${esc(code)}</span><span class="mr-name">${esc(name)}</span></div>`;
+  }).join('');
+  list.querySelectorAll('.mob-result').forEach(el=>{
+    el.addEventListener('click',()=>openMobDetail(+el.dataset.vi,+el.dataset.rid));
+  });
+  $('mobDefault').classList.add('active');$('mobSearch').classList.remove('active');
+}
 
-        function buildGlobalData() {
-            allData = [];
-            for (const [dbName, dbInfo] of Object.entries(databases)) {
-                const dbConfig = config.databases.find(d => d.file === dbName);
-                if (!dbConfig) continue;
+function showMobSearchResults(results){
+  const list=$('mobSearchList');
+  if(!results.length){list.innerHTML='<div class="no-results">Ничего не найдено</div>';return}
+  list.innerHTML=results.map(r=>{
+    const code=String(r.row[r.columns[1].original]).split('\n')[0];
+    const name=String(r.row[r.columns[2].original]).split('\n')[0];
+    return `<div class="mob-result" data-vi="${r.vfdIdx}" data-rid="${r.row.id}"><span class="mr-vfd">${esc(r.vfdAlias)}</span><span class="mr-code">${esc(code)}</span><span class="mr-name">${esc(name)}</span></div>`;
+  }).join('');
+  list.querySelectorAll('.mob-result').forEach(el=>{
+    el.addEventListener('click',()=>openMobDetail(+el.dataset.vi,+el.dataset.rid));
+  });
+  $('mobDefault').classList.remove('active');
+  $('mobSearch').classList.add('active');
+}
 
-                for (const [tblName, tblData] of Object.entries(dbInfo.tables)) {
-                    const tblConfig = dbConfig.tables.find(t => t.name === tblName);
-                    if (!tblConfig) continue;
+function openMobDetail(vfdIdx,rowId){
+  const d=vfdCache[vfdIdx];if(!d)return;
+  const row=d.data.find(r=>r.id===rowId);if(!row)return;
+  const cols=d.columns;
+  const code=String(row[cols[1].original]).split('\n')[0];
+  $('mobDetailTitle').textContent=`${listData[vfdIdx].alias} — ${code}`;
+  let h=`<div class="detail-card"><div class="badge"><span class="dot"></span>${esc(listData[vfdIdx].alias)}</div>`;
+  h+=`<h2>${hl(String(row[cols[1].original]),searchTerm)}</h2>`;
+  h+=`<div class="d-name">${hl(String(row[cols[2].original]),searchTerm)}</div>`;
+  for(let i=3;i<cols.length;i++){
+    h+=`<div class="d-section"><h4>${esc(cols[i].alias)}</h4><p>${hl(String(row[cols[i].original]||''),searchTerm)}</p></div>`;
+  }
+  h+='</div>';
+  $('mobDetailBody').innerHTML=h;
+  $('mobDetail').classList.add('active');
+}
 
-                    tblData.forEach(row => {
-                        allData.push({
-                            db: dbName,
-                            table: tblName,
-                            config: tblConfig,
-                            data: row
-                        });
-                    });
-                }
-            }
-        }
+function closeMobDetail(){$('mobDetail').classList.remove('active')}
+$('mobBackBtn').addEventListener('click',closeMobDetail);
 
-        // === ИНТЕРФЕЙС ФИЛЬТРОВ ===
-        function renderFilters() {
-            const container = document.getElementById('filtersArea');
-            container.innerHTML = '';
+/* === SEARCH === */
+let searchTimeout;
+$('searchInput').addEventListener('input',()=>{clearTimeout(searchTimeout);searchTimeout=setTimeout(doSearch,200)});
 
-            config.databases.forEach(dbConf => {
-                const dbName = dbConf.file;
-                const dbEnabled = enabledDatabases[dbName];
-                
-                const group = document.createElement('div');
-                group.className = 'filter-group';
+function doSearch(){
+  searchTerm=$('searchInput').value.trim().toLowerCase();
+  if(isMobile()){doMobileSearch();return}
+  const resSection=$('resultsSection');
+  const vfdSection=$('vfdSection');
+  if(!searchTerm){
+    resSection.style.display='none';resSection.classList.remove('visible');
+    vfdSection.style.borderBottom='1px solid var(--border)';
+    if(currentVfd!==null)showVfdTable(currentVfd);else showWelcome();
+    return;
+  }
+  resSection.style.display='';resSection.classList.add('visible');
+  vfdSection.style.borderBottom='none';
+  const data=getVisibleData();
+  const results=data.filter(d=>{
+    return d.columns.some(c=>String(d.row[c.original]||'').toLowerCase().includes(searchTerm));
+  });
+  $('resultsCount').textContent=`(${results.length})`;
+  const list=$('resultsList');
+  if(!results.length){list.innerHTML='<div class="no-results">Ничего не найдено</div>';return}
+  list.innerHTML=results.map(r=>{
+    const code=String(r.row[r.columns[1].original]).split('\n')[0];
+    const name=String(r.row[r.columns[2].original]).split('\n')[0];
+    const showVfd=currentVfd===null;
+    return `<div class="result-item" data-vi="${r.vfdIdx}" data-rid="${r.row.id}">
+      ${showVfd?`<span class="r-vfd">${esc(r.vfdAlias)}</span>`:''}
+      <span class="r-code">${esc(code)}</span><span class="r-name">${esc(name)}</span></div>`;
+  }).join('');
+  list.querySelectorAll('.result-item').forEach(el=>{
+    el.addEventListener('click',()=>showDesktopDetail(+el.dataset.vi,+el.dataset.rid,el));
+  });
+  // Show first result detail
+  if(results.length&&!searchTerm.startsWith('_'))showDesktopDetail(results[0].vfdIdx,results[0].row.id,list.querySelector('.result-item'));
+}
 
-                const title = document.createElement('div');
-                title.className = 'filter-group-title';
-                title.innerHTML = `<span>${dbName}</span> <span style="font-weight:400; font-size:0.8em; color:#999;">(${dbRecordCounts[dbName]})</span>`;
-                
-                title.style.cursor = 'pointer';
-                title.onclick = () => {
-                    const newState = !enabledDatabases[dbName];
-                    enabledDatabases[dbName] = newState;
-                    renderFilters(); 
-                    performSearch(document.getElementById('searchInput').value);
-                };
+function doMobileSearch(){
+  if(!searchTerm){showMobDefaultList();return}
+  const data=getVisibleData();
+  const results=data.filter(d=>{
+    return d.columns.some(c=>String(d.row[c.original]||'').toLowerCase().includes(searchTerm));
+  });
+  showMobSearchResults(results);
+}
 
-                group.appendChild(title);
+/* === UTILS === */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function hl(text,term){
+  if(!term)return esc(text).replace(/\n/g,'<br>');
+  const e=esc(text),te=esc(term);
+  const rx=new RegExp(`(${te.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`,'gi');
+  return e.replace(rx,'<mark class="hl">$1</mark>').replace(/\n/g,'<br>');
+}
 
-                const dbInfo = databases[dbName];
-                if (dbInfo && dbConf.tables) {
-                    dbConf.tables.forEach(tblConf => {
-                        const tblName = tblConf.name;
-                        const tableKey = `${dbName}.${tblName}`;
-                        
-                        if (!dbInfo.tables[tblName]) return;
+/* === PWA === */
+function setupPWA(){
+  const manifest={name:'Коды ошибок ПЧ',short_name:'ПЧ-Ошибки',start_url:'./',display:'standalone',background_color:'#0f0f1a',theme_color:'#1a1a2e',icons:[{src:'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%2280%22 height=%2280%22 x=%2210%22 y=%2210%22 rx=%2212%22 fill=%22%234a9eff%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 font-size=%2236%22 fill=%22white%22 font-weight=%22bold%22>ПЧ</text></svg>',sizes:'192x192',type:'image/svg+xml'}]};
+  const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  $('manifest-link').href=URL.createObjectURL(blob);
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register(BASE+'sw.js').then(reg=>{
+      reg.onupdatefound=()=>{const nw=reg.installing;nw.onstatechange=()=>{if(nw.state==='activated')location.reload()}};
+    }).catch(()=>{});
+  }
+}
 
-                        const chip = document.createElement('span');
-                        
-                        const isDbActive = enabledDatabases[dbName];
-                        const isTblActive = enabledTables[tableKey];
-                        
-                        let className = 'filter-chip';
-                        if (!isDbActive || !isTblActive) {
-                            className += ' disabled';
-                        } else {
-                            className += ' active';
-                        }
+window.addEventListener('online',()=>{$('offlineBadge').classList.remove('show')});
+window.addEventListener('offline',()=>{$('offlineBadge').classList.add('show')});
+if(!navigator.onLine)$('offlineBadge').classList.add('show');
 
-                        chip.className = className;
-                        chip.textContent = tblName;
+// Logo click: reset everything
+$('logoBtn').addEventListener('click',resetAll);
+function resetAll(){
+  currentVfd=null;searchTerm='';
+  $('searchInput').value='';
+  $('vfdSelect').value='';
+  $('vfdList').querySelectorAll('.vfd-item').forEach(el=>el.classList.remove('active'));
+  $('resultsSection').style.display='none';$('resultsSection').classList.remove('visible');
+  $('vfdSection').style.borderBottom='1px solid var(--border)';
+  closeMobDetail();
+  renderMobVfdBar();
+  applyLayout();
+}
 
-                        chip.onclick = (e) => {
-                            e.stopPropagation(); 
-                            
-                            if (!enabledDatabases[dbName]) {
-                                enabledDatabases[dbName] = true;
-                            }
-                            
-                            enabledTables[tableKey] = !enabledTables[tableKey];
-                            
-                            renderFilters();
-                            performSearch(document.getElementById('searchInput').value);
-                        };
+function showWelcome(){
+  $('contentArea').innerHTML='<div class="welcome"><h2>Коды ошибок частотных преобразователей</h2><p>Выберите преобразователь из списка или используйте поиск для поиска ошибок по всем полям.</p></div>';
+}
 
-                        group.appendChild(chip);
-                    });
-                }
-
-                container.appendChild(group);
-            });
-        }
-
-        // === ПОИСК ===
-        function performSearch(query) {
-            if (!query.trim()) {
-                clearResults();
-                return;
-            }
-
-            const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-            
-            let results = allData.filter(item => {
-                if (!enabledDatabases[item.db]) return false;
-                const tableKey = `${item.db}.${item.table}`;
-                if (!enabledTables[tableKey]) return false;
-                return true;
-            });
-
-            words.forEach(word => {
-                results = results.filter(item => {
-                    const cols = item.config.detailColumns;
-                    return cols.some(col => String(item.data[col] || '').toLowerCase().includes(word));
-                });
-            });
-
-            displayResults(results, words);
-        }
-
-        function displayResults(results, words) {
-            currentResults = results;
-            const listEl = document.getElementById('resultsList');
-            const countEl = document.getElementById('countBadge');
-            
-            countEl.textContent = results.length;
-            listEl.innerHTML = '';
-
-            if (results.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">Ничего не найдено</div>';
-                return;
-            }
-
-            const limit = config.maxDisplayResults;
-            if (results.length > limit) {
-                listEl.innerHTML = `<div style="padding:10px; color:#ef4444; font-size:0.9em; text-align:center;">Найдено > ${limit} записей. Уточните запрос.</div>`;
-                return;
-            }
-
-            const frag = document.createDocumentFragment();
-
-            results.forEach((item, idx) => {
-                const dCols = item.config.displayColumns;
-                const div = document.createElement('div');
-                div.className = 'result-item';
-                div.onclick = () => showDetail(idx);
-                
-                div.innerHTML = `
-                    <div class="r-source">${item.db} &rarr; ${item.table}</div>
-                    <div class="r-code">${esc(item.data[dCols[0]])}</div>
-                    <div class="r-name">${esc(item.data[dCols[1]])}</div>
-                `;
-                frag.appendChild(div);
-            });
-            listEl.appendChild(frag);
-        }
-
-        function clearResults() {
-            document.getElementById('resultsList').innerHTML = '';
-            document.getElementById('countBadge').textContent = '0';
-            document.getElementById('detailContent').innerHTML = '<div style="text-align:center; color:#999; padding: 20px;">Выберите запись</div>';
-            document.getElementById('detailSection').classList.remove('open');
-        }
-
-        // === ДЕТАЛИЗАЦИЯ ===
-        function showDetail(idx) {
-            const item = currentResults[idx];
-            
-            const allItems = document.querySelectorAll('.result-item');
-            allItems.forEach(i => i.classList.remove('active'));
-            if(allItems[idx]) allItems[idx].classList.add('active');
-
-            const detailEl = document.getElementById('detailContent');
-            const cols = item.config.detailColumns;
-            const labels = item.config.customLabels || {};
-
-            let html = '';
-            cols.forEach(col => {
-                const val = item.data[col] || '';
-                const lbl = labels[col] || col;
-                html += `
-                    <div class="detail-field">
-                        <span class="detail-label">${esc(lbl)}</span>
-                        <div class="detail-value">${esc(val)}</div>
-                    </div>
-                `;
-            });
-            detailEl.innerHTML = html;
-
-            document.getElementById('detailSection').classList.add('open');
-
-            highlightWords(document.getElementById('searchInput').value);
-        }
-
-        function highlightWords(query) {
-            const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-            if (!words.length) return;
-
-            document.querySelectorAll('.detail-value').forEach(el => {
-                const text = el.textContent;
-                let newText = text;
-                words.forEach(w => {
-                    const reg = new RegExp(`(${escRegExp(w)})`, 'gi');
-                    newText = newText.replace(reg, '<span class="highlight">$1</span>');
-                });
-                el.innerHTML = newText;
-            });
-        }
-
-        // === СОБЫТИЯ ===
-        function setupEvents() {
-            // Поиск с debounce
-            let timeout;
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => performSearch(e.target.value), 300);
-            });
-
-            // Справка
-            document.getElementById('helpBtn').addEventListener('click', () => {
-                const p = document.getElementById('infoPanel');
-                const isOpen = p.classList.contains('show');
-                if (isOpen) p.classList.remove('show');
-                else {
-                    p.classList.add('show');
-                    // Если фильтры открыты, можно закрыть их для экономии места
-                    document.getElementById('filterDrawer').classList.remove('open');
-                }
-            });
-
-            // Кнопка Назад (мобильные)
-            document.getElementById('backBtn').addEventListener('click', () => {
-                document.getElementById('detailSection').classList.remove('open');
-            });
-
-            // === НОВАЯ ЛОГИКА: Открытие/Закрытие ФИЛЬТРОВ ===
-            const drawer = document.getElementById('filterDrawer');
-            const toggleBtn = document.getElementById('filterToggleBtn');
-            const closeBtn = document.getElementById('closeDrawerBtn');
-
-            function toggleDrawer() {
-                const isOpen = drawer.classList.contains('open');
-                if (isOpen) {
-                    drawer.classList.remove('open');
-                } else {
-                    drawer.classList.add('open');
-                    // Закрываем справку, если открыта
-                    document.getElementById('infoPanel').classList.remove('show');
-                }
-            }
-
-            toggleBtn.addEventListener('click', toggleDrawer);
-            closeBtn.addEventListener('click', toggleDrawer);
-        }
-
-        function updateInfo() {
-            const list = config.databases.map(d => d.file).join(', ');
-            document.getElementById('dbListInfo').textContent = `Базы: ${list}`;
-        }
-
-        // === УТИЛИТЫ ===
-        function showStatus(msg, type) {
-            const el = document.getElementById('statusMsg');
-            el.textContent = msg;
-            el.className = `status-msg ${type}`;
-            el.style.display = 'block';
-        }
-        function hideStatus() {
-            document.getElementById('statusMsg').style.display = 'none';
-        }
-        function esc(str) {
-            if (!str) return '';
-            return String(str).replace(/&/g, "&amp;")
-                             .replace(/</g, "&lt;")
-                             .replace(/>/g, "&gt;")
-                             .replace(/"/g, "&quot;")
-                             .replace(/'/g, "&#039;");
-        }
-        function escRegExp(str) {
-            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
-    </script>
+setupPWA();
+init();
+</script>
 </body>
 </html>

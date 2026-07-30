@@ -1,0 +1,7 @@
+[
+  { "file": "json/ESQ_760.json", "alias": "ESQ-760" },
+  { "file": "json/Mitsu_FR_A800_Ru.json", "alias": "Mitsu_FR_A800_Ru" },
+{ "file": "json/Sie_G120_En.json", "alias": "Siemens_G120_En" },
+{ "file": "json/Sie_G120_Ru.json", "alias": "Siemens_G120_Ru" },
+{ "file": "json/Simovert.json", "alias": "Simovert" }
+]
