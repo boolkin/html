@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тестирование нейросетей — Игры</title>
+<style>
+    :root {
+        --bg: #0f1420;
+        --bg2: #161d30;
+        --card: #1c2440;
+        --card-hover: #243055;
+        --border: #2c3a63;
+        --text: #e8ecf8;
+        --muted: #93a0c4;
+        --accent: #6ea8ff;
+        --accent2: #a87bff;
+        --green: #5ce6a0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(1200px 600px at 20% -10%, #1a2a55 0%, var(--bg) 55%);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 40px 20px 60px;
+    }
+
+    .wrap { max-width: 1180px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 34px; }
+    header h1 {
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    header p { color: var(--muted); margin-top: 8px; font-size: 1rem; }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+    }
+    .tab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 22px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(28, 36, 64, 0.6);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.98rem;
+        font-weight: 600;
+        transition: all .2s ease;
+        user-select: none;
+    }
+    .tab .ic {
+        width: 34px; height: 34px;
+        border-radius: 9px;
+        background: rgba(110, 168, 255, 0.14);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+    }
+    .tab .cnt {
+        font-size: 0.78rem;
+        background: rgba(110,168,255,.15);
+        color: var(--accent);
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-weight: 700;
+    }
+    .tab:hover { border-color: var(--accent); color: var(--text); }
+    .tab.active {
+        background: linear-gradient(135deg, rgba(110,168,255,.18), rgba(168,123,255,.15));
+        border-color: var(--accent);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(110,168,255,.18);
+    }
+    .tab.active .cnt { background: var(--accent); color: #0b1020; }
+
+    /* Grid */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        animation: fade .3s ease;
+    }
+
+    .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+        color: inherit;
+        transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent);
+        box-shadow: 0 14px 30px rgba(0,0,0,.35);
+    }
+
+    .shot {
+        position: relative;
+        background: #12182b;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+    }
+    .shot img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform .35s ease;
+    }
+    .card:hover .shot img { transform: scale(1.06); }
+    .shot .tag {
+        position: absolute;
+        top: 10px; left: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 20px;
+        background: rgba(10,14,30,.72);
+        border: 1px solid rgba(110,168,255,.4);
+        color: var(--accent);
+        backdrop-filter: blur(4px);
+    }
+
+    .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .body .name { font-weight: 700; font-size: 1.08rem; }
+    .body .game { color: var(--muted); font-size: 0.82rem; margin-bottom: 8px; }
+    .open-btn {
+        margin-top: 10px;
+        text-align: center;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        color: #0b1020;
+        transition: filter .2s ease;
+    }
+    .card:hover .open-btn { filter: brightness(1.12); }
+
+    .hidden { display: none; }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer { text-align: center; color: var(--muted); margin-top: 40px; font-size: 0.82rem; }
+
+    @media (max-width: 560px) {
+        body { padding: 24px 12px 40px; }
+        header h1 { font-size: 1.6rem; }
+        .tab { flex: 1; min-width: 120px; justify-content: center; }
+        .tab .cnt { display: none; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <h1>Тестирование нейросетей</h1>
+        <p>Результаты игры различных ИИ в трёх играх — кликните по карточке, чтобы открыть</p>
+    </header>
+
+    <nav class="tabs" id="tabs">
+        <button class="tab active" data-game="mastermind">
+            <span class="ic">MM</span>
+            <span>Мастермайнд</span>
+            <span class="cnt" data-count="mastermind"></span>
+        </button>
+        <button class="tab" data-game="battlecity">
+            <span class="ic">BC</span>
+            <span>BattleCity</span>
+            <span class="cnt" data-count="battlecity"></span>
+        </button>
+        <button class="tab" data-game="tetris">
+            <span class="ic">TET</span>
+            <span>Тетрис</span>
+            <span class="cnt" data-count="tetris"></span>
+        </button>
+    </nav>
+
+    <!-- Game panels -->
+    <section class="panel" id="panel-mastermind">
+        <div class="grid" id="grid-mastermind"></div>
+    </section>
+
+    <section class="panel hidden" id="panel-battlecity">
+        <div class="grid" id="grid-battlecity"></div>
+    </section>
+
+    <section class="panel hidden" id="panel-tetris">
+        <div class="grid" id="grid-tetris"></div>
+    </section>
+
+    <footer>Скриншоты и игровые страницы — сгенерированы тестируемыми нейросетями</footer>
+</div>
+
+<script>
+    // Данные: игра -> список {ai, html, img, note?}
+    const aiList = ['Agents', 'Frontis', 'GLM', 'Gemma', 'GPT', 'KAT', 'Ornith', 'Qwen', 'Salience'];
+
+    const GAMES = {
+        mastermind: {
+            title: 'Мастермайнд',
+            fs: 'Mastermind',
+            list: aiList.map(ai => ({ ai, html: `${ai}-MM.html`, file: ai, note: '' }))
+        },
+        battlecity: {
+            title: 'BattleCity',
+            fs: 'BattleCity',
+            list: aiList.map(ai => ({ ai, html: `${ai}-BC.html`, file: ai, note: '' }))
+        },
+        tetris: {
+            title: 'Тетрис',
+            fs: 'Tetris',
+            list: aiList.map(ai => ({ ai, html: `${ai}-tetris.html`, file: ai, note: '' }))
+        }
+    };
+
+    // Дополнительная карточка в Тетрисе (классика со звуком)
+    GAMES.tetris.list.push({ ai: 'GLM', html: 'tetris-glm-sound.html', file: 'GLM', note: 'классика, со звуком' });
+
+    const NAMES = {
+        Agents:   'Agents',
+        Frontis:  'Frontis',
+        GLM:      'GLM',
+        Gemma:    'Gemma',
+        KAT:      'KAT',
+        Ornith:   'Ornith',
+        Qwen:     'Qwen',
+        Salience: 'Salience'
+    };
+
+    function render(gameKey) {
+        const g = GAMES[gameKey];
+        const grid = document.getElementById('grid-' + gameKey);
+        grid.innerHTML = g.list.map(item => `
+            <a class="card" href="${item.html}" target="_blank" rel="noopener">
+                <div class="shot">
+                    <span class="tag">${NAMES[item.ai] || item.ai}</span>
+                    <img src="${g.fs}/${item.file}.png" alt="${NAMES[item.ai] || item.ai} — ${g.title}" loading="lazy">
+                </div>
+                <div class="body">
+                    <div class="name">${NAMES[item.ai] || item.ai}</div>
+                    <div class="game">${g.title}${item.note ? ' — ' + item.note : ''}</div>
+                    <div class="open-btn">Открыть игру</div>
+                </div>
+            </a>
+        `).join('');
+    }
+
+    // Счётчики количества карточек
+    document.querySelectorAll('[data-count]').forEach(el => {
+        const key = el.getAttribute('data-count');
+        el.textContent = GAMES[key].list.length;
+    });
+
+    // Инициализация всех панелей
+    Object.keys(GAMES).forEach(k => render(k));
+
+    // Переключение вкладок
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById('panel-' + tab.getAttribute('data-game')).classList.remove('hidden');
+        });
+    });
+</script>
+</body>
+</html>

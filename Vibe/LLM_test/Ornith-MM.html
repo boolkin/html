@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mastermind</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    touch-action: manipulation;
+  }
+
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* === Игровое поле === */
+  .game-field {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .game-field::-webkit-scrollbar {
+    width: 4px;
+  }
+  .game-field::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 2px;
+  }
+
+  .attempt-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .attempt-number {
+    width: 28px;
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+
+  .attempt-colors {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .color-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+  }
+
+  .color-circle.empty {
+    background: rgba(255,255,255,0.08) !important;
+    border: 2px dashed rgba(255,255,255,0.2);
+  }
+
+  .result-dots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .result-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+
+  .result-dot.black {
+    background: #111;
+    border: 2px solid #555;
+  }
+
+  .result-dot.white {
+    background: #eee;
+    border: 2px solid #aaa;
+  }
+
+  .result-dot.empty {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* === Текущая попытка === */
+  .current-attempt {
+    padding: 10px 12px;
+    background: #16213e;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .current-attempt-label {
+    font-size: 12px;
+    color: #666;
+    margin-right: 12px;
+    white-space: nowrap;
+  }
+
+  .current-slots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .current-slot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 2px dashed rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .current-slot.filled {
+    border: 2px solid rgba(255,255,255,0.3);
+    transform: scale(1.05);
+  }
+
+  /* === Панель управления === */
+  .control-panel {
+    flex-shrink: 0;
+    background: #0f3460;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .color-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .color-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    position: relative;
+  }
+
+  .color-btn:active {
+    transform: scale(0.85);
+  }
+
+  .color-btn.selected {
+    border-color: #fff;
+    transform: scale(1.15);
+    box-shadow: 0 0 12px rgba(255,255,255,0.4);
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .action-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 90px;
+    text-align: center;
+  }
+
+  .action-btn:active {
+    transform: scale(0.95);
+  }
+
+  .btn-check {
+    background: #e94560;
+    color: #fff;
+  }
+
+  .btn-check:disabled {
+    background: #555;
+    color: #999;
+    cursor: not-allowed;
+  }
+
+  .btn-remove {
+    background: rgba(255,255,255,0.12);
+    color: #ccc;
+  }
+
+  .btn-remove:disabled {
+    color: #555;
+    cursor: not-allowed;
+  }
+
+  .new-game-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e94560, #0f3460);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity 0.15s ease;
+  }
+
+  .new-game-btn:active {
+    opacity: 0.7;
+  }
+
+  /* === Модальное окно === */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .modal-overlay.visible {
+    display: flex;
+  }
+
+  .modal {
+    background: #16213e;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .modal h2 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .modal p {
+    font-size: 15px;
+    color: #aaa;
+    margin-bottom: 16px;
+  }
+
+  .modal .combo-display {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .modal .combo-display .color-circle {
+    width: 44px;
+    height: 44px;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+
+  .modal .new-game-btn {
+    padding: 12px 32px;
+    font-size: 16px;
+  }
+
+  /* === Адаптация для маленьких экранов === */
+  @media (max-height: 600px) {
+    .color-btn {
+      width: 36px;
+      height: 36px;
+    }
+    .current-slot {
+      width: 36px;
+      height: 36px;
+    }
+    .color-circle {
+      width: 30px;
+      height: 30px;
+    }
+    .action-btn {
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+    .attempt-number {
+      font-size: 11px;
+    }
+    .result-dot {
+      width: 12px;
+      height: 12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- Игровое поле -->
+  <div class="game-field" id="gameField"></div>
+
+  <!-- Текущая попытка -->
+  <div class="current-attempt">
+    <span class="current-attempt-label">Попытка</span>
+    <div class="current-slots" id="currentSlots">
+      <div class="current-slot" id="slot0"></div>
+      <div class="current-slot" id="slot1"></div>
+      <div class="current-slot" id="slot2"></div>
+      <div class="current-slot" id="slot3"></div>
+    </div>
+  </div>
+
+  <!-- Панель управления -->
+  <div class="control-panel">
+    <div class="color-picker" id="colorPicker"></div>
+    <div class="actions">
+      <button class="action-btn btn-check" id="btnCheck" disabled>Проверить</button>
+      <button class="action-btn btn-remove" id="btnRemove" disabled>Убрать</button>
+    </div>
+    <button class="new-game-btn" id="btnNewGame">Новая игра</button>
+  </div>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <h2 id="modalTitle"></h2>
+    <p id="modalText"></p>
+    <div class="combo-display" id="modalCombo"></div>
+    <button class="new-game-btn" id="modalNewGame">Новая игра</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  // === Конфигурация ===
+  const COLORS = [
+    { name: 'red',    hex: '#e94560' },
+    { name: 'blue',   hex: '#0f9beb' },
+    { name: 'green',  hex: '#2ecc71' },
+    { name: 'yellow', hex: '#f1c40f' },
+    { name: 'orange', hex: '#e67e22' },
+    { name: 'purple', hex: '#9b59b6' }
+  ];
+
+  const SLOT_COUNT = 4;
+  const COLOR_COUNT = COLORS.length;
+
+  // === Состояние ===
+  let secret = [];
+  let currentAttempt = [];
+  let attempts = [];
+  let gameOver = false;
+
+  // === DOM ===
+  const gameField    = document.getElementById('gameField');
+  const currentSlots = document.getElementById('currentSlots');
+  const colorPicker  = document.getElementById('colorPicker');
+  const btnCheck     = document.getElementById('btnCheck');
+  const btnRemove    = document.getElementById('btnRemove');
+  const btnNewGame   = document.getElementById('btnNewGame');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle   = document.getElementById('modalTitle');
+  const modalText    = document.getElementById('modalText');
+  const modalCombo   = document.getElementById('modalCombo');
+  const modalNewGame = document.getElementById('modalNewGame');
+
+  // === Инициализация ===
+  function init() {
+    secret = generateSecret();
+    currentAttempt = [];
+    attempts = [];
+    gameOver = false;
+    modalOverlay.classList.remove('visible');
+    renderColorPicker();
+    renderCurrentSlots();
+    renderAttempts();
+    updateButtons();
+  }
+
+  function generateSecret() {
+    const arr = [];
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      arr.push(COLORS[Math.floor(Math.random() * COLOR_COUNT)].name);
+    }
+    return arr;
+  }
+
+  // === Рендер панели цветов ===
+  function renderColorPicker() {
+    colorPicker.innerHTML = '';
+    COLORS.forEach((color, idx) => {
+      const btn = document.createElement('div');
+      btn.className = 'color-btn';
+      btn.style.background = color.hex;
+      btn.dataset.index = idx;
+      btn.addEventListener('click', () => onColorClick(idx));
+      colorPicker.appendChild(btn);
+    });
+  }
+
+  // === Рендер текущей попытки ===
+  function renderCurrentSlots() {
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      const slot = document.getElementById('slot' + i);
+      slot.className = 'current-slot';
+      slot.innerHTML = '';
+      if (i < currentAttempt.length) {
+        const colorName = currentAttempt[i];
+        const colorObj = COLORS.find(c => c.name === colorName);
+        slot.innerHTML = `<div class="color-circle" style="background:${colorObj.hex}"></div>`;
+        slot.classList.add('filled');
+      }
+    }
+  }
+
+  // === Рендер попыток ===
+  function renderAttempts() {
+    gameField.innerHTML = '';
+    attempts.forEach((attempt, idx) => {
+      const row = document.createElement('div');
+      row.className = 'attempt-row';
+
+      // Номер
+      const num = document.createElement('div');
+      num.className = 'attempt-number';
+      num.textContent = idx + 1;
+      row.appendChild(num);
+
+      // Цвета
+      const colorsDiv = document.createElement('div');
+      colorsDiv.className = 'attempt-colors';
+      attempt.colors.forEach(colorName => {
+        const colorObj = COLORS.find(c => c.name === colorName);
+        const circle = document.createElement('div');
+        circle.className = 'color-circle';
+        circle.style.background = colorObj.hex;
+        colorsDiv.appendChild(circle);
+      });
+      row.appendChild(colorsDiv);
+
+      // Результат
+      const dotsDiv = document.createElement('div');
+      dotsDiv.className = 'result-dots';
+      for (let d = 0; d < 4; d++) {
+        const dot = document.createElement('div');
+        dot.className = 'result-dot';
+        if (attempt.result[d] === 'black') {
+          dot.classList.add('black');
+        } else if (attempt.result[d] === 'white') {
+          dot.classList.add('white');
+        } else {
+          dot.classList.add('empty');
+        }
+        dotsDiv.appendChild(dot);
+      }
+      row.appendChild(dotsDiv);
+
+      gameField.appendChild(row);
+    });
+
+    // Прокрутить вниз
+    requestAnimationFrame(() => {
+      gameField.scrollTop = gameField.scrollHeight;
+    });
+  }
+
+  // === Обработка клика по цвету ===
+  function onColorClick(colorIdx) {
+    if (gameOver) return;
+    if (currentAttempt.length >= SLOT_COUNT) return;
+
+    currentAttempt.push(COLORS[colorIdx].name);
+    renderCurrentSlots();
+    updateButtons();
+
+    // Вибрация при нажатии (если поддерживается)
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  // === Убрать последний цвет ===
+  function removeLast() {
+    if (gameOver) return;
+    if (currentAttempt.length === 0) return;
+
+    currentAttempt.pop();
+    renderCurrentSlots();
+    updateButtons();
+  }
+
+  // === Проверка ===
+  function check() {
+    if (gameOver) return;
+    if (currentAttempt.length !== SLOT_COUNT) return;
+
+    const result = calculateResult(currentAttempt, secret);
+
+    attempts.push({
+      colors: [...currentAttempt],
+      result: result
+    });
+
+    currentAttempt = [];
+    renderCurrentSlots();
+    renderAttempts();
+    updateButtons();
+
+    // Проверка победы
+    const blackCount = result.filter(r => r === 'black').length;
+    if (blackCount === SLOT_COUNT) {
+      gameOver = true;
+      setTimeout(() => showModal(true), 400);
+    }
+  }
+
+  // === Подсчёт результата ===
+  function calculateResult(guess, secret) {
+    const result = new Array(SLOT_COUNT).fill('empty');
+
+    // Точные совпадения (чёрные)
+    let blackCount = 0;
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      if (guess[i] === secret[i]) {
+        result[i] = 'black';
+        blackCount++;
+      }
+    }
+
+    // Белые — правильные цвета не на своём месте
+    // Считаем частоту каждого цвета в secret (не занятые)
+    const secretRemaining = {};
+    for (const c of COLORS) {
+      secretRemaining[c.name] = 0;
+    }
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      if (result[i] !== 'black') {
+        secretRemaining[secret[i]]++;
+      }
+    }
+
+    let whiteCount = 0;
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      if (result[i] === 'black') continue;
+      if (secretRemaining[guess[i]] > 0) {
+        result[i] = 'white';
+        secretRemaining[guess[i]]--;
+        whiteCount++;
+      }
+    }
+
+    return result;
+  }
+
+  // === Обновление кнопок ===
+  function updateButtons() {
+    btnCheck.disabled = currentAttempt.length !== SLOT_COUNT;
+    btnRemove.disabled = currentAttempt.length === 0;
+  }
+
+  // === Модальное окно ===
+  function showModal(won) {
+    if (won) {
+      modalTitle.textContent = '🎉 Победа!';
+      modalText.textContent = `Вы угадали комбинацию за ${attempts.length} ${getWordForm(attempts.length)}`;
+    } else {
+      modalTitle.textContent = '😔 Игра окончена';
+      modalText.textContent = 'Попробуйте ещё раз!';
+    }
+
+    modalCombo.innerHTML = '';
+    secret.forEach(colorName => {
+      const colorObj = COLORS.find(c => c.name === colorName);
+      const circle = document.createElement('div');
+      circle.className = 'color-circle';
+      circle.style.background = colorObj.hex;
+      modalCombo.appendChild(circle);
+    });
+
+    modalOverlay.classList.add('visible');
+  }
+
+  function getWordForm(n) {
+    const abs = Math.abs(n) % 100;
+    const last = abs % 10;
+    if (abs > 10 && abs < 20) return 'попыток';
+    if (last === 1) return 'попытка';
+    if (last >= 2 && last <= 4) return 'попытки';
+    return 'попыток';
+  }
+
+  // === Обработчики ===
+  btnCheck.addEventListener('click', check);
+  btnRemove.addEventListener('click', removeLast);
+  btnNewGame.addEventListener('click', init);
+  modalNewGame.addEventListener('click', init);
+
+  // Предотвращение двойного тапа зум
+  document.addEventListener('dblclick', e => e.preventDefault());
+
+  // === Запуск ===
+  init();
+})();
+</script>
+
+</body>
+</html>

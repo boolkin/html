@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Battle City</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Courier New', monospace;
+  color: #fff;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#gameContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 520px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+#header div { padding: 0 10px; }
+.label { color: #aaa; font-size: 12px; }
+.value { color: #ff0; font-size: 16px; font-weight: bold; }
+#canvas {
+  border: 2px solid #555;
+  background: #000;
+  display: block;
+  image-rendering: pixelated;
+}
+#controls {
+  display: none;
+  margin-top: 10px;
+  width: 520px;
+  justify-content: space-between;
+  align-items: center;
+}
+#dpad {
+  position: relative;
+  width: 130px;
+  height: 130px;
+}
+.dpad-btn {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  background: #333;
+  border: 2px solid #666;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.dpad-btn:active { background: #555; }
+.dpad-up { top: 0; left: 44px; }
+.dpad-down { bottom: 0; left: 44px; }
+.dpad-left { top: 44px; left: 0; }
+.dpad-right { top: 44px; right: 0; }
+#actionBtns {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.fire-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #c00;
+  border: 3px solid #f66;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fire-btn:active { background: #f33; }
+#overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+#overlay.active { pointer-events: all; }
+#overlay h1 {
+  font-size: 36px;
+  color: #f00;
+  text-shadow: 2px 2px #000;
+  margin-bottom: 10px;
+}
+#overlay h2 {
+  font-size: 24px;
+  color: #ff0;
+  margin-bottom: 20px;
+}
+#overlay p {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+#overlay button {
+  margin-top: 15px;
+  padding: 10px 30px;
+  font-size: 18px;
+  font-family: 'Courier New', monospace;
+  background: #c00;
+  color: #fff;
+  border: 2px solid #f66;
+  cursor: pointer;
+  pointer-events: all;
+}
+#overlay button:hover { background: #f33; }
+#startOverlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+#startOverlay h1 {
+  font-size: 42px;
+  color: #f00;
+  text-shadow: 3px 3px #600;
+  margin-bottom: 5px;
+  letter-spacing: 4px;
+}
+#startOverlay .sub {
+  color: #aaa;
+  font-size: 13px;
+  margin-bottom: 30px;
+}
+#startOverlay .info {
+  color: #888;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+#startOverlay button {
+  margin-top: 20px;
+  padding: 12px 40px;
+  font-size: 20px;
+  font-family: 'Courier New', monospace;
+  background: #c00;
+  color: #fff;
+  border: 2px solid #f66;
+  cursor: pointer;
+}
+#startOverlay button:hover { background: #f33; }
+@media (max-width: 560px) {
+  #header { width: 95vw; font-size: 12px; }
+  #canvas { width: 95vw; height: auto; }
+  #controls { display: flex; width: 95vw; }
+  .value { font-size: 13px; }
+}
+</style>
+</head>
+<body>
+<div id="gameContainer">
+  <div id="header">
+    <div><span class="label">ENEMIES</span> <span class="value" id="enemyCount">20</span></div>
+    <div><span class="label">STAGE</span> <span class="value" id="stageNum">1</span></div>
+    <div><span class="label">LIVES</span> <span class="value" id="livesCount">3</span></div>
+    <div><span class="label">SCORE</span> <span class="value" id="scoreCount">0</span></div>
+  </div>
+  <div style="position:relative;display:inline-block;">
+    <canvas id="canvas" width="520" height="520"></canvas>
+    <div id="overlay">
+      <h1 id="olTitle"></h1>
+      <h2 id="olSubtitle"></h2>
+      <p id="olInfo"></p>
+      <button id="olBtn" onclick="handleOverlayBtn()">START</button>
+    </div>
+  </div>
+  <div id="controls">
+    <div id="dpad">
+      <div class="dpad-btn dpad-up" data-dir="up">▲</div>
+      <div class="dpad-btn dpad-down" data-dir="down">▼</div>
+      <div class="dpad-btn dpad-left" data-dir="left">◀</div>
+      <div class="dpad-btn dpad-right" data-dir="right">▶</div>
+    </div>
+    <div id="actionBtns">
+      <button class="fire-btn" id="fireBtn">FIRE</button>
+    </div>
+  </div>
+  <div id="startOverlay">
+    <h1>BATTLE CITY</h1>
+    <div class="sub">Protect the Eagle Base!</div>
+    <div class="info">Arrow Keys / WASD to move</div>
+    <div class="info">Space to fire</div>
+    <div class="info" style="margin-top:10px;color:#666;">Touch controls on mobile</div>
+    <button onclick="startGame()">START GAME</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const GRID = 40;
+const COLS = 13;
+const ROWS = 13;
+
+let game = null;
+let animId = null;
+let keys = {};
+let touchDir = { up: false, down: false, left: false, right: false };
+let touchFire = false;
+
+const T = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, TREE: 4, BASE: 5, BASE_DESTROYED: 6 };
+
+const stageMaps = [
+  [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,0,1,0,1,0,1,0,1,0,1,0],
+    [0,1,0,1,0,1,0,1,0,1,0,1,0],
+    [0,1,0,1,0,1,2,1,0,1,0,1,0],
+    [0,1,0,1,0,0,0,0,0,1,0,1,0],
+    [0,0,0,0,0,1,0,1,0,0,0,0,0],
+    [0,1,0,1,0,0,0,0,0,1,0,1,0],
+    [0,1,0,1,0,1,2,1,0,1,0,1,0],
+    [0,1,0,1,0,1,0,1,0,1,0,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,0,1,0,1,1,1,0,1,0,1,0],
+    [0,1,0,0,0,1,5,1,0,0,0,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ],
+  [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,2,0,1,1,1,0,1,1,1,0,2,0],
+    [0,0,0,1,0,0,0,0,0,1,0,0,0],
+    [0,1,1,1,0,2,0,2,0,1,1,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,0,2,0,1,0,1,0,2,0,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,2,0,1,0,1,0,2,0,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,1,0,2,0,2,0,1,1,1,0],
+    [0,0,0,1,0,0,0,0,0,1,0,0,0],
+    [0,2,0,1,1,1,5,1,1,1,0,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ],
+  [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,2,1,0,1,0,1,0,1,2,1,0],
+    [0,1,0,0,0,0,0,0,0,0,0,1,0],
+    [0,1,0,1,1,1,2,1,1,1,0,1,0],
+    [0,0,0,1,0,0,0,0,0,1,0,0,0],
+    [0,2,0,1,0,3,0,3,0,1,0,2,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,2,0,1,0,3,0,3,0,1,0,2,0],
+    [0,0,0,1,0,0,0,0,0,1,0,0,0],
+    [0,1,0,1,1,1,2,1,1,1,0,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,1,2,1,0,1,5,1,0,1,2,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ],
+];
+
+function cloneMap(map) {
+  return map.map(r => [...r]);
+}
+
+class Bullet {
+  constructor(x, y, dir, owner) {
+    this.x = x;
+    this.y = y;
+    this.dir = dir;
+    this.owner = owner;
+    this.speed = 6;
+    this.size = 5;
+    this.alive = true;
+  }
+  update() {
+    if (!this.alive) return;
+    switch(this.dir) {
+      case 'up': this.y -= this.speed; break;
+      case 'down': this.y += this.speed; break;
+      case 'left': this.x -= this.speed; break;
+      case 'right': this.x += this.speed; break;
+    }
+    if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+      this.alive = false;
+      return;
+    }
+    let gx = Math.floor(this.x / GRID);
+    let gy = Math.floor(this.y / GRID);
+    if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) { this.alive = false; return; }
+    let tile = game.map[gy][gx];
+    if (tile === T.BRICK) {
+      game.map[gy][gx] = T.EMPTY;
+      this.alive = false;
+      game.addExplosion(this.x, this.y, 'small');
+      return;
+    }
+    if (tile === T.STEEL) {
+      this.alive = false;
+      game.addExplosion(this.x, this.y, 'small');
+      return;
+    }
+    if (tile === T.BASE) {
+      game.map[gy][gx] = T.BASE_DESTROYED;
+      this.alive = false;
+      game.addExplosion(gx * GRID + GRID/2, gy * GRID + GRID/2, 'big');
+      game.baseDestroyed = true;
+      game.gameOver = true;
+      return;
+    }
+    for (let b of game.bullets) {
+      if (b !== this && b.alive && b.owner !== this.owner) {
+        if (Math.abs(b.x - this.x) < 10 && Math.abs(b.y - this.y) < 10) {
+          this.alive = false;
+          b.alive = false;
+          return;
+        }
+      }
+    }
+    let targets = this.owner === 'player' ? game.enemies : [game.player];
+    for (let t of targets) {
+      if (!t.alive) continue;
+      if (Math.abs(t.x + t.size/2 - this.x) < t.size/2 + this.size/2 &&
+          Math.abs(t.y + t.size/2 - this.y) < t.size/2 + this.size/2) {
+        this.alive = false;
+        t.hit();
+        return;
+      }
+    }
+  }
+  draw() {
+    if (!this.alive) return;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+  }
+}
+
+class Tank {
+  constructor(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.dir = 'up';
+    this.speed = 1.5;
+    this.color = color;
+    this.size = 34;
+    this.alive = true;
+    this.cooldown = 0;
+    this.maxCooldown = 20;
+    this.hp = 1;
+  }
+  get cx() { return this.x + this.size/2; }
+  get cy() { return this.y + this.size/2; }
+  move(dir) {
+    if (!this.alive) return;
+    this.dir = dir;
+    let nx = this.x, ny = this.y;
+    switch(dir) {
+      case 'up': ny -= this.speed; break;
+      case 'down': ny += this.speed; break;
+      case 'left': nx -= this.speed; break;
+      case 'right': nx += this.speed; break;
+    }
+    nx = Math.max(0, Math.min(canvas.width - this.size, nx));
+    ny = Math.max(0, Math.min(canvas.height - this.size, ny));
+    if (!this.collidesWithTiles(nx, ny)) return;
+    if (!this.collidesWithTanks(nx, ny)) return;
+    this.x = nx;
+    this.y = ny;
+  }
+  collidesWithTiles(nx, ny) {
+    let corners = [
+      [nx, ny], [nx + this.size, ny],
+      [nx, ny + this.size], [nx + this.size, ny + this.size]
+    ];
+    for (let [cx, cy] of corners) {
+      let gx = Math.floor(cx / GRID);
+      let gy = Math.floor(cy / GRID);
+      if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) return false;
+      let t = game.map[gy][gx];
+      if (t === T.BRICK || t === T.STEEL || t === T.WATER || t === T.BASE || t === T.BASE_DESTROYED) return false;
+    }
+    return true;
+  }
+  collidesWithTanks(nx, ny) {
+    let all = [game.player, ...game.enemies];
+    for (let t of all) {
+      if (t === this || !t.alive) continue;
+      if (nx < t.x + t.size && nx + this.size > t.x &&
+          ny < t.y + t.size && ny + this.size > t.y) return false;
+    }
+    return true;
+  }
+  fire() {
+    if (!this.alive || this.cooldown > 0) return;
+    this.cooldown = this.maxCooldown;
+    let bx = this.cx, by = this.cy;
+    switch(this.dir) {
+      case 'up': by = this.y; break;
+      case 'down': by = this.y + this.size; break;
+      case 'left': bx = this.x; break;
+      case 'right': bx = this.x + this.size; break;
+    }
+    game.bullets.push(new Bullet(bx, by, this.dir, this.owner || 'player'));
+  }
+  hit() {
+    this.hp--;
+    if (this.hp <= 0) {
+      this.alive = false;
+      game.addExplosion(this.cx, this.cy, 'big');
+      if (this.owner === 'player') {
+        game.playerLives--;
+        if (game.playerLives > 0) {
+          setTimeout(() => game.respawnPlayer(), 1000);
+        }
+      } else {
+        let points = { basic: 100, fast: 200, power: 300, armor: 400 };
+        game.score += points[this.type] || 100;
+      }
+    }
+  }
+  draw() {
+    if (!this.alive) return;
+    ctx.save();
+    ctx.translate(this.cx, this.cy);
+    let angle = 0;
+    switch(this.dir) {
+      case 'up': angle = 0; break;
+      case 'right': angle = Math.PI/2; break;
+      case 'down': angle = Math.PI; break;
+      case 'left': angle = -Math.PI/2; break;
+    }
+    ctx.rotate(angle);
+    ctx.fillStyle = this.color;
+    ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+    ctx.fillStyle = this.trackColor();
+    ctx.fillRect(-this.size/2 - 3, -this.size/2, 5, this.size);
+    ctx.fillRect(this.size/2 - 2, -this.size/2, 5, this.size);
+    ctx.fillStyle = this.turretColor();
+    ctx.fillRect(-7, -7, 14, 14);
+    ctx.fillStyle = this.barrelColor();
+    ctx.fillRect(-3, -this.size/2 - 6, 6, 14);
+    ctx.restore();
+  }
+  trackColor() { return this.color; }
+  turretColor() { return this.color; }
+  barrelColor() { return '#ccc'; }
+}
+
+class Player extends Tank {
+  constructor(x, y) {
+    super(x, y, '#fa0');
+    this.owner = 'player';
+    this.speed = 2;
+    this.maxCooldown = 18;
+  }
+  trackColor() { return '#c80'; }
+  turretColor() { return '#fc4'; }
+  barrelColor() { return '#fff'; }
+}
+
+class Enemy extends Tank {
+  constructor(x, y, type) {
+    let colors = { basic: '#c44', fast: '#4a4', power: '#44f', armor: '#a4a' };
+    super(x, y, colors[type] || '#c44');
+    this.type = type || 'basic';
+    this.owner = 'enemy';
+    this.moveTimer = 0;
+    this.moveDir = 'down';
+    this.aiTimer = 0;
+    switch(type) {
+      case 'fast': this.speed = 2.5; this.maxCooldown = 25; this.hp = 1; break;
+      case 'power': this.speed = 1.5; this.maxCooldown = 30; this.hp = 1; break;
+      case 'armor': this.speed = 1.2; this.maxCooldown = 35; this.hp = 3; break;
+      default: this.speed = 1.2; this.maxCooldown = 40; this.hp = 1;
+    }
+  }
+  trackColor() { return this.color; }
+  turretColor() { return this.color; }
+  barrelColor() { return '#ddd'; }
+  update() {
+    if (!this.alive) return;
+    if (this.cooldown > 0) this.cooldown--;
+    this.aiTimer--;
+    if (this.aiTimer <= 0) {
+      this.pickNewDir();
+    }
+    this.move(this.moveDir);
+    if (Math.random() < 0.02) this.fire();
+    if (this.cooldown <= 0 && (Math.random() < 0.03 || (game.player && game.player.alive && Math.random() < 0.01))) {
+      this.fireAtTarget();
+    }
+  }
+  pickNewDir() {
+    let dirs = ['up', 'down', 'left', 'right'];
+    if (game.player && game.player.alive && Math.random() < 0.4) {
+      let px = game.player.cx, py = game.player.cy;
+      if (Math.abs(px - this.cx) > Math.abs(py - this.cy)) {
+        this.moveDir = px > this.cx ? 'right' : 'left';
+      } else {
+        this.moveDir = py > this.cy ? 'down' : 'up';
+      }
+    } else {
+      this.moveDir = dirs[Math.floor(Math.random() * dirs.length)];
+    }
+    this.aiTimer = 30 + Math.floor(Math.random() * 60);
+  }
+  fireAtTarget() {
+    if (!game.player || !game.player.alive) { this.fire(); return; }
+    let dx = game.player.cx - this.cx;
+    let dy = game.player.cy - this.cy;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      this.dir = dx > 0 ? 'right' : 'left';
+    } else {
+      this.dir = dy > 0 ? 'down' : 'up';
+    }
+    this.fire();
+  }
+}
+
+class Game {
+  constructor(stage) {
+    this.stage = stage || 1;
+    this.map = cloneMap(stageMaps[(stage - 1) % stageMaps.length]);
+    this.player = null;
+    this.enemies = [];
+    this.bullets = [];
+    this.explosions = [];
+    this.score = 0;
+    this.playerLives = 3;
+    this.enemiesToSpawn = 20;
+    this.enemiesOnField = 0;
+    this.maxEnemiesOnField = 4;
+    this.spawnTimer = 0;
+    this.spawnInterval = 90;
+    this.gameOver = false;
+    this.baseDestroyed = false;
+    this.stageComplete = false;
+    this.respawnTimer = 0;
+    this.playerInvincible = 0;
+    this.init();
+  }
+  init() {
+    this.player = new Player(4 * GRID + (GRID - 34)/2, 12 * GRID + (GRID - 34)/2);
+    this.player.owner = 'player';
+    this.enemies = [];
+    this.bullets = [];
+    this.explosions = [];
+    this.enemiesToSpawn = 20;
+    this.enemiesOnField = 0;
+    this.spawnTimer = 0;
+    this.gameOver = false;
+    this.baseDestroyed = false;
+    this.stageComplete = false;
+    this.playerInvincible = 120;
+  }
+  spawnEnemy() {
+    if (this.enemiesToSpawn <= 0 || this.enemiesOnField >= this.maxEnemiesOnField) return;
+    let spawnPoints = [[0,0], [6*GRID,0], [12*GRID,0]];
+    let sp = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+    let blocked = false;
+    for (let e of this.enemies) {
+      if (e.alive && Math.abs(e.x - sp[0]) < 30 && Math.abs(e.y - sp[1]) < 30) blocked = true;
+    }
+    if (this.player && this.player.alive && Math.abs(this.player.x - sp[0]) < 30 && Math.abs(this.player.y - sp[1]) < 30) blocked = true;
+    if (blocked) return;
+    let types = ['basic', 'basic', 'fast', 'power', 'armor'];
+    let type = types[Math.floor(Math.random() * types.length)];
+    let enemy = new Enemy(sp[0], sp[1], type);
+    enemy.owner = 'enemy';
+    this.enemies.push(enemy);
+    this.enemiesToSpawn--;
+    this.enemiesOnField++;
+  }
+  addExplosion(x, y, size) {
+    this.explosions.push({ x, y, size, frame: 0, maxFrames: size === 'big' ? 20 : 10 });
+  }
+  update() {
+    if (this.gameOver || this.stageComplete) return;
+    if (this.player && this.player.alive) {
+      let moving = false;
+      if (keys['ArrowUp'] || keys['KeyW'] || touchDir.up) { this.player.move('up'); moving = true; }
+      else if (keys['ArrowDown'] || keys['KeyS'] || touchDir.down) { this.player.move('down'); moving = true; }
+      else if (keys['ArrowLeft'] || keys['KeyA'] || touchDir.left) { this.player.move('left'); moving = true; }
+      else if (keys['ArrowRight'] || keys['KeyD'] || touchDir.right) { this.player.move('right'); moving = true; }
+      if (keys['Space'] || touchFire) this.player.fire();
+      // FIX: уменьшить кулдаун игрока каждый кадр
+      if (this.player.cooldown > 0) this.player.cooldown--;
+      if (this.playerInvincible > 0) this.playerInvincible--;
+    }
+    if (!this.player && this.playerLives > 0) {
+      this.respawnPlayer();
+    }
+    for (let b of this.bullets) b.update();
+    this.bullets = this.bullets.filter(b => b.alive);
+    for (let e of this.enemies) {
+      e.update();
+      if (!e.alive) this.enemiesOnField--;
+    }
+    this.enemies = this.enemies.filter(e => e.alive);
+    this.spawnTimer++;
+    if (this.spawnTimer >= this.spawnInterval) {
+      this.spawnTimer = 0;
+      this.spawnEnemy();
+    }
+    for (let ex of this.explosions) ex.frame++;
+    this.explosions = this.explosions.filter(ex => ex.frame < ex.maxFrames);
+    if (this.enemiesToSpawn === 0 && this.enemiesOnField === 0 && !this.gameOver) {
+      this.stageComplete = true;
+    }
+    document.getElementById('enemyCount').textContent = this.enemiesToSpawn + this.enemiesOnField;
+    document.getElementById('livesCount').textContent = this.playerLives;
+    document.getElementById('scoreCount').textContent = this.score;
+    document.getElementById('stageNum').textContent = this.stage;
+  }
+  respawnPlayer() {
+    this.player = new Player(4 * GRID + (GRID - 34)/2, 12 * GRID + (GRID - 34)/2);
+    this.player.owner = 'player';
+    this.playerInvincible = 120;
+  }
+  draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        let tile = this.map[r][c];
+        let x = c * GRID, y = r * GRID;
+        switch(tile) {
+          case T.BRICK:
+            ctx.fillStyle = '#a52';
+            ctx.fillRect(x, y, GRID, GRID);
+            ctx.fillStyle = '#c64';
+            ctx.fillRect(x+1, y+1, GRID/2-2, GRID/2-2);
+            ctx.fillRect(x+GRID/2, y+GRID/2, GRID/2-2, GRID/2-2);
+            ctx.fillStyle = '#841';
+            ctx.fillRect(x+1, y+GRID/2, GRID/2-2, 2);
+            ctx.fillRect(x+GRID/2, y+1, 2, GRID/2-2);
+            ctx.fillRect(x+GRID/2, y+GRID/2+2, 2, GRID/2-2);
+            ctx.fillRect(x+1, y+GRID-2, GRID-2, 2);
+            break;
+          case T.STEEL:
+            ctx.fillStyle = '#aaa';
+            ctx.fillRect(x, y, GRID, GRID);
+            ctx.fillStyle = '#ddd';
+            ctx.fillRect(x+4, y+4, GRID-8, GRID-8);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x+8, y+8, 6, 6);
+            break;
+          case T.WATER:
+            ctx.fillStyle = '#24a';
+            ctx.fillRect(x, y, GRID, GRID);
+            ctx.fillStyle = '#36c';
+            let wave = Math.sin(Date.now()/300 + c + r) * 3;
+            ctx.fillRect(x, y + wave, GRID, 4);
+            ctx.fillRect(x, y + GRID/2 + wave, GRID, 4);
+            break;
+          case T.BASE:
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x, y, GRID, GRID);
+            ctx.fillStyle = '#fa0';
+            ctx.beginPath();
+            ctx.moveTo(x + GRID/2, y + 4);
+            ctx.lineTo(x + GRID - 6, y + GRID - 6);
+            ctx.lineTo(x + 6, y + GRID - 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#f80';
+            ctx.fillRect(x + GRID/2 - 4, y + GRID/2, 8, 8);
+            break;
+          case T.BASE_DESTROYED:
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x, y, GRID, GRID);
+            ctx.fillStyle = '#666';
+            ctx.fillRect(x+4, y+4, GRID-8, GRID-8);
+            ctx.fillStyle = '#444';
+            ctx.fillRect(x+8, y+8, GRID-16, GRID-16);
+            break;
+        }
+      }
+    }
+    if (this.player && this.player.alive) {
+      if (this.playerInvincible > 0 && Math.floor(this.playerInvincible / 4) % 2 === 0) {
+        // мигание при неуязвимости
+      } else {
+        this.player.draw();
+      }
+    }
+    for (let e of this.enemies) e.draw();
+    for (let b of this.bullets) b.draw();
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (this.map[r][c] === T.TREE) {
+          let x = c * GRID, y = r * GRID;
+          ctx.fillStyle = '#0a0';
+          ctx.fillRect(x+2, y+2, GRID-4, GRID-4);
+          ctx.fillStyle = '#0c0';
+          ctx.fillRect(x+6, y+6, GRID-12, GRID-12);
+        }
+      }
+    }
+    for (let ex of this.explosions) {
+      let progress = ex.frame / ex.maxFrames;
+      let radius = (ex.size === 'big' ? 30 : 15) * (0.5 + progress * 0.5);
+      ctx.fillStyle = `rgba(255, ${Math.floor(200*(1-progress))}, 0, ${1-progress})`;
+      ctx.beginPath();
+      ctx.arc(ex.x, ex.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255, 255, ${Math.floor(100*(1-progress))}, ${1-progress})`;
+      ctx.beginPath();
+      ctx.arc(ex.x, ex.y, radius * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function startGame() {
+  document.getElementById('startOverlay').style.display = 'none';
+  game = new Game(1);
+  game.score = 0;
+  game.playerLives = 3;
+  if (animId) cancelAnimationFrame(animId);
+  // FIX: скрыть оверлей при старте
+  hideOverlay();
+  gameLoop();
+}
+
+function nextStage() {
+  game.stage++;
+  game.init();
+  hideOverlay();
+}
+
+function gameLoop() {
+  if (!game) return;
+  game.update();
+  game.draw();
+  if (game.gameOver || game.stageComplete) {
+    if (game.gameOver) {
+      showOverlay('GAME OVER', 'Score: ' + game.score, 'TRY AGAIN');
+    } else if (game.stageComplete) {
+      if (game.stage >= 4) {
+        showOverlay('YOU WIN!', 'Final Score: ' + game.score, 'PLAY AGAIN');
+      } else {
+        showOverlay('STAGE CLEAR!', 'Stage ' + (game.stage - 1) + ' complete!', 'NEXT STAGE');
+      }
+    }
+    return;
+  }
+  animId = requestAnimationFrame(gameLoop);
+}
+
+function showOverlay(title, subtitle, btnText) {
+  let ol = document.getElementById('overlay');
+  document.getElementById('olTitle').textContent = title;
+  document.getElementById('olSubtitle').textContent = subtitle;
+  document.getElementById('olInfo').textContent = '';
+  document.getElementById('olBtn').textContent = btnText;
+  ol.className = 'active';
+}
+function hideOverlay() {
+  document.getElementById('overlay').className = '';
+}
+function handleOverlayBtn() {
+  hideOverlay();
+  if (game && game.stageComplete) {
+    nextStage();
+  } else {
+    game = new Game(1);
+    game.score = 0;
+    game.playerLives = 3;
+  }
+}
+
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'Space') e.preventDefault();
+});
+document.addEventListener('keyup', e => {
+  keys[e.code] = false;
+});
+
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  let dir = btn.dataset.dir;
+  btn.addEventListener('touchstart', e => { e.preventDefault(); touchDir[dir] = true; });
+  btn.addEventListener('touchend', e => { e.preventDefault(); touchDir[dir] = false; });
+  btn.addEventListener('mousedown', e => { touchDir[dir] = true; });
+  btn.addEventListener('mouseup', e => { touchDir[dir] = false; });
+  btn.addEventListener('mouseleave', e => { touchDir[dir] = false; });
+});
+let fireBtn = document.getElementById('fireBtn');
+fireBtn.addEventListener('touchstart', e => { e.preventDefault(); touchFire = true; });
+fireBtn.addEventListener('touchend', e => { e.preventDefault(); touchFire = false; });
+fireBtn.addEventListener('mousedown', e => { touchFire = true; });
+fireBtn.addEventListener('mouseup', e => { touchFire = false; });
+fireBtn.addEventListener('mouseleave', e => { touchFire = false; });
+
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  document.getElementById('controls').style.display = 'flex';
+}
+
+// FIX: убрать вызов showOverlay в конце скрипта — оверлей показывается только по необходимости
+</script>
+</body>
+</html>

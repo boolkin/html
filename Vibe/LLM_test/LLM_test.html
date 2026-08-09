@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест нейросетей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">Сначала я просил все тестируемые LLM сгенерировать игру Mastermind по такому запросу: "Нужно разработать игру mastermind на html, css и js с простым адаптивным дизайном для удобного игрового процесса на мобильном устройстве.<br><br>Задача игрока угадать последовательность из 4 цветов (цвета могут повторяться в последовательности).<br>Игра визуально состоит из блоков:<br>1. игровое поле, где хранится история попыток с отображением результата<br>2. ниже блок с текущей попыткой<br>3. в самом низу панель управления.<br>Сверху игровое поле, под ним блок с текщей попыткой и в самом низу панель управления (в нижней части экрана).<br>Панель управления состоит из блока с 6 разноцветными кругами (конфигурация 3+3 в две строки) и справа от блока с цветами будет блок из 2 кнопок ("проверить" и "убрать". распологаются друг под другом) в самом низу должна быть кнопка "новая игра".<br><br>По клику на каждый круг этот цвет должен наполнять текущую попытку (блок текущей попытки), заполняя игровую зону последовательно друг за другом, что означает что если щелкнул например красный круг первым, то он встает в угадываемую последовательность на первое место. Следующий синий, и он встает на вторую позицию. Если нажать на кнопку "убрать", то из текущей попытки убирается последний добавленный цвет. После заполенения 4 цветов нажимается кнопка "проверить" после чего вся последовательность перемещается в игровое поле с номером попытки и результатом в виде черных и белых кружков указывающие на соответствие цветов в угадываемой последовательности (черный - цвет на своем месте, белый - цвет есть, но не на своем месте). При этом очищается поле с текущей попыткой. Угадываемые последовательности цветов в игровой зоне (в истории) нужно заполнять снизу вверх: это означает что последняя угадываемая последовательность цветов должна находиться всегда внизу, и обязательно прикреплена к нижнему краю игрового поля (выравнивание по низу внутри игрового поля). Попытки пронумеровать и расположить так чтобы первая была вверху, последняя внизу. (например было 3 попытки соответственно вверху первая, ниже вторая, еще ниже третья - все три прилипают к нижнему блоку с текущей попыткой). При угадывании выдавать сообщение с количеством попыток и просмотром правильной комбинации Нужно использовать только javascript html и css - все в одном файле чтобы запустить локально."</p>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">Вот что как это выглядит на скриншотах:</p>
+<div style="text-align: center; margin: 20px 0;"><img src="mastermind.png" alt="Изображение" style="max-width: 100%; height: auto; border-radius: 4px;"></div>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">А вот сводная таблица по результатам генерации мастермайнд. (В таблице "масштаб сразу" - это значит не приходится увеличивать и уменьшать чтобы все элементы вместились в масштаб на мобильном телефоне. Там где не написано масштаб сразу, скорее всего приходилось делать такие действия. Поэтому можно поставить плюсик. потому что в условиях про мобильный вид все же говорилось):</p>
+<table border="1" style="border-collapse: collapse; width: 100%; margin: 15px 0; border: 1px solid #ccc;">
+  <tr>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Название</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Ссылка</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Примечание к модели</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Кол-во запросов</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Пояснение</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Мобильный вид</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Играбельность</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Красивость</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Замечания/примечания</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Соотвествие ТЗ</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Токены</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Время, сек</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">т/с</th>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Agents+A3:J14A3:J11A3:J10A3A3:J10</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/InternScience/Agents-A1-Q4_K_M-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">2</td>
+    <td style="padding: 8px; text-align: left; ">Вторым запросом исправил размер шаров в панели управления и "прилипание", не исправил серый цвет в попытке</td>
+    <td style="padding: 8px; text-align: left; ">4</td>
+    <td style="padding: 8px; text-align: left; ">3</td>
+    <td style="padding: 8px; text-align: left; ">белый</td>
+    <td style="padding: 8px; text-align: left; ">Проблемы с выравниванием попыток, медленный интерфейс, серые круги (не видно какой цвет выбран в текущей попытке).</td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка + нумерация + панель управления +</td>
+    <td style="padding: 8px; text-align: left; ">14845</td>
+    <td style="padding: 8px; text-align: left; ">577</td>
+    <td style="padding: 8px; text-align: left; ">25,7</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Frontis</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/FrontisAI/Frontis-MA1-35B-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B (На базе Qwen 3.6)</td>
+    <td style="padding: 8px; text-align: left; ">2</td>
+    <td style="padding: 8px; text-align: left; ">Первый запрос игра играется, но есть огрехи с нажатием кнопки и "прилипанием" истории, вторым исправил это</td>
+    <td style="padding: 8px; text-align: left; ">4</td>
+    <td style="padding: 8px; text-align: left; ">4</td>
+    <td style="padding: 8px; text-align: left; ">белый, простецкий вид</td>
+    <td style="padding: 8px; text-align: left; ">огромные круги, панель управления занимает половину высоты, кнопки убрать и проверить на новой строке</td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка + нумерация + панель управления -</td>
+    <td style="padding: 8px; text-align: left; ">19245</td>
+    <td style="padding: 8px; text-align: left; ">726</td>
+    <td style="padding: 8px; text-align: left; ">26,5</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">GLM</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/GLM-4.7-Flash-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">30B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">2</td>
+    <td style="padding: 8px; text-align: left; ">Были нарекания к сортировке истории и нумерации попыток при том что один из предыдущих разов с первого раза по тз почти (было нарекание по прилипанию), поэтомя я решил доделать, появились номера, но сортировка страдает</td>
+    <td style="padding: 8px; text-align: left; ">4</td>
+    <td style="padding: 8px; text-align: left; ">4</td>
+    <td style="padding: 8px; text-align: left; ">темный, стильно</td>
+    <td style="padding: 8px; text-align: left; ">огромные круги, панель управления занимает половину высоты, кнопки убрать и проверить на новой строке, сортировка не правильная, выравнивание попыток скачет (нет выравнивания)</td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка - нумерация + панель управления -</td>
+    <td style="padding: 8px; text-align: left; ">12199</td>
+    <td style="padding: 8px; text-align: left; ">662</td>
+    <td style="padding: 8px; text-align: left; ">18,4</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Gemma</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">26B-A4B (+MTP)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">5</td>
+    <td style="padding: 8px; text-align: left; ">5</td>
+    <td style="padding: 8px; text-align: left; ">темный, стильный</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка+ нумерация + панель управления +</td>
+    <td style="padding: 8px; text-align: left; ">6369</td>
+    <td style="padding: 8px; text-align: left; ">230</td>
+    <td style="padding: 8px; text-align: left; ">27,7</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">KAT</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">5+</td>
+    <td style="padding: 8px; text-align: left; ">5</td>
+    <td style="padding: 8px; text-align: left; ">темный, стильный</td>
+    <td style="padding: 8px; text-align: left; ">Масштаб сразу+ стильные круги+ пеги показывают место -</td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка+ нумерация + панель управления +</td>
+    <td style="padding: 8px; text-align: left; ">5766</td>
+    <td style="padding: 8px; text-align: left; ">213</td>
+    <td style="padding: 8px; text-align: left; ">27,1</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Ornith</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/Ornith-1.0-35B-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B на базе Qwen 3.5(?)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">4+</td>
+    <td style="padding: 8px; text-align: left; ">4</td>
+    <td style="padding: 8px; text-align: left; ">темный, стильный</td>
+    <td style="padding: 8px; text-align: left; ">пеги показывают место, новая игра не на новой строке</td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка+ нумерация + панель управления -</td>
+    <td style="padding: 8px; text-align: left; ">6039</td>
+    <td style="padding: 8px; text-align: left; ">223</td>
+    <td style="padding: 8px; text-align: left; ">27,1</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Qwen</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B (MTP версия)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">5+</td>
+    <td style="padding: 8px; text-align: left; ">5</td>
+    <td style="padding: 8px; text-align: left; ">темный, стильный</td>
+    <td style="padding: 8px; text-align: left; ">Масштаб сразу+ стильные круги+</td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка+ нумерация + панель управления +</td>
+    <td style="padding: 8px; text-align: left; ">6789</td>
+    <td style="padding: 8px; text-align: left; ">180</td>
+    <td style="padding: 8px; text-align: left; ">37,7</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Salience</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/mradermacher/Salience-1.5-Pro-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">5</td>
+    <td style="padding: 8px; text-align: left; ">5</td>
+    <td style="padding: 8px; text-align: left; ">темный, стильный</td>
+    <td style="padding: 8px; text-align: left; ">Масштаб сразу+</td>
+    <td style="padding: 8px; text-align: left; ">Прилипание + сортировка+ нумерация + панель управления +</td>
+    <td style="padding: 8px; text-align: left; ">5539</td>
+    <td style="padding: 8px; text-align: left; ">207</td>
+    <td style="padding: 8px; text-align: left; ">26,8</td>
+  </tr>
+</table>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">Далее я попросил сгенерировать игру тетрис по такому промпту:<br>"напиши игру тетрис на html, css, js одной страницей"<br><br>И вот что они сделали:</p>
+<div style="text-align: center; margin: 20px 0;"><img src="tetris.png" alt="Изображение" style="max-width: 100%; height: auto; border-radius: 4px;"></div>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">А вот сводная таблица по результатам генерации тетриса (здесь за мобильность сильно бы не снимал баллы просто потому что в промте конкретно не обговаривалось, но все же хорошо кода есть мобильность, ведь так?):</p>
+<table border="1" style="border-collapse: collapse; width: 100%; margin: 15px 0; border: 1px solid #ccc;">
+  <tr>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Название</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Ссылка</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Примечание к модели</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Кол-во запросов</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Пояснение</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Мобильная игра</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Красивость</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Замечания/примечания</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Токены</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Время, сек</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">т/с</th>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Agents</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/InternScience/Agents-A1-Q4_K_M-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">На самом деле 2, так как первый не рисовал падающие фигуры</td>
+    <td style="padding: 8px; text-align: left; ">нет</td>
+    <td style="padding: 8px; text-align: left; ">очень простой вид</td>
+    <td style="padding: 8px; text-align: left; ">Понятный посчет очков, нет дропа фигур</td>
+    <td style="padding: 8px; text-align: left; ">3837</td>
+    <td style="padding: 8px; text-align: left; ">144</td>
+    <td style="padding: 8px; text-align: left; ">26,6</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Frontis</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/FrontisAI/Frontis-MA1-35B-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B (На базе Qwen 3.6)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">На самом деле 2 потому что самый первый я остановил - я увидел что он начал тупо писать код в раздумиях</td>
+    <td style="padding: 8px; text-align: left; ">есть +</td>
+    <td style="padding: 8px; text-align: left; ">Современно, подсветка падения фигуры</td>
+    <td style="padding: 8px; text-align: left; ">подсчет очков странный. Нет дропа в пк версии в мобильном есть, линии считаются</td>
+    <td style="padding: 8px; text-align: left; ">7157</td>
+    <td style="padding: 8px; text-align: left; ">281</td>
+    <td style="padding: 8px; text-align: left; ">25,5</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">GLM</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/GLM-4.7-Flash-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">30B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">В этот раз сгенерировал с первого раза ( почему говорю в этот раз, потому что пару дней назад это было со второго раза, но в той игре был классный звук зато, хотя и вид такой же простецкий немного, там заставка не исчезала после начала игры, вторым запросом испраился)</td>
+    <td style="padding: 8px; text-align: left; ">есть +</td>
+    <td style="padding: 8px; text-align: left; ">простой вид, но в мобильном кнопки управления интереснее, масштабирование норм</td>
+    <td style="padding: 8px; text-align: left; ">Лучше мобильное управление чем у некоторых, но нет дропа, понятный подсчет очков</td>
+    <td style="padding: 8px; text-align: left; ">6411</td>
+    <td style="padding: 8px; text-align: left; ">356</td>
+    <td style="padding: 8px; text-align: left; ">18,0</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Gemma</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">26B-A4B (+MTP)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">с первого раза</td>
+    <td style="padding: 8px; text-align: left; ">нет</td>
+    <td style="padding: 8px; text-align: left; ">очень простой вид</td>
+    <td style="padding: 8px; text-align: left; ">понятный посчет очков и линий (за тетрис больше), нет дропа</td>
+    <td style="padding: 8px; text-align: left; ">4291</td>
+    <td style="padding: 8px; text-align: left; ">153</td>
+    <td style="padding: 8px; text-align: left; ">28,0</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">KAT</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">с первого раза</td>
+    <td style="padding: 8px; text-align: left; ">нет</td>
+    <td style="padding: 8px; text-align: left; ">Современно, подсветка падения фигуры</td>
+    <td style="padding: 8px; text-align: left; ">подсчет очков странный , линии считаются, есть дроп</td>
+    <td style="padding: 8px; text-align: left; ">4907</td>
+    <td style="padding: 8px; text-align: left; ">186</td>
+    <td style="padding: 8px; text-align: left; ">26,4</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Ornith</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/Ornith-1.0-35B-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B на базе Qwen 3.5(?)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">тетрис с первого раза, но как-то глючно, не стал просить исправлять</td>
+    <td style="padding: 8px; text-align: left; ">нет</td>
+    <td style="padding: 8px; text-align: left; ">Современно, подсветка падения фигуры</td>
+    <td style="padding: 8px; text-align: left; ">! Нефиксируются фигуры при дропе, после снятия слоя нужно тоже жать пробел чтобы пошла фигура. Явняй глюк. Есть рекорды +, но очки опять не понятно для меня. Линии считаются</td>
+    <td style="padding: 8px; text-align: left; ">5733</td>
+    <td style="padding: 8px; text-align: left; ">219</td>
+    <td style="padding: 8px; text-align: left; ">26,2</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Qwen</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B (MTP версия)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">По сути с третьего раза, первый глючный, и не смог его исправить нормально, поэтому начал третий заново</td>
+    <td style="padding: 8px; text-align: left; ">есть + , немного путанное…</td>
+    <td style="padding: 8px; text-align: left; ">Современно, подсветка падения фигуры</td>
+    <td style="padding: 8px; text-align: left; ">счет непонятный, линии считаются, есть дроп</td>
+    <td style="padding: 8px; text-align: left; ">6236</td>
+    <td style="padding: 8px; text-align: left; ">155</td>
+    <td style="padding: 8px; text-align: left; ">40,2</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Salience</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/mradermacher/Salience-1.5-Pro-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">Тоже со второго раза, первый раз не играбельная совсем.  кнопку играть жмешь на заставке и ничего не происходит</td>
+    <td style="padding: 8px; text-align: left; ">нет</td>
+    <td style="padding: 8px; text-align: left; ">Современно, подсветка падения фигуры</td>
+    <td style="padding: 8px; text-align: left; ">счет понятный, линии считаются, глюк с дропом - перезапуск игры вместо роняния</td>
+    <td style="padding: 8px; text-align: left; ">5436</td>
+    <td style="padding: 8px; text-align: left; ">202</td>
+    <td style="padding: 8px; text-align: left; ">26,9</td>
+  </tr>
+</table>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">Последний запрос был по генерации игры Battle City (танчики):<br>"Write a game similar to Battle City in a single HTML file without dependencies, running on desktop and mobile"</p>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">Вот так выглядит генерация танчиков:</p>
+<div style="text-align: center; margin: 20px 0;"><img src="BattleCity.png" alt="Изображение" style="max-width: 100%; height: auto; border-radius: 4px;"></div>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">А вот и сводная таблица по танкам:</p>
+<table border="1" style="border-collapse: collapse; width: 100%; margin: 15px 0; border: 1px solid #ccc;">
+  <tr>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Название</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Ссылка</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Примечание к модели</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Кол-во запросов</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Пояснение</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Мобильная игра</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Красивость</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Замечания/примечания</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Токены</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Время, сек</th>
+    <th style="padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">т/с</th>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Agents</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/InternScience/Agents-A1-Q4_K_M-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">есть</td>
+    <td style="padding: 8px; text-align: left; ">Сами танки просто квадраты огромные, кирпичи (сомнительный дизайн), броня, нет штаба</td>
+    <td style="padding: 8px; text-align: left; ">противники выезжают за края-, танки могут проезжать частично сквозь кирпичи, иногда застревают, на мобильном масштаб 65%</td>
+    <td style="padding: 8px; text-align: left; ">7191</td>
+    <td style="padding: 8px; text-align: left; ">269</td>
+    <td style="padding: 8px; text-align: left; ">26,7</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Frontis</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/FrontisAI/Frontis-MA1-35B-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B (На базе Qwen 3.6)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">есть+</td>
+    <td style="padding: 8px; text-align: left; ">танки стильные, нравятся, кирпичи стильные, есьт река, броня</td>
+    <td style="padding: 8px; text-align: left; ">проезжает сквозь кирпичи и всего остального</td>
+    <td style="padding: 8px; text-align: left; ">7417</td>
+    <td style="padding: 8px; text-align: left; ">287</td>
+    <td style="padding: 8px; text-align: left; ">25,8</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">GLM</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/GLM-4.7-Flash-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">30B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">Танки - прям видно что китайская нейросеть - думала и писала по-китайски, в игре все подсказки и слова на китайском (вряд ли даже минус)</td>
+    <td style="padding: 8px; text-align: left; ">есть-</td>
+    <td style="padding: 8px; text-align: left; ">Стиля нет, танки простецкие, меняют размеры при повороте, есть звуки+, нет штаба, мешанина из кирпичей, брони нет</td>
+    <td style="padding: 8px; text-align: left; ">Враги только поверху ездят, бывает уезжают тоже за экран, масштаб 50-65%. В мобильном не работает огонь-.</td>
+    <td style="padding: 8px; text-align: left; ">8826</td>
+    <td style="padding: 8px; text-align: left; ">479</td>
+    <td style="padding: 8px; text-align: left; ">18,4</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Gemma</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">26B-A4B (+MTP)</td>
+    <td style="padding: 8px; text-align: left; ">2</td>
+    <td style="padding: 8px; text-align: left; ">Первый раз сгенерировал неиграбельную игру, танки не ездили, мой танк при выстреле сразу геймовер потому что спавнился на базе и пуля уничтожала базу. Вторым запросом починил косяки. перестраховался и своей пулей не могу уничтожить штаб</td>
+    <td style="padding: 8px; text-align: left; ">есть+</td>
+    <td style="padding: 8px; text-align: left; ">Стиль минималистичный, простейшие фигуры, но есть в этом свой шарм. в целом просто и со в кусом</td>
+    <td style="padding: 8px; text-align: left; ">масштаб 80%</td>
+    <td style="padding: 8px; text-align: left; ">16038</td>
+    <td style="padding: 8px; text-align: left; ">560</td>
+    <td style="padding: 8px; text-align: left; ">28,6</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">KAT</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">3</td>
+    <td style="padding: 8px; text-align: left; ">Первая попытка и ее исправление не удались. Вторая + исправления в итоге</td>
+    <td style="padding: 8px; text-align: left; ">есть+</td>
+    <td style="padding: 8px; text-align: left; ">Стиль интересный, компоновка классическая при этом из простых фигур, танки цветные, что тоже интересно, выглядят как танки</td>
+    <td style="padding: 8px; text-align: left; ">Очень сложно играть но тем интереснее, 3 жизни. Кнопка старт игры не исчезает и перекрывает часть игрового поля. 100% масштаб (+?)</td>
+    <td style="padding: 8px; text-align: left; ">9851</td>
+    <td style="padding: 8px; text-align: left; ">380</td>
+    <td style="padding: 8px; text-align: left; ">25,9</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Ornith</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/Ornith-1.0-35B-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B на базе Qwen 3.5(?)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">С первого раза отлично, впечатлился. Но для чистоты эксперимента запустил генерации еще, и 2 другие были не играбельны…</td>
+    <td style="padding: 8px; text-align: left; ">есть --</td>
+    <td style="padding: 8px; text-align: left; ">Очень стильно, несколько уровней и уровней сложности при старте (на выбор 4 кнопки при старте), реки, трава, кирпичи, броня, бонусы!!! Танки стильные, звуки. Очень и очень круто</td>
+    <td style="padding: 8px; text-align: left; ">Единичный экземпляр, другие запросы модели не удались также, и более того не удались почти совсем. При этом даже эта игра на мобильном совсем не играбельная - управление глючит.</td>
+    <td style="padding: 8px; text-align: left; ">21324</td>
+    <td style="padding: 8px; text-align: left; ">835</td>
+    <td style="padding: 8px; text-align: left; ">25,5</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Qwen</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/unsloth/Qwen3.6-35B-A3B-MTP-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B (MTP версия)</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; "></td>
+    <td style="padding: 8px; text-align: left; ">есть+</td>
+    <td style="padding: 8px; text-align: left; ">Тоже довольно стильно, но танки больше размером чем кирпичи.. Впрочем это тоже инетересно. Есть звуки, реки, трава. уровни генерируются рандомно+</td>
+    <td style="padding: 8px; text-align: left; ">иногда генерируется так что штаб без защиты, впрочем это тоже вряд ли минус. В целом не могу придумать минусы, только придирки. Интересно так что можно на паузу поставить (+?)</td>
+    <td style="padding: 8px; text-align: left; ">10973</td>
+    <td style="padding: 8px; text-align: left; ">291</td>
+    <td style="padding: 8px; text-align: left; ">37,7</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; text-align: left; ">Salience</td>
+    <td style="padding: 8px; text-align: left; ">https://huggingface.co/mradermacher/Salience-1.5-Pro-GGUF</td>
+    <td style="padding: 8px; text-align: left; ">35B-A3B</td>
+    <td style="padding: 8px; text-align: left; ">1</td>
+    <td style="padding: 8px; text-align: left; ">Танки получились не играбельными хотя очень навороченные поидее - там анимации, трава, вода, броня, танк проезжает сквозь все препятствия а ощющение будто бы поле недорисовано - есть бонусы, бомбы и прочее, врагов не увидел. Играть не возможно, хотя по размеру и задумке навероченное что-то. Вторым запросом сделал тоже не играбельную игру</td>
+    <td style="padding: 8px; text-align: left; ">есть---</td>
+    <td style="padding: 8px; text-align: left; ">кирпичи зеленка, но вцелом неиграбельное нечто</td>
+    <td style="padding: 8px; text-align: left; ">не играется вообще - что-то как-то управляется, но ни такнка ни врагов не видно… --</td>
+    <td style="padding: 8px; text-align: left; ">13577</td>
+    <td style="padding: 8px; text-align: left; ">519</td>
+    <td style="padding: 8px; text-align: left; ">26,2</td>
+  </tr>
+</table>
+<p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">Поиграть во все эти игры можно на этой странице: <a href="https://boolkin.gitverse.site/html/Vibe/LLM_test/">https://boolkin.gitverse.site/html/Vibe/LLM_test/</a></p>
+</body>
+</html>

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastermind</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        /* 1. Игровое поле (История) */
+        #game-field {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #e0e0e0;
+            justify-content: flex-end; /* Прилипаем к низу */
+        }
+
+        .attempt-row {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .attempt-number {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 30px;
+        }
+
+        .guess-colors {
+            display: flex;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .peg {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+
+        .feedback {
+            display: flex;
+            gap: 5px;
+        }
+
+        .feedback-peg {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+
+        .black-peg {
+            background-color: #000;
+        }
+
+        .white-peg {
+            background-color: #fff;
+            border: 1px solid #999;
+        }
+
+        /* 2. Блок текущей попытки */
+        #current-attempt-block {
+            padding: 15px;
+            background-color: #fff;
+            border-top: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #current-guess-display {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .current-peg {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            background-color: #fff;
+            transition: background-color 0.2s;
+        }
+
+        .current-peg.filled {
+            border-color: transparent;
+        }
+
+        #attempt-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 3. Панель управления */
+        #control-panel {
+            padding: 15px;
+            background-color: #fff;
+            border-top: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #color-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .color-btn {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+
+        .color-btn:active {
+            transform: scale(0.9);
+        }
+
+        #action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+
+        .action-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .action-btn.remove {
+            background-color: #dc3545;
+        }
+
+        /* Кнопка новая игра - перемещена в панель управления */
+        #new-game-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Модальное окно победы */
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 10px;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+        }
+
+        .secret-code-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Игровое поле -->
+    <div id="game-field">
+        <!-- Сюда будут добавляться попытки -->
+    </div>
+
+    <!-- 2. Блок текущей попытки -->
+    <div id="current-attempt-block">
+        <div id="current-guess-display">
+            <div class="current-peg" data-index="0"></div>
+            <div class="current-peg" data-index="1"></div>
+            <div class="current-peg" data-index="2"></div>
+            <div class="current-peg" data-index="3"></div>
+        </div>
+        <div id="attempt-label">Ваша попытка</div>
+    </div>
+
+    <!-- 3. Панель управления -->
+    <div id="control-panel">
+        <div id="color-selector">
+            <button class="color-btn" style="background-color: #FF0000;" data-color="#FF0000"></button>
+            <button class="color-btn" style="background-color: #0000FF;" data-color="#0000FF"></button>
+            <button class="color-btn" style="background-color: #00AA00;" data-color="#00AA00"></button>
+            <button class="color-btn" style="background-color: #FFFF00;" data-color="#FFFF00"></button>
+            <button class="color-btn" style="background-color: #FF8800;" data-color="#FF8800"></button>
+            <button class="color-btn" style="background-color: #8800FF;" data-color="#8800FF"></button>
+        </div>
+
+        <div id="action-buttons">
+            <button class="action-btn remove" id="remove-btn">Убрать</button>
+            <button class="action-btn" id="check-btn">Проверить</button>
+        </div>
+        
+        <button id="new-game-btn">Новая игра</button>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="win-modal">
+        <div class="modal-content">
+            <h2>Поздравляем!</h2>
+            <p>Вы угадали комбинацию за <span id="attempts-count"></span> попыток.</p>
+            <p>Правильная комбинация:</p>
+            <div class="secret-code-display" id="secret-code-display"></div>
+            <button class="action-btn" onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        class MastermindGame {
+            constructor() {
+                this.colors = [
+                    '#FF0000', '#0000FF', '#00AA00', 
+                    '#FFFF00', '#FF8800', '#8800FF'
+                ];
+                this.secretCode = [];
+                this.currentGuess = [];
+                this.history = [];
+                this.attempts = 0;
+                
+                this.gameField = document.getElementById('game-field');
+                this.currentPegs = document.querySelectorAll('.current-peg');
+                this.removeBtn = document.getElementById('remove-btn');
+                this.checkBtn = document.getElementById('check-btn');
+                this.winModal = document.getElementById('win-modal');
+                
+                this.init();
+            }
+
+            init() {
+                this.generateSecretCode();
+                this.bindEvents();
+                this.updateUI();
+            }
+
+            generateSecretCode() {
+                this.secretCode = [];
+                for (let i = 0; i < 4; i++) {
+                    const randomColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+                    this.secretCode.push(randomColor);
+                }
+                console.log("Secret Code (for debug):", this.secretCode); // Для отладки можно убрать
+            }
+
+            bindEvents() {
+                // Выбор цвета
+                document.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const color = e.target.dataset.color;
+                        this.addToCurrentGuess(color);
+                    });
+                });
+
+                // Убрать
+                this.removeBtn.addEventListener('click', () => {
+                    this.removeFromCurrentGuess();
+                });
+
+                // Проверить
+                this.checkBtn.addEventListener('click', () => {
+                    this.checkGuess();
+                });
+
+                // Новая игра
+                document.getElementById('new-game-btn').addEventListener('click', () => {
+                    this.resetGame();
+                });
+            }
+
+            addToCurrentGuess(color) {
+                if (this.currentGuess.length < 4) {
+                    this.currentGuess.push(color);
+                    this.updateCurrentAttemptUI();
+                }
+            }
+
+            removeFromCurrentGuess() {
+                if (this.currentGuess.length > 0) {
+                    this.currentGuess.pop();
+                    this.updateCurrentAttemptUI();
+                }
+            }
+
+            updateCurrentAttemptUI() {
+                this.currentPegs.forEach((peg, index) => {
+                    if (this.currentGuess[index]) {
+                        peg.style.backgroundColor = this.currentGuess[index];
+                        peg.classList.add('filled');
+                    } else {
+                        peg.style.backgroundColor = '#fff';
+                        peg.classList.remove('filled');
+                    }
+                });
+            }
+
+            checkGuess() {
+                if (this.currentGuess.length !== 4) {
+                    alert("Пожалуйста, заполните все 4 ячейки цветами.");
+                    return;
+                }
+
+                this.attempts++;
+                const feedback = this.calculateFeedback(this.currentGuess, this.secretCode);
+                
+                // Добавляем в историю
+                this.history.push({
+                    guess: [...this.currentGuess],
+                    feedback: feedback
+                });
+
+                // Очищаем текущую попытку
+                this.currentGuess = [];
+                this.updateCurrentAttemptUI();
+                this.updateHistoryUI();
+
+                // Проверка на победу
+                if (feedback.black === 4) {
+                    this.showWinModal();
+                }
+            }
+
+            calculateFeedback(guess, code) {
+                let black = 0;
+                let white = 0;
+                
+                // Вспомогательные структуры для подсчета белых pegs
+                // Мы должны исключить черные pegs из подсчета белых
+                const codeCounts = {};
+                const guessCounts = {};
+
+                for (let i = 0; i < 4; i++) {
+                    if (guess[i] === code[i]) {
+                        black++;
+                    } else {
+                        // Если не черное, считаем для белых
+                        if (!codeCounts[code[i]]) codeCounts[code[i]] = 0;
+                        codeCounts[code[i]]++;
+                        
+                        if (!guessCounts[guess[i]]) guessCounts[guess[i]] = 0;
+                        guessCounts[guess[i]]++;
+                    }
+                }
+
+                for (let color in guessCounts) {
+                    if (codeCounts[color]) {
+                        // Количество белых pegs для этого цвета - минимум из того, что в коде и в гассе
+                        // (исключая уже занятые черными)
+                        white += Math.min(guessCounts[color], codeCounts[color]);
+                    }
+                }
+
+                return { black, white };
+            }
+
+            updateHistoryUI() {
+                // Очищаем поле
+                this.gameField.innerHTML = '';
+
+                // Создаем элементы истории
+                this.history.forEach((item, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'attempt-row';
+
+                    // Номер попытки
+                    const num = document.createElement('div');
+                    num.className = 'attempt-number';
+                    num.textContent = index + 1;
+                    row.appendChild(num);
+
+                    // Цвета попытки
+                    const colorsDiv = document.createElement('div');
+                    colorsDiv.className = 'guess-colors';
+                    item.guess.forEach(color => {
+                        const peg = document.createElement('div');
+                        peg.className = 'peg';
+                        peg.style.backgroundColor = color;
+                        colorsDiv.appendChild(peg);
+                    });
+                    row.appendChild(colorsDiv);
+
+                    // Обратная связь (черные и белые pegs)
+                    const feedbackDiv = document.createElement('div');
+                    feedbackDiv.className = 'feedback';
+                    
+                    // Черные pegs
+                    for (let i = 0; i < item.feedback.black; i++) {
+                        const bp = document.createElement('div');
+                        bp.className = 'feedback-peg black-peg';
+                        feedbackDiv.appendChild(bp);
+                    }
+                    // Белые pegs
+                    for (let i = 0; i < item.feedback.white; i++) {
+                        const wp = document.createElement('div');
+                        wp.className = 'feedback-peg white-peg';
+                        feedbackDiv.appendChild(wp);
+                    }
+                    
+                    row.appendChild(feedbackDiv);
+                    this.gameField.appendChild(row);
+                });
+
+                // Прокрутка вниз к последней попытке
+                this.gameField.scrollTop = this.gameField.scrollHeight;
+            }
+
+            showWinModal() {
+                document.getElementById('attempts-count').textContent = this.attempts;
+                const secretDisplay = document.getElementById('secret-code-display');
+                secretDisplay.innerHTML = '';
+                this.secretCode.forEach(color => {
+                    const peg = document.createElement('div');
+                    peg.className = 'peg';
+                    peg.style.backgroundColor = color;
+                    secretDisplay.appendChild(peg);
+                });
+                this.winModal.style.display = 'flex';
+            }
+
+            resetGame() {
+                this.secretCode = [];
+                this.currentGuess = [];
+                this.history = [];
+                this.attempts = 0;
+                this.gameField.innerHTML = '';
+                this.updateCurrentAttemptUI();
+                this.generateSecretCode();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('win-modal').style.display = 'none';
+        }
+
+        // Инициализация игры
+        const game = new MastermindGame();
+    </script>
+</body>
+</html>

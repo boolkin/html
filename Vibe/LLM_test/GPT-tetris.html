@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Tetris – одна страница</title>
+<style>
+    body{
+        background:#222;
+        color:#fff;
+        font-family:Arial, Helvetica, sans-serif;
+        text-align:center;
+        margin:0;
+        padding:0;
+    }
+    canvas{
+        background:#000;
+        display:block;
+        margin:20px auto;
+    }
+    #score{
+        font-size:18px;
+        margin-top:10px;
+    }
+</style>
+</head>
+<body>
+<canvas id="tetris" width="200" height="400"></canvas>
+<div id="score">Score: 0</div>
+
+<script>
+/* ────── НАСТРОЙКИ ────── */
+const canvas = document.getElementById('tetris');
+const ctx = canvas.getContext('2d');
+const ROWS = 20;          // высота поля
+const COLS = 10;          // ширина поля
+const BLOCK_SIZE = 20;    // размер квадратика в пикселях
+const DROP_INTERVAL = 500; // базовый интервал падения (мс)
+canvas.width  = COLS * BLOCK_SIZE;
+canvas.height = ROWS * BLOCK_SIZE;
+
+/* ────── ИНФОРМАЦИЯ О ПОЛЕ ────── */
+const board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+
+/* ────── ФОРМЫ ПЛЕЙРОВ ────── */
+const SHAPES = {
+    I: [[1,1,1,1]],
+    O: [[1,1],[1,1]],
+    T: [[0,1,0],[1,1,1]],
+    S: [[0,1,1],[1,1,0]],
+    Z: [[1,1,0],[0,1,1]],
+    J: [[1,0,0],[1,1,1]],
+    L: [[0,0,1],[1,1,1]]
+};
+const COLORS = {
+    I: '#00f',
+    O: '#ff0',
+    T: '#f0f',
+    S: '#0f0',
+    Z: '#f00',
+    J: '#00f',
+    L: '#ffa500'
+};
+const SHAPE_KEYS = Object.keys(SHAPES);
+
+/* ────── ТЕКУЩИЙ ПЛЕЙЕР ────── */
+let currentPiece = null;
+let currentX = 0, currentY = 0;
+let currentColor = '';
+let dropTimer = 0;
+
+/* ────── ИНИЦИАЛИЗАЦИЯ ────── */
+function newPiece() {
+    const type = SHAPE_KEYS[Math.floor(Math.random()*SHAPE_KEYS.length)];
+    currentPiece = SHAPES[type];
+    currentColor = COLORS[type];
+    currentX = Math.floor((COLS - currentPiece[0].length)/2);
+    currentY = 0;
+    if(!isValidMove(currentPiece, currentX, currentY)) {
+        // game over
+        alert('Game Over! Final Score: ' + score);
+        resetGame();
+    }
+}
+
+/* ────── ПОВЕРНУТЬ ФОРМУ ────── */
+function rotate(matrix) {
+    const N = matrix.length;
+    const result = Array.from({length: N}, () => Array(N).fill(0));
+    for(let i=0;i<N;i++)
+        for(let j=0;j<N;j++)
+            result[j][N-1-i] = matrix[i][j];
+    return result;
+}
+
+/* ────── ПРОВЕРКА ПРИСТУПНОСТИ ПОЛОЖЕНИЯ ────── */
+function isValidMove(shape, offsetX, offsetY) {
+    for(let y=0;y<shape.length;y++){
+        for(let x=0;x<shape[y].length;x++){
+            if(shape[y][x]){
+                const newX = offsetX + x;
+                const newY = offsetY + y;
+                if(newX < 0 || newX >= COLS || newY >= ROWS) return false;
+                if(newY >= 0 && board[newY][newX]) return false;
+            }
+        }
+    }
+    return true;
+}
+
+/* ────── ПОЛОЖИТЬ ПЛЕЙЕР НА ПОЛЕ ────── */
+function placePiece() {
+    for(let y=0;y<currentPiece.length;y++){
+        for(let x=0;x<currentPiece[y].length;x++){
+            if(currentPiece[y][x]){
+                board[currentY + y][currentX + x] = currentColor;
+            }
+        }
+    }
+    clearLines();
+    newPiece();
+}
+
+/* ────── УДАЛЕНИЕ ПОЛНЫХ ЛИНИЙ ────── */
+let score = 0;
+function clearLines() {
+    let linesCleared = 0;
+    for(let y=ROWS-1;y>=0;y--){
+        if(board[y].every(cell => cell)){
+            board.splice(y,1);
+            board.unshift(Array(COLS).fill(0));
+            linesCleared++;
+            y++; // проверить текущую строку снова, т.к. она сместилась вниз
+        }
+    }
+    if(linesCleared){
+        score += linesCleared * 100;
+        document.getElementById('score').textContent = 'Score: ' + score;
+    }
+}
+
+/* ────── РИСОВАНИЕ ПОЛЯ И ПЛЕЙЕРА ────── */
+function drawCell(x, y, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+    ctx.strokeStyle = '#222';
+    ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+}
+function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // draw board
+    for(let y=0;y<ROWS;y++){
+        for(let x=0;x<COLS;x++){
+            if(board[y][x]){
+                drawCell(x,y,board[y][x]);
+            }
+        }
+    }
+    // draw current piece
+    for(let y=0;y<currentPiece.length;y++){
+        for(let x=0;x<currentPiece[y].length;x++){
+            if(currentPiece[y][x]){
+                drawCell(currentX + x, currentY + y, currentColor);
+            }
+        }
+    }
+}
+
+/* ────── КОНТРОЛЬ ────── */
+document.addEventListener('keydown', event => {
+    if(event.key === 'ArrowLeft'){
+        if(isValidMove(currentPiece, currentX -1, currentY)) currentX--;
+    } else if(event.key === 'ArrowRight'){
+        if(isValidMove(currentPiece, currentX +1, currentY)) currentX++;
+    } else if(event.key === 'ArrowDown'){
+        if(isValidMove(currentPiece, currentX, currentY +1)) currentY++;
+    } else if(event.key === 'ArrowUp'){
+        const rotated = rotate(currentPiece);
+        if(isValidMove(rotated, currentX, currentY)) currentPiece = rotated;
+    } else if(event.key === ' '){ // hard drop
+        while(isValidMove(currentPiece, currentX, currentY +1)) currentY++;
+        placePiece();
+    }
+});
+
+/* ────── ИГРА ────── */
+function resetGame(){
+    for(let y=0;y<ROWS;y++){
+        for(let x=0;x<COLS;x++){
+            board[y][x] = 0;
+        }
+    }
+    score = 0;
+    document.getElementById('score').textContent = 'Score: 0';
+    newPiece();
+    dropTimer = 0;
+}
+
+function gameLoop(time){
+    if(time - dropTimer > DROP_INTERVAL){
+        if(isValidMove(currentPiece, currentX, currentY +1)){
+            currentY++;
+        } else {
+            placePiece();
+        }
+        dropTimer = time;
+    }
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+resetGame();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>

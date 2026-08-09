@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastermind Game</title>
+    <style>
+        :root {
+            --bg-color: #2c3e50;
+            --panel-color: #34495e;
+            --text-color: #ecf0f1;
+            --accent-color: #e74c3c;
+            --circle-size: 40px;
+            --small-circle-size: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 1. Игровое поле (История) */
+        #game-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Прижимает попытки к низу */
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 2px solid var(--panel-color);
+        }
+
+        .attempt-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .attempt-info {
+            font-size: 0.9rem;
+            min-width: 30px;
+        }
+
+        .attempt-colors {
+            display: flex;
+            gap: 8px;
+        }
+
+        .peg {
+            width: var(--circle-size);
+            height: var(--circle-size);
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .result-pegs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            width: 30px;
+        }
+
+        .res-peg {
+            width: var(--small-circle-size);
+            height: var(--small-circle-size);
+            border-radius: 50%;
+            background: #555;
+        }
+        .res-peg.black { background: #000; }
+        .res-peg.white { background: #fff; }
+
+        /* 2. Блок текущей попытки */
+        #current-attempt-container {
+            padding: 15px;
+            background: var(--panel-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .current-slots {
+            display: flex;
+            gap: 10px;
+        }
+
+        .slot {
+            width: var(--circle-size);
+            height: var(--circle-size);
+            border-radius: 50%;
+            border: 2px dashed rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* 3. Панель управления */
+        #controls-section {
+            padding: 15px;
+            background: var(--panel-color);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .main-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .palette-circle {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        #check-btn { background: #27ae60; color: white; }
+        #remove-btn { background: #e67e22; color: white; }
+        #new-game-btn { background: var(--accent-color); color: white; width: 100%; }
+
+        .btn:active { transform: scale(0.95); }
+
+        /* Модальное окно */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #modal-content {
+            background: var(--panel-color);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 300px;
+        }
+
+        .win-combo {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-board">
+        <!-- Сюда будут добавляться попытки -->
+    </div>
+
+    <div id="current-attempt-container">
+        <div class="current-slots" id="current-slots">
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+        </div>
+    </div>
+
+    <div id="controls-section">
+        <div class="main-controls">
+            <div class="color-palette" id="palette">
+                <!-- 6 цветов -->
+                <button class="palette-circle" style="background: #e74c3c;" data-color="#e74c3c"></button>
+                <button class="palette-circle" style="background: #3498db;" data-color="#3498db"></button>
+                <button class="palette-circle" style="background: #2ecc71;" data-color="#2ecc71"></button>
+                <button class="palette-circle" style="background: #f1c40f;" data-color="#f1c40f"></button>
+                <button class="palette-circle" style="background: #9b59b6;" data-color="#9b59b6"></button>
+                <button class="palette-circle" style="background: #e67e22;" data-color="#e67e22"></button>
+            </div>
+            <div class="action-buttons">
+                <button class="btn" id="check-btn">Проверить</button>
+                <button class="btn" id="remove-btn">Убрать</button>
+            </div>
+        </div>
+        <button class="btn" id="new-game-btn">Новая игра</button>
+    </div>
+
+    <div id="modal">
+        <div id="modal-content">
+            <h2 id="modal-title">Победа!</h2>
+            <p id="modal-text"></p>
+            <div class="win-combo" id="win-combo"></div>
+            <br>
+            <button class="btn" id="modal-close-btn" style="background: #3498db; color: white; width: 100%;">OK</button>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22'];
+        let secretCode = [];
+        let currentGuess = [];
+        let attemptsCount = 0;
+        let isGameOver = false;
+
+        // DOM Elements
+        const gameBoard = document.getElementById('game-board');
+        const currentSlots = document.getElementById('current-slots');
+        const palette = document.getElementById('palette');
+        const checkBtn = document.getElementById('check-btn');
+        const removeBtn = document.getElementById('remove-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const modal = document.getElementById('modal');
+        const modalText = document.getElementById('modal-text');
+        const winComboContainer = document.getElementById('win-combo');
+
+        function initGame() {
+            // Сброс состояния
+            secretCode = [];
+            currentGuess = [];
+            attemptsCount = 0;
+            isGameOver = false;
+            gameBoard.innerHTML = '';
+            modal.style.display = 'none';
+            updateCurrentAttemptUI();
+        }
+
+        function generateSecretCode() {
+            for (let i = 0; i < 4; i++) {
+                secretCode.push(COLORS[Math.floor(Math.random() * COLORS.length)]);
+            }
+            console.log("Secret Code (for debugging):", secretCode);
+        }
+
+        function updateCurrentAttemptUI() {
+            const slots = currentSlots.querySelectorAll('.slot');
+            slots.forEach((slot, index) => {
+                slot.style.background = currentGuess[index] || 'rgba(0,0,0,0.2)';
+                slot.style.borderStyle = currentGuess[index] ? 'solid' : 'dashed';
+            });
+        }
+
+        function handleColorClick(color) {
+            if (isGameOver || currentGuess.length >= 4) return;
+            currentGuess.push(color);
+            updateCurrentAttemptUI();
+        }
+
+        function handleRemove() {
+            if (isGameOver || currentGuess.length === 0) return;
+            currentGuess.pop();
+            updateCurrentAttemptUI();
+        }
+
+        function checkGuess() {
+            if (isGameOver || currentGuess.length < 4) return;
+
+            attemptsCount++;
+            const result = calculateResult(currentGuess, secretCode);
+            addAttemptToHistory(currentGuess, result);
+
+            if (result.black === 4) {
+                endGame(true);
+            }
+
+            currentGuess = [];
+            updateCurrentAttemptUI();
+        }
+
+        function calculateResult(guess, secret) {
+            let black = 0;
+            let white = 0;
+            
+            const secretCopy = [...secret];
+            const guessCopy = [...guess];
+
+            // 1. Ищем черные кружки (точное совпадение)
+            for (let i = 0; i < 4; i++) {
+                if (guessCopy[i] === secretCopy[i]) {
+                    black++;
+                    secretCopy[i] = null;
+                    guessCopy[i] = null;
+                }
+            }
+
+            // 2. Ищем белые кружки (цвет есть, но не на месте)
+            for (let i = 0; i < 4; i++) {
+                if (guessCopy[i] !== null) {
+                    const foundIndex = secretCopy.indexOf(guessCopy[i]);
+                    if (foundIndex !== -1) {
+                        white++;
+                        secretCopy[foundIndex] = null;
+                    }
+                }
+            }
+
+            return { black, white };
+        }
+
+        function addAttemptToHistory(guess, result) {
+            const row = document.createElement('div');
+            row.className = 'attempt-row';
+
+            const info = document.createElement('div');
+            info.className = 'attempt-info';
+            info.textContent = `#${attemptsCount}`;
+
+            const colorsDiv = document.createElement('div');
+            colorsDiv.className = 'attempt-colors';
+            guess.forEach(color => {
+                const peg = document.createElement('div');
+                peg.className = 'peg';
+                peg.style.backgroundColor = color;
+                colorsDiv.appendChild(peg);
+            });
+
+            const resDiv = document.createElement('div');
+            resDiv.className = 'result-pegs';
+            // Добавляем черные
+            for (let i = 0; i < result.black; i++) {
+                const p = document.createElement('div');
+                p.className = 'res-peg black';
+                resDiv.appendChild(p);
+            }
+            // Добавляем белые
+            for (let i = 0; i < result.white; i++) {
+                const p = document.createElement('div');
+                p.className = 'res-peg white';
+                resDiv.appendChild(p);
+            }
+            // Пустые места для красоты (всего 4)
+            const totalResult = result.black + result.white;
+            for (let i = 0; i < (4 - totalResult); i++) {
+                const p = document.createElement('div');
+                p.className = 'res-peg';
+                resDiv.appendChild(p);
+            }
+
+            row.appendChild(info);
+            row.appendChild(colorsDiv);
+            row.appendChild(resDiv);
+
+            // Добавляем в начало контейнера, так как контейнер имеет justify-content: flex-end
+            // Но чтобы порядок был 1, 2, 3 сверху вниз, мы используем appendChild, 
+            // а CSS flex-direction: column + justify-content: flex-end прижмет их к низу.
+            gameBoard.appendChild(row);
+            
+            // Прокрутка вниз
+            gameBoard.scrollTop = gameBoard.scrollHeight;
+        }
+
+        function endGame(isWin) {
+            isGameOver = true;
+            modal.style.display = 'flex';
+            modalText.textContent = isWin 
+                ? `Вы угадали за ${attemptsCount} попыток!` 
+                : `Игра окончена. Попробуйте еще раз.`;
+            
+            document.getElementById('modal-title').textContent = isWin ? "Победа!" : "Поражение";
+
+            // Показываем правильную комбинацию
+            winComboContainer.innerHTML = '';
+            secretCode.forEach(color => {
+                const peg = document.createElement('div');
+                peg.className = 'peg';
+                peg.style.backgroundColor = color;
+                winComboContainer.appendChild(peg);
+            });
+        }
+
+        // Event Listeners
+        palette.addEventListener('click', (e) => {
+            if (e.target.classList.contains('palette-circle')) {
+                handleColorClick(e.target.dataset.color);
+            }
+        });
+
+        removeBtn.addEventListener('click', handleRemove);
+        checkBtn.addEventListener('click', checkGuess);
+        newGameBtn.addEventListener('click', () => {
+            initGame();
+            generateSecretCode();
+        });
+        document.getElementById('modal-close-btn').addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // Start
+        initGame();
+        generateSecretCode();
+
+    </script>
+</body>
+</html>

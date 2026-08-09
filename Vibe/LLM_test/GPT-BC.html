@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mini Battle City</title>
+<style>
+  html, body { margin:0; padding:0; overflow:hidden; background:#111; }
+  canvas { display:block; background:#222; }
+  /* On‑screen touch controls (visible only on small screens) */
+  #controls { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:none; }
+  .btn { width:50px; height:50px; margin:5px; background:#555; border-radius:8px; color:#fff; font-size:24px; line-height:50px; text-align:center; user-select:none; }
+  @media (max-width:600px) {
+    #controls { display:flex; }
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="controls">
+  <div class="btn" id="up">↑</div>
+  <div class="btn" id="left">←</div>
+  <div class="btn" id="right">→</div>
+  <div class="btn" id="down">↓</div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = window.innerWidth;
+  const h = canvas.height = window.innerHeight;
+
+  /* ---------- Game Objects ---------- */
+  class Tank {
+    constructor(x, y, color, isPlayer=false) {
+      this.x = x; this.y = y; this.size = 20; this.color = color;
+      this.isPlayer = isPlayer;
+      this.speed = 2;
+      this.dir = {x:0, y:0};
+      this.bullets = [];
+      this.health = 3;
+    }
+    move() {
+      this.x += this.dir.x * this.speed;
+      this.y += this.dir.y * this.speed;
+      // Keep inside bounds
+      this.x = Math.max(0, Math.min(w - this.size, this.x));
+      this.y = Math.max(0, Math.min(h - this.size, this.y));
+      // Wall collision
+      for (const wall of walls) {
+        if (rectOverlap(this, wall)) {
+          this.x -= this.dir.x * this.speed;
+          this.y -= this.dir.y * this.speed;
+        }
+      }
+    }
+    shoot() {
+      if (this.isPlayer) {
+        const b = new Bullet(this.x + this.size/2, this.y + this.size/2, 0, -5, this.color);
+        this.bullets.push(b);
+      } else {
+        const b = new Bullet(this.x + this.size/2, this.y + this.size/2, 0, 5, this.color);
+        this.bullets.push(b);
+      }
+    }
+    draw() {
+      ctx.fillStyle = this.color;
+      ctx.fillRect(this.x, this.y, this.size, this.size);
+      // Health bar
+      if (this.isPlayer) {
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(this.x, this.y - 10, this.size * (this.health / 3), 5);
+      }
+      // Draw bullets
+      for (const b of this.bullets) b.draw();
+    }
+  }
+
+  class Bullet {
+    constructor(x, y, vx, vy, color) {
+      this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+      this.size = 4; this.color = color;
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy;
+      // Remove if out of bounds
+      if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) return false;
+      // Wall collision
+      for (const wall of walls) {
+        if (rectOverlap(this, wall)) return false;
+      }
+      return true;
+    }
+    draw() {
+      ctx.fillStyle = this.color;
+      ctx.fillRect(this.x, this.y, this.size, this.size);
+    }
+  }
+
+  /* ---------- Helper Functions ---------- */
+  function rectOverlap(a, b) {
+    return a.x < b.x + b.size && a.x + a.size > b.x &&
+           a.y < b.y + b.size && a.y + a.size > b.y;
+  }
+
+  /* ---------- Game State ---------- */
+  const player = new Tank(w/2 - 10, h - 40, '#0ff', true);
+  const enemy = new Tank(20, 20, '#f00');
+  enemy.dir = {x:1, y:0}; // patrol horizontally
+  const walls = [
+    {x: w/4, y: h/3, size: 100},
+    {x: 3*w/4 - 100, y: h/3, size: 100},
+    {x: w/2 - 50, y: h/2, size: 100}
+  ];
+  let score = 0;
+  let gameOver = false;
+
+  /* ---------- Input Handling ---------- */
+  const keys = {};
+  window.addEventListener('keydown', e => keys[e.key] = true);
+  window.addEventListener('keyup', e => keys[e.key] = false);
+
+  // Touch controls
+  const touchDir = {x:0, y:0};
+  const controls = document.getElementById('controls');
+  if (controls) {
+    const btns = {up:0, left:0, right:0, down:0};
+    ['up','left','right','down'].forEach(id=>{
+      const btn = document.getElementById(id);
+      btn.addEventListener('touchstart', ()=>btns[id]=1);
+      btn.addEventListener('touchend', ()=>btns[id]=0);
+      btn.addEventListener('touchcancel', ()=>btns[id]=0);
+    });
+    setInterval(()=>{ // poll touch buttons
+      touchDir.x = (btns.right - btns.left);
+      touchDir.y = (btns.down - btns.up);
+    }, 16);
+  }
+
+  /* ---------- Game Loop ---------- */
+  function update() {
+    if (gameOver) return;
+
+    // Player movement
+    const dir = {x:0, y:0};
+    if (keys['ArrowUp']||keys['w']) dir.y = -1;
+    if (keys['ArrowDown']||keys['s']) dir.y = 1;
+    if (keys['ArrowLeft']||keys['a']) dir.x = -1;
+    if (keys['ArrowRight']||keys['d']) dir.x = 1;
+    // Touch overrides
+    dir.x = touchDir.x || dir.x;
+    dir.y = touchDir.y || dir.y;
+    player.dir = dir;
+    player.move();
+
+    // Shooting
+    if (keys[' ']) player.shoot();
+    // Enemy shooting periodically
+    if (Math.random() < 0.01) enemy.shoot();
+
+    // Enemy patrol
+    enemy.x += enemy.dir.x * enemy.speed;
+    if (enemy.x <= 0 || enemy.x + enemy.size >= w) enemy.dir.x *= -1;
+
+    // Update bullets
+    player.bullets = player.bullets.filter(b=>{
+      if (!b.update()) return false;
+      // Collision with enemy
+      if (rectOverlap(b, enemy)) {
+        score++;
+        enemy.x = Math.random()*(w-enemy.size);
+        enemy.y = Math.random()*(h/2-enemy.size);
+        return false;
+      }
+      return true;
+    });
+    enemy.bullets = enemy.bullets.filter(b=>{
+      if (!b.update()) return false;
+      // Collision with player
+      if (rectOverlap(b, player)) {
+        player.health--;
+        if (player.health <= 0) gameOver = true;
+        return false;
+      }
+      return true;
+    });
+
+    // Collision with walls for bullets already handled in update()
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,w,h);
+    // Draw walls
+    ctx.fillStyle = '#888';
+    for (const wall of walls) ctx.fillRect(wall.x, wall.y, wall.size, wall.size);
+    // Draw tanks
+    player.draw();
+    enemy.draw();
+    // Draw score
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('Score: '+score, 10, 30);
+    // Game over
+    if (gameOver) {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0,0,w,h);
+      ctx.fillStyle = '#f00';
+      ctx.font = '48px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER', w/2, h/2);
+    }
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  /* ---------- Resize Handling ---------- */
+  window.addEventListener('resize', ()=>{
+    canvas.width = w = window.innerWidth;
+    canvas.height = h = window.innerHeight;
+  });
+
+})();
+</script>
+</body>
+</html>

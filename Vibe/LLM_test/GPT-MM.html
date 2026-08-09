@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Mastermind (4‑цвета)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ---------- Общие стили ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f0f0f0;
+  display:flex;flex-direction:column;align-items:center;padding:10px;
+}
+h1{margin-bottom:15px;color:#333}
+
+/* ---------- Контейнеры ---------- */
+#game{
+  width:100%;max-width:400px;background:#fff;
+  border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);
+  padding:15px;
+}
+#history{
+  display:flex;flex-direction:column-reverse; /* новые снизу */
+  min-height:200px;
+  margin-bottom:15px;
+}
+.attempt{
+  display:flex;align-items:center;margin:5px 0;
+}
+.attempt .guess{display:flex;margin-right:10px;}
+.attempt .guess .slot{width:30px;height:30px;border-radius:50%;border:2px solid #333;margin-right:5px;}
+.attempt .pegs{display:flex;}
+.attempt .pegs .peg{width:12px;height:12px;border-radius:50%;margin:1px 2px;}
+.attempt .pegs .peg.black{background:#000;}
+.attempt .pegs .peg.white{background:#fff;border:1px solid #333;}
+
+/* ---------- Текущая попытка ---------- */
+#current{display:flex;margin-bottom:15px;}
+#current .slot{width:35px;height:35px;border-radius:50%;border:2px solid #333;margin-right:5px;background:#eee;}
+#current .slot.filled{background:#ccc;}
+
+/* ---------- Панель управления ---------- */
+#controls{
+  display:flex;flex-direction:column;align-items:center;
+}
+.palette{
+  display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:10px;
+}
+.palette .color{
+  width:35px;height:35px;border-radius:50%;margin:5px;
+  cursor:pointer;box-shadow:0 0 4px rgba(0,0,0,.3);
+}
+.palette .color:hover{transform:scale(1.1);transition:transform .1s;}
+.buttons{
+  display:flex;flex-direction:column;
+}
+.buttons button{
+  margin:5px 0;padding:8px 12px;border:none;border-radius:4px;
+  cursor:pointer;font-weight:bold;
+}
+#check{background:#4CAF50;color:#fff;}
+#remove{background:#f44336;color:#fff;}
+#new{background:#2196F3;color:#fff;margin-top:15px;width:100%;}
+
+/* ---------- Адаптивность ---------- */
+@media (max-width:480px){
+  .attempt .guess .slot{width:25px;height:25px;}
+  .attempt .pegs .peg{width:10px;height:10px;}
+  #current .slot{width:30px;height:30px;}
+  .palette .color{width:30px;height:30px;}
+}
+</style>
+</head>
+
+<body>
+<h1>Mastermind</h1>
+<div id="game">
+  <div id="history"></div>
+  <div id="current"></div>
+  <div id="controls">
+    <div class="palette" id="palette"></div>
+    <div class="buttons">
+      <button id="check">Проверить</button>
+      <button id="remove">Убрать</button>
+    </div>
+  </div>
+  <button id="new">Новая игра</button>
+</div>
+
+<script>
+/* ---------- Константы и переменные ---------- */
+const COLORS = [
+  {name:'red',hex:'#e74c3c'},
+  {name:'green',hex:'#27ae60'},
+  {name:'blue',hex:'#3498db'},
+  {name:'yellow',hex:'#f1c40f'},
+  {name:'purple',hex:'#9b59b6'},
+  {name:'orange',hex:'#e67e22'}
+];
+const CODE_LENGTH = 4;
+let secret = [];
+let currentAttempt = [];
+let attemptsCount = 0;
+
+/* ---------- Инициализация ---------- */
+function init(){
+  secret = generateSecret();
+  attemptsCount = 0;
+  currentAttempt = [];
+  document.getElementById('history').innerHTML = '';
+  document.getElementById('current').innerHTML = '';
+  createPalette();
+  createCurrentSlots();
+}
+init();
+
+/* ---------- Генератор случайного кода ---------- */
+function generateSecret(){
+  const arr=[];
+  for(let i=0;i<CODE_LENGTH;i++){
+    const col = COLORS[Math.floor(Math.random()*COLORS.length)];
+    arr.push(col.name);
+  }
+  return arr;
+}
+
+/* ---------- Создание палитры цветов ---------- */
+function createPalette(){
+  const pal=document.getElementById('palette');
+  pal.innerHTML='';
+  COLORS.forEach(col=>{
+    const btn=document.createElement('div');
+    btn.className='color';
+    btn.style.background=col.hex;
+    btn.dataset.color=col.name;
+    btn.onclick=()=>addColor(col.name);
+    pal.appendChild(btn);
+  });
+}
+
+/* ---------- Создание пустых слотов текущей попытки ---------- */
+function createCurrentSlots(){
+  const cur=document.getElementById('current');
+  cur.innerHTML='';
+  for(let i=0;i<CODE_LENGTH;i++){
+    const slot=document.createElement('div');
+    slot.className='slot';
+    slot.dataset.idx=i;
+    cur.appendChild(slot);
+  }
+}
+
+/* ---------- Добавление выбранного цвета в попытку ---------- */
+function addColor(name){
+  if(currentAttempt.length>=CODE_LENGTH) return;
+  const idx=currentAttempt.length;
+  currentAttempt.push(name);
+  const slot=document.querySelector(`#current .slot[data-idx="${idx}"]`);
+  slot.style.background=nameToHex(name);
+  slot.classList.add('filled');
+}
+
+/* ---------- Удаление последнего цвета ---------- */
+function removeLast(){
+  if(currentAttempt.length===0) return;
+  const idx=currentAttempt.length-1;
+  currentAttempt.pop();
+  const slot=document.querySelector(`#current .slot[data-idx="${idx}"]`);
+  slot.style.background='#eee';
+  slot.classList.remove('filled');
+}
+
+/* ---------- Проверка попытки ---------- */
+function checkAttempt(){
+  if(currentAttempt.length!==CODE_LENGTH) {
+    alert('Заполните все 4 цвета!');
+    return;
+  }
+  attemptsCount++;
+  const result=evaluateGuess(currentAttempt,secret);
+  addAttemptToHistory(currentAttempt,result);
+  if(result.black===CODE_LENGTH){
+    setTimeout(()=>{ // небольшая задержка для визуального эффекта
+      alert(`Поздравляем! Вы угадали за ${attemptsCount} попыток.\nКод: ${secret.join(', ')}`);
+    },200);
+  }
+  // очистка текущей попытки
+  currentAttempt=[];
+  createCurrentSlots();
+}
+
+/* ---------- Оценка угадывания ---------- */
+function evaluateGuess(guess,secret){
+  const result={black:0,white:0};
+  const secretCopy=secret.slice();
+  const guessCopy=guess.slice();
+
+  // черные (правильный цвет и позиция)
+  for(let i=0;i<CODE_LENGTH;i++){
+    if(guessCopy[i]===secretCopy[i]){
+      result.black++;
+      secretCopy[i]=null;
+      guessCopy[i]=null;
+    }
+  }
+
+  // белые (правильный цвет, но неправильная позиция)
+  for(let i=0;i<CODE_LENGTH;i++){
+    if(guessCopy[i]===null) continue;
+    const idx=secretCopy.indexOf(guessCopy[i]);
+    if(idx!==-1){
+      result.white++;
+      secretCopy[idx]=null;
+    }
+  }
+  return result;
+}
+
+/* ---------- Добавление строки в историю ---------- */
+function addAttemptToHistory(guess,result){
+  const hist=document.getElementById('history');
+  const attempt=document.createElement('div');
+  attempt.className='attempt';
+
+  // секция с угадываемыми цветами
+  const guessDiv=document.createElement('div');
+  guessDiv.className='guess';
+  guess.forEach(color=>{
+    const slot=document.createElement('div');
+    slot.className='slot';
+    slot.style.background=nameToHex(color);
+    guessDiv.appendChild(slot);
+  });
+
+  // секция с черными/белыми кружками
+  const pegsDiv=document.createElement('div');
+  pegsDiv.className='pegs';
+  for(let i=0;i<result.black;i++){
+    const peg=document.createElement('div');
+    peg.className='peg black';
+    pegsDiv.appendChild(peg);
+  }
+  for(let i=0;i<result.white;i++){
+    const peg=document.createElement('div');
+    peg.className='peg white';
+    pegsDiv.appendChild(peg);
+  }
+
+  attempt.appendChild(guessDiv);
+  attempt.appendChild(pegsDiv);
+  hist.appendChild(attempt); // добавляем в конец (снизу)
+}
+
+/* ---------- Вспомогательные функции ---------- */
+function nameToHex(name){
+  const col=COLORS.find(c=>c.name===name);
+  return col?col.hex:'#000';
+}
+
+/* ---------- Обработчики кнопок ---------- */
+document.getElementById('check').onclick=checkAttempt;
+document.getElementById('remove').onclick=removeLast;
+document.getElementById('new').onclick=init;
+
+</script>
+</body>
+</html>

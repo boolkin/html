@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastermind</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-color: #16213e;
+            --text-color: #e94560;
+            --slot-bg: #0f3460;
+            --slot-active: #533483;
+            --white-peg: #ffffff;
+            --black-peg: #000000;
+            --btn-bg: #e94560;
+            --btn-text: #ffffff;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none; /* Запрет выделения текста для удобства кликов */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--btn-text);
+            font-family: var(--font-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Игровое поле (История) --- */
+        #game-board {
+            flex: 1; /* Занимает всё оставшееся пространство */
+            display: flex;
+            flex-direction: column-reverse; /* Выстраивает элементы снизу вверх (новые ниже) */
+            padding: 10px 20px;
+            gap: 10px;
+            background-color: var(--panel-color);
+            border-bottom: 5px solid var(--slot-bg);
+            overflow-y: auto; /* Скролл, если попыток много */
+        }
+
+        /* --- Блок с текущей попыткой --- */
+        #current-attempt {
+            background-color: var(--panel-color);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            min-height: 80px;
+            border-bottom: 1px solid #333;
+            z-index: 10;
+        }
+
+        .slot {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--slot-bg);
+            border: 2px solid #333;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .slot.filled {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+
+        /* --- Панель управления --- */
+        #controls {
+            background-color: var(--bg-color);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+            z-index: 20;
+        }
+
+        /* Палитра цветов */
+        #palette {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .color-btn {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .color-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Кнопки действий */
+        #action-buttons {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #btn-remove {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        #btn-check {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        /* Кнопка новой игры */
+        #btn-new-game {
+            background-color: transparent;
+            border: 2px solid var(--btn-text);
+            color: var(--btn-text);
+            padding: 10px 30px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: all 0.3s;
+        }
+
+        #btn-new-game:hover {
+            background-color: var(--btn-text);
+            color: var(--bg-color);
+        }
+
+        /* --- Элементы истории --- */
+        .history-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .attempt-number {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            margin-right: 15px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .guess-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .guess-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .feedback-container {
+            display: flex;
+            gap: 5px;
+            margin-left: 15px;
+        }
+
+        .feedback-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .feedback-black {
+            background-color: var(--black-peg);
+        }
+
+        .feedback-white {
+            background-color: var(--white-peg);
+        }
+
+        /* --- Модальное окно (Победа) --- */
+        #modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none; /* Скрыто по умолчанию */
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        #modal-content {
+            background: var(--panel-color);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--btn-text);
+            max-width: 90%;
+            width: 350px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--btn-text);
+        }
+
+        .secret-code-display {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .secret-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .modal-btn {
+            background-color: var(--btn-text);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Игровое поле (История) -->
+    <div id="game-board">
+        <!-- Строки с попытками будут добавляться сюда через JS -->
+    </div>
+
+    <!-- Блок с текущей попыткой -->
+    <div id="current-attempt">
+        <div class="slot"></div>
+        <div class="slot"></div>
+        <div class="slot"></div>
+        <div class="slot"></div>
+    </div>
+
+    <!-- Панель управления -->
+    <div id="controls">
+        <!-- Палитра цветов -->
+        <div id="palette">
+            <!-- Цвета генерируются JS -->
+        </div>
+
+        <!-- Кнопки действий -->
+        <div id="action-buttons">
+            <button id="btn-remove" class="action-btn">Убрать</button>
+            <button id="btn-check" class="action-btn">Проверить</button>
+        </div>
+
+        <!-- Новая игра -->
+        <button id="btn-new-game">Новая игра</button>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="modal-overlay">
+        <div id="modal-content">
+            <div class="modal-title" id="modal-title">Победа!</div>
+            <p id="modal-message">Вы угадали за X попыток.</p>
+            <div class="secret-code-display" id="secret-code-display">
+                <!-- Правильный код -->
+            </div>
+            <button class="modal-btn" onclick="startGame()">Играть снова</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Конфигурация игры ---
+        const COLORS = [
+            '#e74c3c', // Красный
+            '#2ecc71', // Зеленый
+            '#3498db', // Синий
+            '#f1c40f', // Желтый
+            '#e67e22', // Оранжевый
+            '#9b59b6'  // Фиолетовый
+        ];
+        
+        const MAX_ATTEMPTS = 10;
+        const SEQUENCE_LENGTH = 4;
+
+        // --- Состояние игры ---
+        let secretCode = [];
+        let currentGuess = []; // Массив цветов (индексы от 0 до 5)
+        let attempts = []; // История попыток
+        let isGameOver = false;
+
+        // --- DOM элементы ---
+        const paletteContainer = document.getElementById('palette');
+        const currentAttemptContainer = document.getElementById('current-attempt');
+        const gameBoard = document.getElementById('game-board');
+        const btnRemove = document.getElementById('btn-remove');
+        const btnCheck = document.getElementById('btn-check');
+        const btnNewGame = document.getElementById('btn-new-game');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const secretCodeDisplay = document.getElementById('secret-code-display');
+
+        // --- Инициализация ---
+        function init() {
+            // Генерация кнопок цветов
+            paletteContainer.innerHTML = '';
+            COLORS.forEach((color, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'color-btn';
+                btn.style.backgroundColor = color;
+                btn.onclick = () => addColor(index);
+                paletteContainer.appendChild(btn);
+            });
+
+            // Обработчики событий
+            btnRemove.onclick = removeColor;
+            btnCheck.onclick = checkGuess;
+            btnNewGame.onclick = startGame;
+
+            startGame();
+        }
+
+        // --- Логика игры ---
+
+        function startGame() {
+            // Сброс состояния
+            secretCode = generateSecretCode();
+            currentGuess = [];
+            attempts = [];
+            isGameOver = false;
+            
+            // Очистка UI
+            modalOverlay.style.display = 'none';
+            gameBoard.innerHTML = '';
+            renderCurrentAttempt();
+            
+            // Сброс скролла
+            gameBoard.scrollTop = gameBoard.scrollHeight;
+        }
+
+        function generateSecretCode() {
+            const code = [];
+            for (let i = 0; i < SEQUENCE_LENGTH; i++) {
+                code.push(Math.floor(Math.random() * COLORS.length));
+            }
+            return code;
+        }
+
+        function addColor(colorIndex) {
+            if (isGameOver) return;
+            if (currentGuess.length < SEQUENCE_LENGTH) {
+                currentGuess.push(colorIndex);
+                renderCurrentAttempt();
+            }
+        }
+
+        function removeColor() {
+            if (isGameOver) return;
+            if (currentGuess.length > 0) {
+                currentGuess.pop();
+                renderCurrentAttempt();
+            }
+        }
+
+        function renderCurrentAttempt() {
+            const slots = currentAttemptContainer.querySelectorAll('.slot');
+            slots.forEach((slot, index) => {
+                if (index < currentGuess.length) {
+                    slot.style.backgroundColor = COLORS[currentGuess[index]];
+                    slot.classList.add('filled');
+                } else {
+                    slot.style.backgroundColor = 'var(--slot-bg)';
+                    slot.classList.remove('filled');
+                }
+            });
+        }
+
+        function checkGuess() {
+            if (isGameOver) return;
+            if (currentGuess.length !== SEQUENCE_LENGTH) {
+                // Визуальная подсказка, что нужно заполнить все 4
+                slots = currentAttemptContainer.querySelectorAll('.slot');
+                slots.forEach(s => s.style.transform = 'scale(1.2)');
+                setTimeout(() => slots.forEach(s => s.style.transform = 'scale(1.1)'), 200);
+                return;
+            }
+
+            // Вычисление результата (черные и белые)
+            const result = calculateResult(currentGuess, secretCode);
+            
+            // Сохранение попытки
+            attempts.push({
+                guess: [...currentGuess],
+                result: result
+            });
+
+            // Проверка победы
+            if (result.black === SEQUENCE_LENGTH) {
+                endGame(true);
+                return;
+            }
+
+            // Проверка поражения
+            if (attempts.length >= MAX_ATTEMPTS) {
+                endGame(false);
+                return;
+            }
+
+            // Очистка текущей попытки для следующего хода
+            currentGuess = [];
+            renderCurrentAttempt();
+
+            // Отрисовка строки в истории
+            renderHistoryRow();
+        }
+
+        function calculateResult(guess, secret) {
+            let black = 0;
+            let white = 0;
+
+            // Копии массивов для модификации
+            let guessCopy = [...guess];
+            let secretCopy = [...secret];
+
+            // Считаем черные (точное совпадение)
+            for (let i = 0; i < SEQUENCE_LENGTH; i++) {
+                if (guessCopy[i] === secretCopy[i]) {
+                    black++;
+                    guessCopy[i] = -1; // Удаляем из рассмотрения
+                    secretCopy[i] = -2;
+                }
+            }
+
+            // Считаем белые (цвет есть, но не на месте)
+            for (let i = 0; i < SEQUENCE_LENGTH; i++) {
+                if (guessCopy[i] !== -1) {
+                    const idx = secretCopy.indexOf(guessCopy[i]);
+                    if (idx !== -1) {
+                        white++;
+                        guessCopy[i] = -1; // Удаляем из рассмотрения
+                        secretCopy[idx] = -2;
+                    }
+                }
+            }
+
+            return { black, white };
+        }
+
+        function renderHistoryRow() {
+            const row = document.createElement('div');
+            row.className = 'history-row';
+            
+            // 1. Номер попытки
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'attempt-number';
+            numberSpan.innerText = attempts.length; // Номер текущей попытки (1, 2, 3...)
+            row.appendChild(numberSpan);
+
+            // 2. Цвета угадывания
+            const guessContainer = document.createElement('div');
+            guessContainer.className = 'guess-dots';
+
+            const lastAttempt = attempts[attempts.length - 1].guess;
+            lastAttempt.forEach(colorIndex => {
+                const dot = document.createElement('div');
+                dot.className = 'guess-dot';
+                dot.style.backgroundColor = COLORS[colorIndex];
+                guessContainer.appendChild(dot);
+            });
+
+            row.appendChild(guessContainer);
+
+            // 3. Результат (черные/белые)
+            const resultContainer = document.createElement('div');
+            resultContainer.className = 'feedback-container';
+            const res = attempts[attempts.length - 1].result;
+
+            for (let i = 0; i < res.black; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot feedback-black';
+                resultContainer.appendChild(dot);
+            }
+            for (let i = 0; i < res.white; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot feedback-white';
+                resultContainer.appendChild(dot);
+            }
+
+            row.appendChild(resultContainer);
+            
+            // Добавляем в игровое поле (он автоматически прилипнет снизу из-за flex-direction: column-reverse)
+            gameBoard.appendChild(row);
+            
+            // Автопрокрутка к низу
+            gameBoard.scrollTop = gameBoard.scrollHeight;
+        }
+
+        function endGame(win) {
+            isGameOver = true;
+            setTimeout(() => {
+                modalOverlay.style.display = 'flex';
+                
+                if (win) {
+                    modalTitle.innerText = "Победа!";
+                    modalTitle.style.color = "#2ecc71";
+                    modalMessage.innerText = `Вы угадали код за ${attempts.length} попыток!`;
+                } else {
+                    modalTitle.innerText = "Поражение";
+                    modalTitle.style.color = "#e74c3c";
+                    modalMessage.innerText = "Попытки закончились. Правильный код:";
+                }
+
+                // Показать правильный код
+                secretCodeDisplay.innerHTML = '';
+                secretCode.forEach(colorIndex => {
+                    const dot = document.createElement('div');
+                    dot.className = 'secret-dot';
+                    dot.style.backgroundColor = COLORS[colorIndex];
+                    secretCodeDisplay.appendChild(dot);
+                });
+
+            }, 300);
+        }
+
+        // Запуск
+        init();
+
+    </script>
+</body>
+</html>

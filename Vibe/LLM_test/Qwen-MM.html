@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mastermind</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* === HEADER === */
+  .header {
+    text-align: center;
+    padding: 8px 0 4px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #e94560;
+    flex-shrink: 0;
+  }
+
+  /* === GAME FIELD === */
+  .game-field {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+  }
+
+  .game-field::-webkit-scrollbar {
+    width: 4px;
+  }
+  .game-field::-webkit-scrollbar-thumb {
+    background: #0f3460;
+    border-radius: 2px;
+  }
+
+  .attempt-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #1a1a2e;
+    border-radius: 10px;
+    border: 1px solid #0f3460;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .attempt-number {
+    font-size: 0.8rem;
+    color: #888;
+    min-width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .attempt-colors {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .attempt-color {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+  }
+
+  .pegs-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 3px;
+    min-width: 32px;
+    flex-shrink: 0;
+  }
+
+  .peg {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #444;
+  }
+
+  .peg.black {
+    background: #111;
+    border-color: #555;
+    box-shadow: 0 0 3px rgba(255,255,255,0.2);
+  }
+
+  .peg.white {
+    background: #f0f0f0;
+    border-color: #ccc;
+  }
+
+  /* === CURRENT ATTEMPT === */
+  .current-attempt-block {
+    flex-shrink: 0;
+    padding: 10px 12px;
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+  }
+
+  .current-label {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .current-slots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .current-slot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px dashed #0f3460;
+    background: rgba(15, 52, 96, 0.3);
+    transition: all 0.2s;
+  }
+
+  .current-slot.filled {
+    border-style: solid;
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  }
+
+  /* === CONTROL PANEL === */
+  .control-panel {
+    flex-shrink: 0;
+    padding: 8px 12px 4px;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .colors-block {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .color-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+
+  .color-btn:active {
+    transform: scale(0.88);
+  }
+
+  .color-btn:active::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+
+  .color-btn.red { background: radial-gradient(circle at 35% 35%, #ff6b6b, #c0392b); }
+  .color-btn.blue { background: radial-gradient(circle at 35% 35%, #74b9ff, #2980b9); }
+  .color-btn.green { background: radial-gradient(circle at 35% 35%, #55efc4, #27ae60); }
+  .color-btn.yellow { background: radial-gradient(circle at 35% 35%, #ffeaa7, #f39c12); }
+  .color-btn.purple { background: radial-gradient(circle at 35% 35%, #a29bfe, #6c5ce7); }
+  .color-btn.orange { background: radial-gradient(circle at 35% 35%, #fab1a0, #e17055); }
+
+  .buttons-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: transform 0.15s, opacity 0.15s;
+    min-width: 100px;
+  }
+
+  .action-btn:active {
+    transform: scale(0.95);
+  }
+
+  .btn-check {
+    background: linear-gradient(135deg, #e94560, #c0392b);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(233, 69, 96, 0.4);
+  }
+
+  .btn-check:disabled {
+    opacity: 0.4;
+    cursor: default;
+    transform: none;
+  }
+
+  .btn-remove {
+    background: linear-gradient(135deg, #555, #333);
+    color: #ccc;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  }
+
+  .btn-remove:disabled {
+    opacity: 0.4;
+    cursor: default;
+    transform: none;
+  }
+
+  /* === NEW GAME BUTTON === */
+  .new-game-btn {
+    flex-shrink: 0;
+    padding: 10px;
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    color: #888;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: center;
+  }
+
+  .new-game-btn:active {
+    background: linear-gradient(135deg, #1a4a8a, #0f3460);
+    color: #eee;
+  }
+
+  /* === MODAL === */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal {
+    background: #16213e;
+    border: 2px solid #0f3460;
+    border-radius: 16px;
+    padding: 28px 32px;
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    animation: modalIn 0.35s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.85) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal h2 {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    color: #e94560;
+  }
+
+  .modal p {
+    font-size: 0.95rem;
+    color: #ccc;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  .modal .secret-reveal {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .modal .secret-reveal .attempt-color {
+    width: 38px;
+    height: 38px;
+    border-width: 2px;
+  }
+
+  .modal-btn {
+    margin-top: 16px;
+    padding: 12px 36px;
+    background: linear-gradient(135deg, #e94560, #c0392b);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: transform 0.15s;
+  }
+
+  .modal-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* === WIN/LOSE animations === */
+  .attempt-row.win-row {
+    border-color: #27ae60;
+    background: rgba(39, 174, 96, 0.1);
+  }
+
+  /* === Responsive tweaks === */
+  @media (max-height: 600px) {
+    .header { padding: 4px 0 2px; font-size: 1.1rem; }
+    .game-field { padding: 4px 8px; }
+    .attempt-row { padding: 4px 8px; gap: 6px; }
+    .attempt-color { width: 26px; height: 26px; }
+    .current-slot { width: 36px; height: 36px; }
+    .color-btn { width: 40px; height: 40px; }
+    .action-btn { padding: 8px 18px; font-size: 0.78rem; }
+    .current-attempt-block { padding: 6px 8px; }
+    .control-panel { gap: 14px; padding: 6px 8px; }
+  }
+
+  @media (min-width: 500px) {
+    .color-btn { width: 52px; height: 52px; }
+    .current-slot { width: 50px; height: 50px; }
+    .attempt-color { width: 36px; height: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">MASTERMIND</div>
+
+<div class="game-field" id="gameField"></div>
+
+<div class="current-attempt-block">
+  <div class="current-label">Ваш ход</div>
+  <div class="current-slots" id="currentSlots">
+    <div class="current-slot" data-index="0"></div>
+    <div class="current-slot" data-index="1"></div>
+    <div class="current-slot" data-index="2"></div>
+    <div class="current-slot" data-index="3"></div>
+  </div>
+</div>
+
+<div class="control-panel">
+  <div class="colors-block">
+    <div class="color-btn red" data-color="red"></div>
+    <div class="color-btn blue" data-color="blue"></div>
+    <div class="color-btn green" data-color="green"></div>
+    <div class="color-btn yellow" data-color="yellow"></div>
+    <div class="color-btn purple" data-color="purple"></div>
+    <div class="color-btn orange" data-color="orange"></div>
+  </div>
+  <div class="buttons-block">
+    <button class="action-btn btn-check" id="btnCheck" disabled>Проверить</button>
+    <button class="action-btn btn-remove" id="btnRemove" disabled>Убрать</button>
+  </div>
+</div>
+
+<div style="padding: 4px 12px 8px; flex-shrink: 0;">
+  <button class="new-game-btn" id="btnNewGame">Новая игра</button>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <p id="modalMessage"></p>
+    <div class="secret-reveal" id="modalReveal"></div>
+    <button class="modal-btn" id="modalBtn">Играть снова</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const COLORS = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+  const COLOR_MAP = {
+    red: '#c0392b',
+    blue: '#2980b9',
+    green: '#27ae60',
+    yellow: '#f39c12',
+    purple: '#6c5ce7',
+    orange: '#e17055'
+  };
+  const SECRET_LENGTH = 4;
+  const MAX_ATTEMPTS = 10;
+
+  let secret = [];
+  let currentAttempt = [];
+  let attempts = [];
+  let gameOver = false;
+
+  const gameField = document.getElementById('gameField');
+  const currentSlots = document.querySelectorAll('.current-slot');
+  const btnCheck = document.getElementById('btnCheck');
+  const btnRemove = document.getElementById('btnRemove');
+  const btnNewGame = document.getElementById('btnNewGame');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMessage = document.getElementById('modalMessage');
+  const modalReveal = document.getElementById('modalReveal');
+  const modalBtn = document.getElementById('modalBtn');
+  const colorBtns = document.querySelectorAll('.color-btn');
+
+  function generateSecret() {
+    secret = [];
+    for (let i = 0; i < SECRET_LENGTH; i++) {
+      secret.push(COLORS[Math.floor(Math.random() * COLORS.length)]);
+    }
+  }
+
+  function resetGame() {
+    currentAttempt = [];
+    attempts = [];
+    gameOver = false;
+    gameField.innerHTML = '';
+    updateCurrentSlots();
+    updateButtons();
+    modalOverlay.classList.remove('active');
+  }
+
+  function updateCurrentSlots() {
+    currentSlots.forEach((slot, i) => {
+      slot.className = 'current-slot';
+      slot.style.background = '';
+      if (i < currentAttempt.length) {
+        slot.classList.add('filled');
+        slot.style.background = `radial-gradient(circle at 35% 35%, ${lighten(COLOR_MAP[currentAttempt[i]], 40)}, ${COLOR_MAP[currentAttempt[i]]})`;
+      }
+    });
+  }
+
+  function lighten(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, (num >> 16) + Math.round(255 * percent / 100));
+    const g = Math.min(255, ((num >> 8) & 0x00FF) + Math.round(255 * percent / 100));
+    const b = Math.min(255, (num & 0x0000FF) + Math.round(255 * percent / 100));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function updateButtons() {
+    btnCheck.disabled = currentAttempt.length !== SECRET_LENGTH || gameOver;
+    btnRemove.disabled = currentAttempt.length === 0 || gameOver;
+  }
+
+  function evaluateAttempt(attempt) {
+    let black = 0;
+    let white = 0;
+    const secretCopy = [...secret];
+    const attemptCopy = [...attempt];
+
+    // Black pegs (exact match)
+    for (let i = 0; i < SECRET_LENGTH; i++) {
+      if (attemptCopy[i] === secretCopy[i]) {
+        black++;
+        secretCopy[i] = null;
+        attemptCopy[i] = null;
+      }
+    }
+
+    // White pegs (color exists but wrong position)
+    for (let i = 0; i < SECRET_LENGTH; i++) {
+      if (attemptCopy[i] !== null) {
+        const idx = secretCopy.indexOf(attemptCopy[i]);
+        if (idx !== -1) {
+          white++;
+          secretCopy[idx] = null;
+        }
+      }
+    }
+
+    return { black, white };
+  }
+
+  function addAttemptRow(attempt, result, isLast) {
+    const row = document.createElement('div');
+    row.className = 'attempt-row';
+
+    const numLabel = document.createElement('div');
+    numLabel.className = 'attempt-number';
+    numLabel.textContent = attempts.length;
+
+    const colorsDiv = document.createElement('div');
+    colorsDiv.className = 'attempt-colors';
+
+    attempt.forEach(color => {
+      const circle = document.createElement('div');
+      circle.className = 'attempt-color';
+      circle.style.background = `radial-gradient(circle at 35% 35%, ${lighten(COLOR_MAP[color], 40)}, ${COLOR_MAP[color]})`;
+      colorsDiv.appendChild(circle);
+    });
+
+    const pegsDiv = document.createElement('div');
+    pegsDiv.className = 'pegs-container';
+
+    const totalPegs = blackWhiteCount(result);
+    for (let i = 0; i < totalPegs; i++) {
+      const peg = document.createElement('div');
+      peg.className = 'peg';
+      pegsDiv.appendChild(peg);
+    }
+
+    let pegIndex = 0;
+    for (let i = 0; i < result.black; i++) {
+      pegsDiv.children[pegIndex].classList.add('black');
+      pegIndex++;
+    }
+    for (let i = 0; i < result.white; i++) {
+      pegsDiv.children[pegIndex].classList.add('white');
+      pegIndex++;
+    }
+
+    row.appendChild(numLabel);
+    row.appendChild(colorsDiv);
+    row.appendChild(pegsDiv);
+
+    if (isLast) {
+      row.classList.add('win-row');
+    }
+
+    gameField.appendChild(row);
+    gameField.scrollTop = gameField.scrollHeight;
+  }
+
+  function blackWhiteCount(result) {
+    return Math.min(result.black + result.white, 4);
+  }
+
+  function checkWin() {
+    const result = evaluateAttempt(currentAttempt);
+    attempts.push({ attempt: [...currentAttempt], result });
+
+    if (result.black === SECRET_LENGTH) {
+      addAttemptRow(currentAttempt, result, true);
+      gameOver = true;
+      updateButtons();
+      setTimeout(() => showModal(true), 400);
+      return true;
+    }
+
+    if (attempts.length >= MAX_ATTEMPTS) {
+      addAttemptRow(currentAttempt, result, false);
+      gameOver = true;
+      updateButtons();
+      setTimeout(() => showModal(false), 400);
+      return true;
+    }
+
+    addAttemptRow(currentAttempt, result, false);
+    return false;
+  }
+
+  function showModal(isWin) {
+    if (isWin) {
+      modalTitle.textContent = '🎉 Победа!';
+      modalMessage.textContent = `Вы угадали комбинацию за ${attempts.length} ${getAttemptsWord(attempts.length)}!`;
+    } else {
+      modalTitle.textContent = '😔 Игра окончена';
+      modalMessage.textContent = 'К сожалению, вы исчерпали все попытки.';
+    }
+
+    modalReveal.innerHTML = '';
+    secret.forEach(color => {
+      const circle = document.createElement('div');
+      circle.className = 'attempt-color';
+      circle.style.background = `radial-gradient(circle at 35% 35%, ${lighten(COLOR_MAP[color], 40)}, ${COLOR_MAP[color]})`;
+      circle.style.border = '2px solid rgba(255,255,255,0.3)';
+      modalReveal.appendChild(circle);
+    });
+
+    modalOverlay.classList.add('active');
+  }
+
+  function getAttemptsWord(n) {
+    const abs = Math.abs(n) % 100;
+    const lastDigit = abs % 10;
+    if (abs > 10 && abs < 20) return 'попыток';
+    if (lastDigit === 1) return 'попытку';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'попытки';
+    return 'попыток';
+  }
+
+  function clearCurrentAttempt() {
+    currentAttempt = [];
+    updateCurrentSlots();
+    updateButtons();
+  }
+
+  // === EVENT LISTENERS ===
+
+  colorBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (gameOver) return;
+      if (currentAttempt.length < SECRET_LENGTH) {
+        currentAttempt.push(btn.dataset.color);
+        updateCurrentSlots();
+        updateButtons();
+      }
+    });
+  });
+
+  btnCheck.addEventListener('click', () => {
+    if (currentAttempt.length !== SECRET_LENGTH || gameOver) return;
+    checkWin();
+    if (!gameOver) {
+      clearCurrentAttempt();
+    }
+  });
+
+  btnRemove.addEventListener('click', () => {
+    if (currentAttempt.length === 0 || gameOver) return;
+    currentAttempt.pop();
+    updateCurrentSlots();
+    updateButtons();
+  });
+
+  btnNewGame.addEventListener('click', () => {
+    resetGame();
+    generateSecret();
+  });
+
+  modalBtn.addEventListener('click', () => {
+    resetGame();
+    generateSecret();
+  });
+
+  // Prevent double-tap zoom on mobile
+  document.addEventListener('dblclick', e => e.preventDefault());
+
+  // === INIT ===
+  resetGame();
+  generateSecret();
+})();
+</script>
+
+</body>
+</html>
